@@ -1,0 +1,78 @@
+﻿// SPDX-License-Identifier: MIT
+using Godot;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+/// <summary>
+/// Scannt Rezept-Definitionen als Fallback aus dem Dateisystem.
+/// </summary>
+public sealed class FileSystemRecipeLoader : IDataLoader<RecipeDef>
+{
+    private readonly string basisPfad;
+
+    public FileSystemRecipeLoader(string basisPfad = "res://data/recipes")
+    {
+        this.basisPfad = basisPfad;
+    }
+
+    public string LoaderName => nameof(FileSystemRecipeLoader);
+    public int Priority => 10;
+
+    public Task<IReadOnlyCollection<RecipeDef>> LoadAsync(SceneTree sceneTree)
+    {
+        var daten = LadeAusOrdner(basisPfad);
+        if (daten.Count > 0)
+        {
+            DebugLogger.LogServices(() => $"FileSystemRecipeLoader: {daten.Count} Rezepte gefunden");
+        }
+        return Task.FromResult<IReadOnlyCollection<RecipeDef>>(daten);
+    }
+
+    private IReadOnlyCollection<RecipeDef> LadeAusOrdner(string ordnerPfad)
+    {
+        var ergebnis = new List<RecipeDef>();
+        if (!DirAccess.DirExistsAbsolute(ordnerPfad))
+        {
+            DebugLogger.LogDatabase(() => $"FileSystemRecipeLoader: Ordner fehlt {ordnerPfad}");
+            return ergebnis;
+        }
+
+        var dir = DirAccess.Open(ordnerPfad);
+        if (dir == null)
+        {
+            DebugLogger.LogDatabase(() => $"FileSystemRecipeLoader: Kann Ordner nicht oeffnen {ordnerPfad}");
+            return ergebnis;
+        }
+
+        dir.ListDirBegin();
+        while (true)
+        {
+            var datei = dir.GetNext();
+            if (string.IsNullOrEmpty(datei))
+            {
+                break;
+            }
+            if (dir.CurrentIsDir())
+            {
+                continue;
+            }
+            if (!datei.EndsWith(".tres", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var pfad = $"{ordnerPfad}/{datei}";
+            var resource = ResourceLoader.Load<RecipeDef>(pfad);
+            if (resource != null && !string.IsNullOrEmpty(resource.Id))
+            {
+                ergebnis.Add(resource);
+            }
+        }
+        dir.ListDirEnd();
+        dir.Dispose();
+        return ergebnis;
+    }
+}
+
+

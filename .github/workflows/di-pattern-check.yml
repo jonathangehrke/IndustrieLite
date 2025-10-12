@@ -1,0 +1,75 @@
+name: DI Pattern Enforcement
+
+# Phase 7: Automated CI check for explicit DI pattern compliance
+# Prevents runtime ServiceContainer lookups in manager code
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'code/managers/**/*.cs'
+      - 'code/runtime/**/*.cs'
+      - 'tools/ci/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'code/managers/**/*.cs'
+      - 'code/runtime/**/*.cs'
+      - 'tools/ci/**'
+
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check-di-pattern:
+    name: Check DI Pattern Compliance
+    runs-on: windows-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run DI Pattern Check
+        shell: pwsh
+        run: |
+          Write-Host "Running DI pattern enforcement check..." -ForegroundColor Cyan
+          $result = & .\tools\ci\CheckNoRuntimeServiceLocator.ps1 -RootPath $PWD
+          exit $LASTEXITCODE
+
+      - name: Upload Results (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: di-violations
+          path: |
+            code/managers/**/*.cs
+            code/runtime/**/*.cs
+          retention-days: 7
+
+  # Optional: Also run .NET build to catch compilation errors
+  build:
+    name: Build Check
+    runs-on: windows-latest
+    timeout-minutes: 15
+    needs: check-di-pattern # Only build if DI check passes
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x' # Adjust to your .NET version
+
+      - name: Restore dependencies
+        run: dotnet restore IndustrieLite.csproj
+
+      - name: Build project
+        run: dotnet build IndustrieLite.csproj --configuration Release --no-restore

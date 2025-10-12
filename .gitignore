@@ -1,0 +1,64 @@
+﻿# Godot 4 / C# Build System
+.godot/
+.godot/imported/
+.mono/
+.import/
+shader_cache/
+
+# C# Build Outputs
+**/bin/
+**/obj/
+**/*.dll
+**/*.pdb
+**/*.cache
+
+# IDE
+.vs/
+.idea/
+*.user
+*.suo
+
+# OS Files
+.DS_Store
+Thumbs.db
+Desktop.ini
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+~*
+
+# Godot Engine Binary (nicht ins Repo)
+Godot_v4.4.1-stable_mono_win64/
+
+# Temporäre Job/Task-Dateien
+job*.txt
+_ms_*.txt
+*_tmp_*.txt
+
+# Backup-Dateien
+*.bak
+
+# Test-Outputs
+test_output.txt
+
+# Diff/Patch-Dateien
+*.diff
+*.patch
+
+# Sonstige temporäre Dateien
+
+# Savegames (Entwicklungs-/Test-Daten)
+/savegame*.json
+
+# Godot Export-Einstellungen (optional - kann entwickler-spezifische Pfade enthalten)
+export_presets.cfg
+
+# Test-Resultate
+**/TestResults/
+*.trx

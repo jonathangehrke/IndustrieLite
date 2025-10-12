@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://ch4ldti5q4s1r"]
+
+[ext_resource type="PackedScene" path="res://scenes/MainMenu.tscn" id="1"]
+[ext_resource type="Script" uid="uid://c8u2qajtq1bid" path="res://scenes/Root.gd" id="2"]
+
+[node name="Root" type="Node"]
+script = ExtResource("2")
+
+[node name="MenuCanvas" type="CanvasLayer" parent="."]
+layer = 100
+
+[node name="MainMenu" parent="MenuCanvas" instance=ExtResource("1")]
+layout_mode = 3
+anchors_preset = 15
+grow_horizontal = 2
+grow_vertical = 2

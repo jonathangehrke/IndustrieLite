@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://code/data/BuildingDef.cs" id="1_0"]
+[ext_resource type="Texture2D" path="res://assets/buildings/Solar.png" id="2_0"]
+
+[resource]
+script = ExtResource("1_0")
+Id = "solar_plant"
+DisplayName = "Solaranlage"
+Width = 2
+Height = 2
+Cost = 800
+Category = "Energie"
+Icon = ExtResource("2_0")
+LegacyIds = ["Solar"]
+DefaultRecipeId = "power_generation"
+AvailableRecipes = ["power_generation"]
+AutoStartProduction = true

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=3 format=3 uid="uid://b3cky6pdoy2p"]
+
+[ext_resource type="Script" uid="uid://cp8f6go1hj4gg" path="res://code/data/BuildingDef.cs" id="1_0"]
+[ext_resource type="Texture2D" uid="uid://b7gons5i2clws" path="res://assets/buildings/Huehnerstall.png" id="2_0"]
+
+[resource]
+script = ExtResource("1_0")
+Id = "chicken_farm"
+DisplayName = "Hühnerstall"
+Width = 3
+Height = 3
+Cost = 2500
+Category = "Produktion"
+Icon = ExtResource("2_0")
+Alternatives = Array[String]([])
+Tags = Array[String]([])
+LegacyIds = Array[String](["ChickenFarm"])
+RequiredLevel = 2
+DefaultRecipeId = "chicken_production"
+AvailableRecipes = Array[String](["chicken_production", "egg_production"])
+AutoStartProduction = true
+WorkersRequired = 2
