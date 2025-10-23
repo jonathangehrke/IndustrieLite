@@ -1,6 +1,6 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
+using Godot;
 
 public partial class ProductionManager
 {
@@ -10,8 +10,15 @@ public partial class ProductionManager
     /// </summary>
     public void Initialize(ResourceManager resourceManager, Simulation simulation, ProductionSystem? productionSystem = null, Node? devFlags = null)
     {
-        if (resourceManager == null) throw new ArgumentNullException(nameof(resourceManager));
-        if (simulation == null) throw new ArgumentNullException(nameof(simulation));
+        if (resourceManager == null)
+        {
+            throw new ArgumentNullException(nameof(resourceManager));
+        }
+
+        if (simulation == null)
+        {
+            throw new ArgumentNullException(nameof(simulation));
+        }
 
         this.resourceManager = resourceManager;
         this.productionSystem = productionSystem;
@@ -19,7 +26,7 @@ public partial class ProductionManager
         try
         {
             simulation.Register(this);
-            _registeredWithSimulation = true;
+            this.registeredWithSimulation = true;
         }
         catch (Exception ex)
         {
@@ -28,7 +35,13 @@ public partial class ProductionManager
 
         if (devFlags != null)
         {
-            try { UseNewProduction = (bool)devFlags.Get("use_new_production"); } catch { }
+            try
+            {
+                this.UseNewProduction = (bool)devFlags.Get("use_new_production");
+            }
+            catch
+            {
+            }
         }
 
         DebugLogger.LogProduction("ProductionManager.Initialize(): Abhaengigkeiten gesetzt (typed DI)");

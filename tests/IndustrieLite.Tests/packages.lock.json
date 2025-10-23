@@ -39,14 +39,6 @@
         "resolved": "4.4.1",
         "contentHash": "ghnQEo5LikQPfbCYcVxje8epffNCiyNG4zvGWUDRZRC1O+653+yqG3wdxk3+5RZsA3jaRuGKRavsGcnhLKe12g=="
       },
-      "GodotSharpEditor": {
-        "type": "Transitive",
-        "resolved": "4.4.1",
-        "contentHash": "cc3nA24r/sjW8KxrNqfSQk4CQMQYcg/kYk5935R88IhGBdRuTH4miaBXPlzR/td5GR8i1oGtCMWyW8axpQ0DxA==",
-        "dependencies": {
-          "GodotSharp": "4.4.1"
-        }
-      },
       "Microsoft.CodeCoverage": {
         "type": "Transitive",
         "resolved": "17.11.1",
@@ -123,8 +115,7 @@
         "type": "Project",
         "dependencies": {
           "Godot.SourceGenerators": "[4.4.1, )",
-          "GodotSharp": "[4.4.1, )",
-          "GodotSharpEditor": "[4.4.1, )"
+          "GodotSharp": "[4.4.1, )"
         }
       }
     }

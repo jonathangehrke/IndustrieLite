@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
@@ -25,7 +25,7 @@ public class BuildTool : IInputTool
 
     public void Enter()
     {
-        DebugLogger.LogInput($"BuildTool aktiviert (Typ: {AktuellerBautyp})");
+        DebugLogger.LogInput($"BuildTool aktiviert (Typ: {this.AktuellerBautyp})");
     }
 
     public void Exit()
@@ -35,28 +35,32 @@ public class BuildTool : IInputTool
 
     public void OnClick(Vector2I zelle)
     {
-        if (string.IsNullOrEmpty(AktuellerBautyp))
+        if (string.IsNullOrEmpty(this.AktuellerBautyp))
         {
             DebugLogger.LogInput("Kein Bautyp gesetzt");
             return;
         }
 
-        DebugLogger.LogInput($"BuildTool: versuche '{AktuellerBautyp}' bei Zelle {zelle} zu platzieren");
+        DebugLogger.LogInput($"BuildTool: versuche '{this.AktuellerBautyp}' bei Zelle {zelle} zu platzieren");
 
         // Spezialfall: Strasse (kanonisch)
-        var kanon = IdMigration.ToCanonical(AktuellerBautyp);
-        if (kanon == "road")
+        var kanon = IdMigration.ToCanonical(this.AktuellerBautyp);
+        if (string.Equals(kanon, "road", System.StringComparison.Ordinal))
         {
-            if (roadManager == null)
+            if (this.roadManager == null)
             {
                 DebugLogger.LogInput("RoadManager nicht gefunden");
                 return;
             }
-            var res = roadManager.TryPlaceRoad(zelle);
+            var res = this.roadManager.TryPlaceRoad(zelle);
             if (!res.Ok)
             {
                 var ui = ServiceContainer.Instance?.GetNamedService<UIService>(ServiceNames.UIService);
-                if (res.ErrorInfo != null) ui?.ShowErrorToast(res.ErrorInfo);
+                if (res.ErrorInfo != null)
+                {
+                    ui?.ShowErrorToast(res.ErrorInfo);
+                }
+
                 return;
             }
             {
@@ -68,18 +72,17 @@ public class BuildTool : IInputTool
         }
 
         // Fruehvalidierung gegen Database entfällt in DI-Pfad; BuildingManager.CanPlace validiert konsistent
-
-        var canEx = buildingManager.CanPlaceEx(AktuellerBautyp, zelle);
+        var canEx = this.buildingManager.CanPlaceEx(this.AktuellerBautyp, zelle);
         if (!canEx.Ok)
         {
-            DebugLogger.LogInput($"Kann '{AktuellerBautyp}' nicht bei {zelle} platzieren");
+            DebugLogger.LogInput($"Kann '{this.AktuellerBautyp}' nicht bei {zelle} platzieren");
             var ui = ServiceContainer.Instance?.GetNamedService<UIService>(ServiceNames.UIService);
             ui?.ShowErrorToast(canEx.ErrorInfo ?? new ErrorInfo(ErrorIds.BuildingInvalidPlacementName, "Platzierung nicht moeglich"));
             return;
         }
 
         // Kosten ermitteln (fuer Debit) – einfache Abfrage ueber CanPlace, da es Size/Cost liefert
-        if (!buildingManager.CanPlace(AktuellerBautyp, zelle, out var groesse, out var kosten))
+        if (!this.buildingManager.CanPlace(this.AktuellerBautyp, zelle, out var groesse, out var kosten))
         {
             // Sollte nicht vorkommen, da CanPlaceEx bereits true meldete, aber sicherheitshalber
             var ui = ServiceContainer.Instance?.GetNamedService<UIService>(ServiceNames.UIService);
@@ -88,7 +91,7 @@ public class BuildTool : IInputTool
         }
 
         DebugLogger.LogInput($"Platzierung moeglich, Kosten: {kosten}");
-        var debit = economyManager.TryDebit(kosten);
+        var debit = this.economyManager.TryDebit(kosten);
         if (!debit.Ok)
         {
             var ui = ServiceContainer.Instance?.GetNamedService<UIService>(ServiceNames.UIService);
@@ -96,11 +99,11 @@ public class BuildTool : IInputTool
             return;
         }
 
-        var place = buildingManager.TryPlaceBuilding(AktuellerBautyp, zelle);
+        var place = this.buildingManager.TryPlaceBuilding(this.AktuellerBautyp, zelle);
         if (!place.Ok)
         {
             // Rückzahlung, falls Platzierung unerwartet fehlschlägt
-            economyManager.TryCredit(kosten);
+            this.economyManager.TryCredit(kosten);
             var ui = ServiceContainer.Instance?.GetNamedService<UIService>(ServiceNames.UIService);
             ui?.ShowErrorToast(place.ErrorInfo ?? new ErrorInfo(ErrorIds.SystemUnexpectedExceptionName, "Platzierung fehlgeschlagen"));
             return;

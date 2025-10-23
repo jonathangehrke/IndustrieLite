@@ -1,12 +1,12 @@
-﻿// SPDX-License-Identifier: MIT
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using IndustrieLite.Transport.Core.Interfaces;
-using IndustrieLite.Transport.Core.Models;
-
+// SPDX-License-Identifier: MIT
 namespace IndustrieLite.Transport.Core.Services
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using IndustrieLite.Transport.Core.Interfaces;
+    using IndustrieLite.Transport.Core.Models;
+
     /// <summary>
     /// Zentralisiert alle Transport-bezogenen Events und stellt Legacy-Kompatibilität bereit.
     /// </summary>
@@ -31,21 +31,23 @@ namespace IndustrieLite.Transport.Core.Services
         public void PublishJobEvent(string eventType, TransportJob job)
         {
             if (job == null)
+            {
                 throw new ArgumentNullException(nameof(job));
+            }
 
             List<Action<string, TransportJob>> aktuelleHandler;
             List<Action<TransportJob>>? legacyHandlers;
 
-            lock (lockObject)
+            lock (this.lockObject)
             {
-                aktuelleHandler = ExtractAlive(handlers, out _);
+                aktuelleHandler = ExtractAlive(this.handlers, out _);
                 legacyHandlers = eventType switch
                 {
-                    "JobGeplant" => ExtractAlive(jobGeplantHandlers, out _),
-                    "JobGestartet" => ExtractAlive(jobGestartetHandlers, out _),
-                    "JobAbgeschlossen" => ExtractAlive(jobAbgeschlossenHandlers, out _),
-                    "JobFehlgeschlagen" => ExtractAlive(jobFehlgeschlagenHandlers, out _),
-                    _ => null
+                    "JobGeplant" => ExtractAlive(this.jobGeplantHandlers, out _),
+                    "JobGestartet" => ExtractAlive(this.jobGestartetHandlers, out _),
+                    "JobAbgeschlossen" => ExtractAlive(this.jobAbgeschlossenHandlers, out _),
+                    "JobFehlgeschlagen" => ExtractAlive(this.jobFehlgeschlagenHandlers, out _),
+                    _ => null,
                 };
             }
 
@@ -55,7 +57,9 @@ namespace IndustrieLite.Transport.Core.Services
             }
 
             if (legacyHandlers == null)
+            {
                 return;
+            }
 
             foreach (var handler in legacyHandlers)
             {
@@ -66,20 +70,22 @@ namespace IndustrieLite.Transport.Core.Services
         public IDisposable SubscribeToJobEvents(Action<string, TransportJob> handler)
         {
             if (handler == null)
+            {
                 throw new ArgumentNullException(nameof(handler));
+            }
 
             WeakReference<Action<string, TransportJob>> weak;
-            lock (lockObject)
+            lock (this.lockObject)
             {
                 weak = new WeakReference<Action<string, TransportJob>>(handler);
-                handlers.Add(weak);
+                this.handlers.Add(weak);
             }
 
             return new EventSubscription(() =>
             {
-                lock (lockObject)
+                lock (this.lockObject)
                 {
-                    RemoveWeak(handlers, handler);
+                    RemoveWeak(this.handlers, handler);
                 }
             });
         }
@@ -87,151 +93,213 @@ namespace IndustrieLite.Transport.Core.Services
         public void ConnectJobManager(ITransportJobManager jobManager)
         {
             if (jobManager == null)
+            {
                 throw new ArgumentNullException(nameof(jobManager));
+            }
 
             // Bereits bestehende Verbindung lösen
-            if (connectedJobManager != null)
-                DisconnectJobManager(connectedJobManager);
+            if (this.connectedJobManager != null)
+            {
+                this.DisconnectJobManager(this.connectedJobManager);
+            }
 
-            dJobGestartet = job => PublishJobEvent("JobGestartet", job);
-            dJobAbgeschlossen = job => PublishJobEvent("JobAbgeschlossen", job);
-            dJobFehlgeschlagen = job => PublishJobEvent("JobFehlgeschlagen", job);
-            jobManager.JobGestartet += dJobGestartet;
-            jobManager.JobAbgeschlossen += dJobAbgeschlossen;
-            jobManager.JobFehlgeschlagen += dJobFehlgeschlagen;
-            connectedJobManager = jobManager;
+            this.dJobGestartet = job => this.PublishJobEvent("JobGestartet", job);
+            this.dJobAbgeschlossen = job => this.PublishJobEvent("JobAbgeschlossen", job);
+            this.dJobFehlgeschlagen = job => this.PublishJobEvent("JobFehlgeschlagen", job);
+            jobManager.JobGestartet += this.dJobGestartet;
+            jobManager.JobAbgeschlossen += this.dJobAbgeschlossen;
+            jobManager.JobFehlgeschlagen += this.dJobFehlgeschlagen;
+            this.connectedJobManager = jobManager;
         }
 
         public void ConnectPlanningService(ITransportPlanningService planningService)
         {
             if (planningService == null)
+            {
                 throw new ArgumentNullException(nameof(planningService));
+            }
 
-            if (connectedPlanningService != null)
-                DisconnectPlanningService(connectedPlanningService);
+            if (this.connectedPlanningService != null)
+            {
+                this.DisconnectPlanningService(this.connectedPlanningService);
+            }
 
-            dJobGeplant = job => PublishJobEvent("JobGeplant", job);
-            planningService.JobGeplant += dJobGeplant;
-            connectedPlanningService = planningService;
+            this.dJobGeplant = job => this.PublishJobEvent("JobGeplant", job);
+            planningService.JobGeplant += this.dJobGeplant;
+            this.connectedPlanningService = planningService;
         }
 
         public void DisconnectJobManager(ITransportJobManager jobManager)
         {
             if (jobManager == null)
+            {
                 return;
-            if (!ReferenceEquals(connectedJobManager, jobManager))
+            }
+
+            if (!ReferenceEquals(this.connectedJobManager, jobManager))
+            {
                 return;
+            }
+
             try
             {
-                if (dJobGestartet != null) jobManager.JobGestartet -= dJobGestartet;
-                if (dJobAbgeschlossen != null) jobManager.JobAbgeschlossen -= dJobAbgeschlossen;
-                if (dJobFehlgeschlagen != null) jobManager.JobFehlgeschlagen -= dJobFehlgeschlagen;
+                if (this.dJobGestartet != null)
+                {
+                    jobManager.JobGestartet -= this.dJobGestartet;
+                }
+
+                if (this.dJobAbgeschlossen != null)
+                {
+                    jobManager.JobAbgeschlossen -= this.dJobAbgeschlossen;
+                }
+
+                if (this.dJobFehlgeschlagen != null)
+                {
+                    jobManager.JobFehlgeschlagen -= this.dJobFehlgeschlagen;
+                }
             }
-            catch { }
+            catch
+            {
+            }
             finally
             {
-                dJobGestartet = null;
-                dJobAbgeschlossen = null;
-                dJobFehlgeschlagen = null;
-                connectedJobManager = null;
+                this.dJobGestartet = null;
+                this.dJobAbgeschlossen = null;
+                this.dJobFehlgeschlagen = null;
+                this.connectedJobManager = null;
             }
         }
 
         public void DisconnectPlanningService(ITransportPlanningService planningService)
         {
             if (planningService == null)
+            {
                 return;
-            if (!ReferenceEquals(connectedPlanningService, planningService))
+            }
+
+            if (!ReferenceEquals(this.connectedPlanningService, planningService))
+            {
                 return;
+            }
+
             try
             {
-                if (dJobGeplant != null) planningService.JobGeplant -= dJobGeplant;
+                if (this.dJobGeplant != null)
+                {
+                    planningService.JobGeplant -= this.dJobGeplant;
+                }
             }
-            catch { }
+            catch
+            {
+            }
             finally
             {
-                dJobGeplant = null;
-                connectedPlanningService = null;
+                this.dJobGeplant = null;
+                this.connectedPlanningService = null;
             }
         }
 
         public void AddLegacyJobGeplantHandler(Action<TransportJob> handler)
         {
             if (handler == null)
-                throw new ArgumentNullException(nameof(handler));
-            lock (lockObject)
             {
-                jobGeplantHandlers.Add(new WeakReference<Action<TransportJob>>(handler));
+                throw new ArgumentNullException(nameof(handler));
+            }
+
+            lock (this.lockObject)
+            {
+                this.jobGeplantHandlers.Add(new WeakReference<Action<TransportJob>>(handler));
             }
         }
 
         public void RemoveLegacyJobGeplantHandler(Action<TransportJob> handler)
         {
             if (handler == null)
-                return;
-            lock (lockObject)
             {
-                RemoveWeak(jobGeplantHandlers, handler);
+                return;
+            }
+
+            lock (this.lockObject)
+            {
+                RemoveWeak(this.jobGeplantHandlers, handler);
             }
         }
 
         public void AddLegacyJobGestartetHandler(Action<TransportJob> handler)
         {
             if (handler == null)
-                throw new ArgumentNullException(nameof(handler));
-            lock (lockObject)
             {
-                jobGestartetHandlers.Add(new WeakReference<Action<TransportJob>>(handler));
+                throw new ArgumentNullException(nameof(handler));
+            }
+
+            lock (this.lockObject)
+            {
+                this.jobGestartetHandlers.Add(new WeakReference<Action<TransportJob>>(handler));
             }
         }
 
         public void RemoveLegacyJobGestartetHandler(Action<TransportJob> handler)
         {
             if (handler == null)
-                return;
-            lock (lockObject)
             {
-                RemoveWeak(jobGestartetHandlers, handler);
+                return;
+            }
+
+            lock (this.lockObject)
+            {
+                RemoveWeak(this.jobGestartetHandlers, handler);
             }
         }
 
         public void AddLegacyJobAbgeschlossenHandler(Action<TransportJob> handler)
         {
             if (handler == null)
-                throw new ArgumentNullException(nameof(handler));
-            lock (lockObject)
             {
-                jobAbgeschlossenHandlers.Add(new WeakReference<Action<TransportJob>>(handler));
+                throw new ArgumentNullException(nameof(handler));
+            }
+
+            lock (this.lockObject)
+            {
+                this.jobAbgeschlossenHandlers.Add(new WeakReference<Action<TransportJob>>(handler));
             }
         }
 
         public void RemoveLegacyJobAbgeschlossenHandler(Action<TransportJob> handler)
         {
             if (handler == null)
-                return;
-            lock (lockObject)
             {
-                RemoveWeak(jobAbgeschlossenHandlers, handler);
+                return;
+            }
+
+            lock (this.lockObject)
+            {
+                RemoveWeak(this.jobAbgeschlossenHandlers, handler);
             }
         }
 
         public void AddLegacyJobFehlgeschlagenHandler(Action<TransportJob> handler)
         {
             if (handler == null)
-                throw new ArgumentNullException(nameof(handler));
-            lock (lockObject)
             {
-                jobFehlgeschlagenHandlers.Add(new WeakReference<Action<TransportJob>>(handler));
+                throw new ArgumentNullException(nameof(handler));
+            }
+
+            lock (this.lockObject)
+            {
+                this.jobFehlgeschlagenHandlers.Add(new WeakReference<Action<TransportJob>>(handler));
             }
         }
 
         public void RemoveLegacyJobFehlgeschlagenHandler(Action<TransportJob> handler)
         {
             if (handler == null)
-                return;
-            lock (lockObject)
             {
-                RemoveWeak(jobFehlgeschlagenHandlers, handler);
+                return;
+            }
+
+            lock (this.lockObject)
+            {
+                RemoveWeak(this.jobFehlgeschlagenHandlers, handler);
             }
         }
 
@@ -310,30 +378,37 @@ namespace IndustrieLite.Transport.Core.Services
 
             public void Dispose()
             {
-                if (disposed)
+                if (this.disposed)
+                {
                     return;
+                }
 
-                unsubscribe();
-                disposed = true;
+                this.unsubscribe();
+                this.disposed = true;
             }
         }
 
         public void Dispose()
         {
             // Saubere Trennung von Core-Eventquellen
-            if (connectedJobManager != null)
-                DisconnectJobManager(connectedJobManager);
-            if (connectedPlanningService != null)
-                DisconnectPlanningService(connectedPlanningService);
+            if (this.connectedJobManager != null)
+            {
+                this.DisconnectJobManager(this.connectedJobManager);
+            }
+
+            if (this.connectedPlanningService != null)
+            {
+                this.DisconnectPlanningService(this.connectedPlanningService);
+            }
 
             // Schwache Handler-Listen bereinigen
-            lock (lockObject)
+            lock (this.lockObject)
             {
-                handlers.Clear();
-                jobGeplantHandlers.Clear();
-                jobGestartetHandlers.Clear();
-                jobAbgeschlossenHandlers.Clear();
-                jobFehlgeschlagenHandlers.Clear();
+                this.handlers.Clear();
+                this.jobGeplantHandlers.Clear();
+                this.jobGestartetHandlers.Clear();
+                this.jobAbgeschlossenHandlers.Clear();
+                this.jobFehlgeschlagenHandlers.Clear();
             }
         }
     }

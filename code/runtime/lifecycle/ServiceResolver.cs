@@ -1,6 +1,6 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
+using Godot;
 
 /// <summary>
 /// Helper-Klasse für Service-Auflösung im GameLifecycleManager.
@@ -11,31 +11,42 @@ internal class ServiceResolver
     public class ServiceReferences
     {
         public GameManager? GameManager { get; set; }
+
         public EconomyManager? EconomyManager { get; set; }
+
         public LandManager? LandManager { get; set; }
+
         public BuildingManager? BuildingManager { get; set; }
+
         public TransportManager? TransportManager { get; set; }
+
         public RoadManager? RoadManager { get; set; }
+
         public ResourceManager? ResourceManager { get; set; }
+
         public ProductionManager? ProductionManager { get; set; }
+
         public SaveLoadService? SaveLoadService { get; set; }
+
         public Map? Map { get; set; }
+
         public EventHub? EventHub { get; set; }
+
         public GameTimeManager? GameTimeManager { get; set; }
 
         public bool AreBasicServicesReady()
         {
-            return EconomyManager != null &&
-                   LandManager != null &&
-                   BuildingManager != null &&
-                   ProductionManager != null;
+            return this.EconomyManager != null &&
+                   this.LandManager != null &&
+                   this.BuildingManager != null &&
+                   this.ProductionManager != null;
         }
 
         public bool AreAllServicesReady()
         {
-            return AreBasicServicesReady() &&
-                   SaveLoadService != null &&
-                   GameManager != null;
+            return this.AreBasicServicesReady() &&
+                   this.SaveLoadService != null &&
+                   this.GameManager != null;
         }
     }
 
@@ -49,12 +60,13 @@ internal class ServiceResolver
     /// <summary>
     /// Versucht alle Services aufzulösen. Gibt null zurück wenn nicht alle verfügbar sind.
     /// </summary>
+    /// <returns></returns>
     public ServiceReferences? TryResolveServices()
     {
         var refs = new ServiceReferences();
 
         // GameManager direkt vom Parent holen (zuverlässiger)
-        refs.GameManager = ownerNode.GetNodeOrNull<GameManager>("../");
+        refs.GameManager = this.ownerNode.GetNodeOrNull<GameManager>("../");
         if (refs.GameManager == null)
         {
             DebugLogger.LogLifecycle("ServiceResolver: GameManager not found");
@@ -79,7 +91,7 @@ internal class ServiceResolver
 
         // SaveLoadService auflösen
         refs.SaveLoadService = refs.GameManager?.SaveLoadService ??
-                              ownerNode.GetNodeOrNull<SaveLoadService>("../SaveLoadService");
+                              this.ownerNode.GetNodeOrNull<SaveLoadService>("../SaveLoadService");
         if (refs.SaveLoadService == null)
         {
             var sc = ServiceContainer.Instance;
@@ -87,7 +99,9 @@ internal class ServiceResolver
             {
                 SaveLoadService? sl;
                 if (sc.TryGetNamedService<SaveLoadService>(nameof(SaveLoadService), out sl))
+                {
                     refs.SaveLoadService = sl;
+                }
             }
         }
         if (refs.SaveLoadService == null)
@@ -110,7 +124,9 @@ internal class ServiceResolver
         {
             EventHub? eh;
             if (scEh.TryGetNamedService<EventHub>("EventHub", out eh))
+            {
                 refs.EventHub = eh;
+            }
         }
 
         // GameTimeManager auflösen
@@ -118,7 +134,9 @@ internal class ServiceResolver
         {
             GameTimeManager? gtm;
             if (scEh.TryGetNamedService<GameTimeManager>("GameTimeManager", out gtm))
+            {
                 refs.GameTimeManager = gtm;
+            }
         }
 
         DebugLogger.LogLifecycle("ServiceResolver: Alle Services erfolgreich aufgelöst");
@@ -126,14 +144,17 @@ internal class ServiceResolver
     }
 
     /// <summary>
-    /// Emit Money-Changed Event über EventHub
+    /// Emit Money-Changed Event über EventHub.
     /// </summary>
     public void EmitMoneyChanged(ServiceReferences services)
     {
         var sc2 = ServiceContainer.Instance;
         EventHub? eventHub = null;
         if (sc2 != null)
+        {
             sc2.TryGetNamedService<EventHub>("EventHub", out eventHub);
+        }
+
         if (eventHub != null && services.EconomyManager != null)
         {
             eventHub.EmitSignal(EventHub.SignalName.MoneyChanged, services.EconomyManager.GetMoney());
@@ -141,14 +162,17 @@ internal class ServiceResolver
     }
 
     /// <summary>
-    /// GameTime zurücksetzen
+    /// GameTime zurücksetzen.
     /// </summary>
     public void ResetGameTime()
     {
         var sc3 = ServiceContainer.Instance;
         GameTimeManager? gtm = null;
         if (sc3 != null)
+        {
             sc3.TryGetNamedService<GameTimeManager>("GameTimeManager", out gtm);
+        }
+
         gtm?.ResetToStart();
     }
 }

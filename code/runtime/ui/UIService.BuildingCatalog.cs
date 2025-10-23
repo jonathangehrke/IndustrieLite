@@ -1,23 +1,28 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
-/// UIService.BuildingCatalog: Database-Katalog, Buildables/Resources
+/// UIService.BuildingCatalog: Database-Katalog, Buildables/Resources.
 /// </summary>
 public partial class UIService
 {
     /// <summary>
-    /// Get all buildable buildings from Database (filtered by current level)
+    /// Get all buildable buildings from Database (filtered by current level).
     /// </summary>
+    /// <returns></returns>
     public Godot.Collections.Array<BuildingDef> GetBuildableBuildings()
     {
-        if (database == null) InitializeServices();
-        var all = database?.GetBuildableBuildings() ?? new Godot.Collections.Array<BuildingDef>();
-        return FilterBuildingsByLevel(all);
+        if (this.database == null)
+        {
+            this.InitializeServices();
+        }
+
+        var all = this.database?.GetBuildableBuildings() ?? new Godot.Collections.Array<BuildingDef>();
+        return this.FilterBuildingsByLevel(all);
     }
 
     /// <summary>
-    /// Filters buildings by required level
+    /// Filters buildings by required level.
     /// </summary>
     private Godot.Collections.Array<BuildingDef> FilterBuildingsByLevel(Godot.Collections.Array<BuildingDef> buildings)
     {
@@ -40,12 +45,17 @@ public partial class UIService
     }
 
     /// <summary>
-    /// Get buildable buildings organized by category for UI (filtered by current level)
+    /// Get buildable buildings organized by category for UI (filtered by current level).
     /// </summary>
+    /// <returns></returns>
     public Godot.Collections.Dictionary GetBuildableCatalog()
     {
-        if (database == null) InitializeServices();
-        var catalog = database?.GetBuildableCatalog() ?? new Godot.Collections.Dictionary();
+        if (this.database == null)
+        {
+            this.InitializeServices();
+        }
+
+        var catalog = this.database?.GetBuildableCatalog() ?? new Godot.Collections.Dictionary();
 
         // Filter each category by level
         var filtered = new Godot.Collections.Dictionary();
@@ -53,7 +63,7 @@ public partial class UIService
         {
             var category = key.AsString();
             var buildings = catalog[key].AsGodotArray<BuildingDef>();
-            var filteredBuildings = FilterBuildingsByLevel(buildings);
+            var filteredBuildings = this.FilterBuildingsByLevel(buildings);
 
             // Only include categories that have buildings after filtering
             if (filteredBuildings.Count > 0)
@@ -65,36 +75,50 @@ public partial class UIService
     }
 
     /// <summary>
-    /// Get building definition by ID
+    /// Get building definition by ID.
     /// </summary>
+    /// <returns></returns>
     public BuildingDef? GetBuildingDef(string buildingId)
     {
-        if (database == null) InitializeServices();
-        return database?.GetBuilding(buildingId);
+        if (this.database == null)
+        {
+            this.InitializeServices();
+        }
+
+        return this.database?.GetBuilding(buildingId);
     }
 
     /// <summary>
-    /// Check if a building ID exists and is buildable
+    /// Check if a building ID exists and is buildable.
     /// </summary>
+    /// <returns></returns>
     public bool IsBuildingBuildable(string buildingId)
     {
-        var building = GetBuildingDef(buildingId);
+        var building = this.GetBuildingDef(buildingId);
         return building != null && building.Cost > 0 && !building.Tags.Contains("non-buildable");
     }
 
     /// <summary>
-    /// Get resources by ID dictionary (filtered by current level)
+    /// Get resources by ID dictionary (filtered by current level).
     /// </summary>
+    /// <returns></returns>
     public Godot.Collections.Dictionary GetResourcesById()
     {
-        if (database == null) InitializeServices();
-        if (database?.ResourcesById == null) return new Godot.Collections.Dictionary();
+        if (this.database == null)
+        {
+            this.InitializeServices();
+        }
+
+        if (this.database?.ResourcesById == null)
+        {
+            return new Godot.Collections.Dictionary();
+        }
 
         var levelManager = ServiceContainer.Instance?.GetNamedService<LevelManager>("LevelManager");
         int currentLevel = levelManager?.CurrentLevel ?? 1;
 
         var result = new Godot.Collections.Dictionary();
-        foreach (var kvp in database.ResourcesById)
+        foreach (var kvp in this.database.ResourcesById)
         {
             var resource = kvp.Value;
             // Only include resources that are unlocked at current level
@@ -107,12 +131,17 @@ public partial class UIService
     }
 
     /// <summary>
-    /// Get buildable buildings by category (filtered by current level)
+    /// Get buildable buildings by category (filtered by current level).
     /// </summary>
+    /// <returns></returns>
     public Godot.Collections.Array<Godot.Collections.Dictionary> GetBuildablesByCategory(string category = "buildable")
     {
-        if (database == null) InitializeServices();
-        var all = database?.GetBuildablesByCategory(category) ?? new Godot.Collections.Array<Godot.Collections.Dictionary>();
+        if (this.database == null)
+        {
+            this.InitializeServices();
+        }
+
+        var all = this.database?.GetBuildablesByCategory(category) ?? new Godot.Collections.Array<Godot.Collections.Dictionary>();
 
         var levelManager = ServiceContainer.Instance?.GetNamedService<LevelManager>("LevelManager");
         int currentLevel = levelManager?.CurrentLevel ?? 1;
@@ -130,7 +159,7 @@ public partial class UIService
             {
                 // Fallback: Try to get from BuildingDef
                 var id = item.TryGetValue("id", out var idVariant) ? idVariant.AsString() : "";
-                var building = GetBuildingDef(id);
+                var building = this.GetBuildingDef(id);
                 if (building != null)
                 {
                     requiredLevel = building.RequiredLevel;

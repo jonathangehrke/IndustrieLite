@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
@@ -15,7 +15,7 @@ public partial class SaveLoadTestBridge : Node
             { "from_version", fromVersion },
             { "to_version", toVersion },
             { "test_successful", res.TestSuccessful },
-            { "error_message", res.ErrorMessage ?? string.Empty }
+            { "error_message", res.ErrorMessage ?? string.Empty },
         };
         return d;
     }
@@ -36,7 +36,10 @@ public partial class SaveLoadTestBridge : Node
 
             var folder = ProjectSettings.GlobalizePath("user://test_saves/");
             if (!System.IO.Directory.Exists(folder))
+            {
                 System.IO.Directory.CreateDirectory(folder);
+            }
+
             var fileName = "fixture_load.json";
             var fullPath = System.IO.Path.Combine(folder, fileName);
             System.IO.File.WriteAllText(fullPath, content);
@@ -84,7 +87,10 @@ public partial class SaveLoadTestBridge : Node
 
             var folder = ProjectSettings.GlobalizePath("user://test_saves/");
             if (!System.IO.Directory.Exists(folder))
+            {
                 System.IO.Directory.CreateDirectory(folder);
+            }
+
             var fileName = "fixture_roundtrip.json";
             var fullPath = System.IO.Path.Combine(folder, fileName);
             System.IO.File.WriteAllText(fullPath, content);
@@ -122,6 +128,7 @@ public partial class SaveLoadTestBridge : Node
             return result;
         }
     }
+
     public Godot.Collections.Dictionary RunRoundTripOnMinimalScenario()
     {
         var result = SaveLoadTest.RunRoundTripOnMinimalScenario();
@@ -132,7 +139,7 @@ public partial class SaveLoadTestBridge : Node
             { "second_save_successful", result.SecondSaveSuccessful },
             { "json_files_identical", result.JsonFilesIdentical },
             { "states_semantically_same", result.StatesSemanticallySame },
-            { "error_message", result.ErrorMessage ?? string.Empty }
+            { "error_message", result.ErrorMessage ?? string.Empty },
         };
         return d;
     }
@@ -147,7 +154,7 @@ public partial class SaveLoadTestBridge : Node
             { "second_save_successful", result.SecondSaveSuccessful },
             { "json_files_identical", result.JsonFilesIdentical },
             { "states_semantically_same", result.StatesSemanticallySame },
-            { "error_message", result.ErrorMessage ?? string.Empty }
+            { "error_message", result.ErrorMessage ?? string.Empty },
         };
         return d;
     }

@@ -1,6 +1,6 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System.Collections.Generic;
+using Godot;
 
 public partial class House : Building, IProducer
 {
@@ -10,26 +10,26 @@ public partial class House : Building, IProducer
 
     public House()
     {
-        DefaultSize = new Vector2I(2,2);
-        Size = DefaultSize;
-        Color = new Color(0.9f, 0.2f, 0.2f);
+        this.DefaultSize = new Vector2I(2, 2);
+        this.Size = this.DefaultSize;
+        this.Color = new Color(0.9f, 0.2f, 0.2f);
     }
 
     public override void _Ready()
     {
         base._Ready();
-        if (productionManager != null)
+        if (this.productionManager != null)
         {
-            productionManager.RegisterProducer(this);
+            this.productionManager.RegisterProducer(this);
         }
-        DebugLogger.LogServices($"House registered with ProductionManager at position {GridPos}");
+        DebugLogger.LogServices($"House registered with ProductionManager at position {this.GridPos}");
     }
 
     public override void _ExitTree()
     {
-        if (productionManager != null)
+        if (this.productionManager != null)
         {
-            productionManager.UnregisterProducer(this);
+            this.productionManager.UnregisterProducer(this);
         }
         base._ExitTree();
     }
@@ -43,13 +43,13 @@ public partial class House : Building, IProducer
     {
         return new Dictionary<StringName, int>
         {
-            { new StringName("workers"), Output }
+            { new StringName("workers"), this.Output },
         };
     }
 
     public void OnProductionTick(bool canProduce)
     {
-        DebugLogger.LogServices($"House stellt {Output} Arbeiter bereit");
+        DebugLogger.LogServices($"House stellt {this.Output} Arbeiter bereit");
     }
 
     public Godot.Collections.Dictionary GetNeedsForUI()
@@ -60,7 +60,7 @@ public partial class House : Building, IProducer
     public Godot.Collections.Dictionary GetProductionForUI()
     {
         var dict = new Godot.Collections.Dictionary();
-        dict["workers"] = Output;
+        dict["workers"] = this.Output;
         return dict;
     }
 
@@ -68,12 +68,19 @@ public partial class House : Building, IProducer
     {
         return new Godot.Collections.Dictionary();
     }
+
     public override void InitializeDependencies(ProductionManager? productionManager, EconomyManager? economyManager, EventHub? eventHub)
     {
         if (productionManager != null)
         {
             this.productionManager = productionManager;
-            try { this.productionManager.RegisterProducer(this); } catch { }
+            try
+            {
+                this.productionManager.RegisterProducer(this);
+            }
+            catch
+            {
+            }
         }
     }
 }

@@ -1,9 +1,9 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
 /// SupplierService - Explicit DI Initialization (Phase 6)
-/// Dependencies werden via Initialize() injiziert statt via ServiceContainer lookup
+/// Dependencies werden via Initialize() injiziert statt via ServiceContainer lookup.
 /// </summary>
 public partial class SupplierService : Node
 {
@@ -19,12 +19,23 @@ public partial class SupplierService : Node
         this.eventHub = eventHub;
 
         if (buildingManager == null)
+        {
             DebugLogger.LogServices("SupplierService: WARNING - BuildingManager not found");
+        }
+
         if (transportManager == null)
+        {
             DebugLogger.LogServices("SupplierService: WARNING - TransportManager not found");
+        }
+
         if (gameDatabase == null)
+        {
             DebugLogger.LogServices("SupplierService: WARNING - GameDatabase not found");
+        }
+
         if (eventHub == null)
+        {
             DebugLogger.LogServices("SupplierService: WARNING - EventHub not found");
+        }
     }
 }

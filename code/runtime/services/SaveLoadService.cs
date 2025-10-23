@@ -1,7 +1,7 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
-using System.Threading.Tasks;
+// SPDX-License-Identifier: MIT
 using System.Threading;
+using System.Threading.Tasks;
+using Godot;
 
 /// <summary>
 /// Fassade fuer Save/Load-Ablauf. Delegiert an SaveManager / LoadManager / Validator.
@@ -16,30 +16,30 @@ public partial class SaveLoadService : Node
 
     public SaveLoadService()
     {
-        Initialisiere(ServiceContainer.Instance);
+        this.Initialisiere(ServiceContainer.Instance);
     }
 
     public override void _Ready()
     {
-        Initialisiere(ServiceContainer.Instance);
-        RegistriereBeimServiceContainer();
+        this.Initialisiere(ServiceContainer.Instance);
+        this.RegistriereBeimServiceContainer();
     }
 
     private void Initialisiere(ServiceContainer? container)
     {
-        serviceContainer = container ?? ServiceContainer.Instance;
-        saveManager = new SaveManager(serviceContainer);
-        loadManager = new LoadManager(serviceContainer);
+        this.serviceContainer = container ?? ServiceContainer.Instance;
+        this.saveManager = new SaveManager(this.serviceContainer);
+        this.loadManager = new LoadManager(this.serviceContainer);
     }
 
     private void RegistriereBeimServiceContainer()
     {
-        if (registered)
+        if (this.registered)
         {
             return;
         }
 
-        var container = serviceContainer ?? ServiceContainer.Instance;
+        var container = this.serviceContainer ?? ServiceContainer.Instance;
         if (container == null)
         {
             return;
@@ -47,60 +47,60 @@ public partial class SaveLoadService : Node
 
         container.RegisterNamedService(nameof(SaveLoadService), this);
         // Typed-Registration entfernt (nur Named)
-        registered = true;
+        this.registered = true;
     }
 
     public void SaveGame(string fileName, LandManager land, BuildingManager buildings, EconomyManager economy, TransportManager? transport = null)
     {
         // Synchrone API bleibt aus Kompatibilitaetsgruenden bestehen
-        saveManager.SaveGame(fileName, land, buildings, economy, transport);
+        this.saveManager.SaveGame(fileName, land, buildings, economy, transport);
     }
 
     public async Task SaveGameAsync(string fileName, LandManager land, BuildingManager buildings, EconomyManager economy, TransportManager? transport = null)
     {
         // Echte asynchrone Implementierung (kein Task.Run)
-        await saveManager.SaveGameAsync(fileName, land, buildings, economy, transport).ConfigureAwait(false);
+        await this.saveManager.SaveGameAsync(fileName, land, buildings, economy, transport).ConfigureAwait(false);
     }
 
     public async Task SaveGameAsync(string fileName, LandManager land, BuildingManager buildings, EconomyManager economy, CancellationToken cancellationToken, TransportManager? transport = null)
     {
-        await saveManager.SaveGameAsync(fileName, land, buildings, economy, transport, cancellationToken).ConfigureAwait(false);
+        await this.saveManager.SaveGameAsync(fileName, land, buildings, economy, transport, cancellationToken).ConfigureAwait(false);
     }
 
     public void LoadGame(string fileName, LandManager land, BuildingManager buildings, EconomyManager economy, ProductionManager? production, Map? map, TransportManager? transport = null)
     {
         // Synchrone API bleibt aus Kompatibilitaetsgruenden bestehen
-        loadManager.LoadGame(fileName, land, buildings, economy, production, map, transport);
+        this.loadManager.LoadGame(fileName, land, buildings, economy, production, map, transport);
     }
 
     public async Task LoadGameAsync(string fileName, LandManager land, BuildingManager buildings, EconomyManager economy, ProductionManager? production, Map? map, TransportManager? transport = null)
     {
         // Echte asynchrone Implementierung (kein Task.Run)
-        await loadManager.LoadGameAsync(fileName, land, buildings, economy, production, map, transport).ConfigureAwait(false);
+        await this.loadManager.LoadGameAsync(fileName, land, buildings, economy, production, map, transport).ConfigureAwait(false);
     }
 
     public async Task LoadGameAsync(string fileName, LandManager land, BuildingManager buildings, EconomyManager economy, ProductionManager? production, Map? map, CancellationToken cancellationToken, TransportManager? transport = null)
     {
-        await loadManager.LoadGameAsync(fileName, land, buildings, economy, production, map, transport, cancellationToken).ConfigureAwait(false);
+        await this.loadManager.LoadGameAsync(fileName, land, buildings, economy, production, map, transport, cancellationToken).ConfigureAwait(false);
     }
 
     public SaveData LoadFromFile(string fileName)
     {
-        return loadManager.LoadFromFile(fileName);
+        return this.loadManager.LoadFromFile(fileName);
     }
 
     public bool ValidateSchema(SaveData data, out string errorMessage)
     {
-        return validator.ValidateSchema(data, out errorMessage);
+        return this.validator.ValidateSchema(data, out errorMessage);
     }
 
     public void ValidateFileIntegrity(string filePath)
     {
-        validator.ValidateFileIntegrity(filePath);
+        this.validator.ValidateFileIntegrity(filePath);
     }
 
     public bool RoundTripSemanticsEqual(LandManager land, BuildingManager buildings, EconomyManager economy, out string diffInfo)
     {
-        return validator.RoundTripSemanticsEqual(land, buildings, economy, out diffInfo);
+        return this.validator.RoundTripSemanticsEqual(land, buildings, economy, out diffInfo);
     }
 }

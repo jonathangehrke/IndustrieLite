@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
@@ -7,7 +7,9 @@ using Godot;
 public interface ILandReadModel
 {
     int GetGridW();
+
     int GetGridH();
+
     bool IsOwned(Vector2I cell);
 }
 

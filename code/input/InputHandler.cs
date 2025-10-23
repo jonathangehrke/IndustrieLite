@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
@@ -13,9 +13,9 @@ public partial class InputHandler : Node
 
     public override void _Ready()
     {
-        SetProcess(true);
-        SetProcessInput(true);
-        SetProcessUnhandledInput(true);
+        this.SetProcess(true);
+        this.SetProcessInput(true);
+        this.SetProcessUnhandledInput(true);
     }
 
     /// <summary>
@@ -27,13 +27,13 @@ public partial class InputHandler : Node
     public void InjiziereDependencies(Map map, InputEventRouter router, ToolManager toolManager)
     {
         this.map = map;
-        inputEventRouter = router;
+        this.inputEventRouter = router;
         this.toolManager = toolManager;
     }
 
     public override void _Input(InputEvent @event)
     {
-        if (inputEventRouter == null)
+        if (this.inputEventRouter == null)
         {
             return;
         }
@@ -45,20 +45,20 @@ public partial class InputHandler : Node
                 return;
             }
 
-            var fokus = GetViewport()?.GuiGetFocusOwner();
+            var fokus = this.GetViewport()?.GuiGetFocusOwner();
             if (fokus is LineEdit || fokus is TextEdit)
             {
                 return;
             }
 
-            inputEventRouter.FordereModusAbbrechenDurchEscAn();
-            GetViewport()?.SetInputAsHandled();
+            this.inputEventRouter.FordereModusAbbrechenDurchEscAn();
+            this.GetViewport()?.SetInputAsHandled();
         }
     }
 
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (inputEventRouter == null)
+        if (this.inputEventRouter == null)
         {
             return;
         }
@@ -68,18 +68,18 @@ public partial class InputHandler : Node
             switch (action.Action)
             {
                 case "toggle_demolish":
-                    inputEventRouter.VerarbeiteDemolishAktion(action.Pressed);
+                    this.inputEventRouter.VerarbeiteDemolishAktion(action.Pressed);
                     return;
                 case "zoom_in":
                     if (action.Pressed)
                     {
-                        inputEventRouter.FuegeZoomSchrittHinzu(-1);
+                        this.inputEventRouter.FuegeZoomSchrittHinzu(-1);
                     }
                     return;
                 case "zoom_out":
                     if (action.Pressed)
                     {
-                        inputEventRouter.FuegeZoomSchrittHinzu(1);
+                        this.inputEventRouter.FuegeZoomSchrittHinzu(1);
                     }
                     return;
                 default:
@@ -91,30 +91,30 @@ public partial class InputHandler : Node
         {
             if (mb.ButtonIndex == MouseButton.Left)
             {
-                if (map != null)
+                if (this.map != null)
                 {
-                    var weltPos = map.GetGlobalMousePosition();
-                    var zelle = map.BerechneCellVonPosition(weltPos);
-                    inputEventRouter.FuegeMausKlickHinzu(zelle);
+                    var weltPos = this.map.GetGlobalMousePosition();
+                    var zelle = this.map.BerechneCellVonPosition(weltPos);
+                    this.inputEventRouter.FuegeMausKlickHinzu(zelle);
                 }
                 return;
             }
 
             if (mb.ButtonIndex == MouseButton.Right)
             {
-                inputEventRouter.FordereModusAbbrechenDurchRechtsklickAn();
+                this.inputEventRouter.FordereModusAbbrechenDurchRechtsklickAn();
                 return;
             }
 
             if (mb.ButtonIndex == MouseButton.WheelUp)
             {
-                inputEventRouter.FuegeZoomSchrittHinzu(-1);
+                this.inputEventRouter.FuegeZoomSchrittHinzu(-1);
                 return;
             }
 
             if (mb.ButtonIndex == MouseButton.WheelDown)
             {
-                inputEventRouter.FuegeZoomSchrittHinzu(1);
+                this.inputEventRouter.FuegeZoomSchrittHinzu(1);
                 return;
             }
         }
@@ -122,16 +122,16 @@ public partial class InputHandler : Node
 
     public override void _Process(double delta)
     {
-        if (inputEventRouter == null)
+        if (this.inputEventRouter == null)
         {
             return;
         }
 
-        var richtung = BerechneKameraBewegung();
-        if (richtung != letzteKameraRichtung)
+        var richtung = this.BerechneKameraBewegung();
+        if (richtung != this.letzteKameraRichtung)
         {
-            inputEventRouter.MeldeKameraBewegung(richtung);
-            letzteKameraRichtung = richtung;
+            this.inputEventRouter.MeldeKameraBewegung(richtung);
+            this.letzteKameraRichtung = richtung;
         }
     }
 

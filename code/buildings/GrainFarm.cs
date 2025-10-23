@@ -1,6 +1,6 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System.Collections.Generic;
+using Godot;
 
 /// <summary>
 /// Bauernhof (Getreidefarm) - produziert Getreide per Rezeptsystem.
@@ -11,31 +11,33 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
     public static readonly StringName MainResourceId = new("grain");
 
     // Bestand als ganze Einheiten (abgerundet aus dem Ausgabepuffer)
-    public int Stock => Mathf.FloorToInt(_inventar.TryGetValue(MainResourceId, out var wert) ? wert : 0f);
+    public int Stock => Mathf.FloorToInt(this.inventar.TryGetValue(MainResourceId, out var wert) ? wert : 0f);
 
     // Dynamisches Inventar pro Ressourcen-ID (StringName)
-    private readonly Dictionary<StringName, float> _inventar = new();
+    private readonly Dictionary<StringName, float> inventar = new();
 
     private ProductionManager? productionManager;
     private EconomyManager? economyManager;
-    private EventHub? _eventHub;
+    private EventHub? eventHub;
     // Arbeiterbedarf pro Produktions-Tick
     [Export]
     public int WorkerNeed = 2;
 
     // Rezeptsystem (Standard: grain_production via BuildingDef.DefaultRecipeId)
-    [Export] public string RezeptIdOverride { get; set; } = "";
-    private RecipeProductionController? _controller;
+    [Export]
+    public string RezeptIdOverride { get; set; } = "";
+
+    private RecipeProductionController? controller;
     // UI: Merker fuer letzte Produktions-Freigabe
-    private bool _uiLastCanProduce = false;
-    private readonly Dictionary<StringName, int> _uiLetzteAbdeckung = new();
+    private bool uiLastCanProduce = false;
+    private readonly Dictionary<StringName, int> uiLetzteAbdeckung = new();
 
     public GrainFarm()
     {
-        DefaultSize = new Vector2I(3, 3);
-        Size = DefaultSize;
+        this.DefaultSize = new Vector2I(3, 3);
+        this.Size = this.DefaultSize;
         // Farbe nur als Fallback - Icon wird aus BuildingDef geladen
-        Color = new Color(0.8f, 0.9f, 0.5f);
+        this.Color = new Color(0.8f, 0.9f, 0.5f);
     }
 
     public override void _Ready()
@@ -43,33 +45,33 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
         base._Ready();
 
         // Beim ProductionManager registrieren
-        if (productionManager != null)
+        if (this.productionManager != null)
         {
-            productionManager.RegisterProducer(this);
+            this.productionManager.RegisterProducer(this);
         }
-        DebugLogger.LogServices($"GrainFarm registered with ProductionManager at {GridPos}");
+        DebugLogger.LogServices($"GrainFarm registered with ProductionManager at {this.GridPos}");
 
         // Inventar initialisieren
-        if (!_inventar.ContainsKey(MainResourceId))
+        if (!this.inventar.ContainsKey(MainResourceId))
         {
-            _inventar[MainResourceId] = 0f;
+            this.inventar[MainResourceId] = 0f;
         }
 
         // Arbeiterbedarf aus BuildingDef lesen (falls gesetzt)
-        var def = GetBuildingDef();
+        var def = this.GetBuildingDef();
         if (def != null && def.WorkersRequired > 0)
         {
-            WorkerNeed = def.WorkersRequired;
+            this.WorkerNeed = def.WorkersRequired;
         }
 
         // Rezept-Controller anlegen und Rezept setzen
-        _controller = new RecipeProductionController();
-        _controller.Name = "RecipeProductionController"; // Explicit name for save/load
-        _controller.Initialize(_database, productionManager);
-        AddChild(_controller);
+        this.controller = new RecipeProductionController();
+        this.controller.Name = "RecipeProductionController"; // Explicit name for save/load
+        this.controller.Initialize(this.database, this.productionManager);
+        this.AddChild(this.controller);
 
-        var rezeptId = !string.IsNullOrEmpty(RezeptIdOverride) ? RezeptIdOverride : HoleStandardRezeptId();
-        if (!_controller.SetzeRezept(rezeptId))
+        var rezeptId = !string.IsNullOrEmpty(this.RezeptIdOverride) ? this.RezeptIdOverride : this.HoleStandardRezeptId();
+        if (!this.controller.SetzeRezept(rezeptId))
         {
             DebugLogger.Log("debug_building", DebugLogger.LogLevel.Error, () => $"GrainFarm: Rezept '{rezeptId}' konnte nicht gesetzt werden");
         }
@@ -77,7 +79,7 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
 
     public override void _ExitTree()
     {
-        productionManager?.UnregisterProducer(this);
+        this.productionManager?.UnregisterProducer(this);
         base._ExitTree();
     }
 
@@ -85,17 +87,17 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
     public Dictionary<StringName, int> GetResourceNeeds()
     {
         var neu = new Dictionary<StringName, int>();
-        if (_controller != null && _controller.AktuellesRezept != null)
+        if (this.controller != null && this.controller.AktuellesRezept != null)
         {
-            var needs = _controller.ErmittleTickBedarf();
+            var needs = this.controller.ErmittleTickBedarf();
             foreach (var kv in needs)
             {
                 neu[kv.Key] = kv.Value;
             }
         }
-        if (WorkerNeed > 0)
+        if (this.WorkerNeed > 0)
         {
-            neu[new StringName("workers")] = WorkerNeed;
+            neu[new StringName("workers")] = this.WorkerNeed;
         }
         return neu;
     }
@@ -109,8 +111,8 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
     // Produktions-Tick: Rezept fortschreiben und Ausgaben in Bestand uebernehmen
     public void OnProductionTick(bool canProduce)
     {
-        _uiLastCanProduce = canProduce;
-        if (_controller == null || _controller.AktuellesRezept == null)
+        this.uiLastCanProduce = canProduce;
+        if (this.controller == null || this.controller.AktuellesRezept == null)
         {
             if (!canProduce)
             {
@@ -119,37 +121,37 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
             return;
         }
 
-        var zyklen = _controller.VerarbeiteProduktionsTick(canProduce);
+        var zyklen = this.controller.VerarbeiteProduktionsTick(canProduce);
         if (zyklen > 0)
         {
             // Ausgabepuffer abholen (Getreide)
-            float buff = _controller.HoleAusgabe("grain");
+            float buff = this.controller.HoleAusgabe("grain");
             int add = Mathf.FloorToInt(buff);
             if (add > 0)
             {
-                _controller.EntnehmeAusgabe("grain", add);
+                this.controller.EntnehmeAusgabe("grain", add);
                 Simulation.ValidateSimTickContext("GrainFarm: Bestand erhoehen");
                 // DETERMINISMUS: SimTick-only - Bestand nur innerhalb des SimTick anpassen
-                AddToInventory(MainResourceId, add);
+                this.AddToInventory(MainResourceId, add);
             }
 
             // Oekonomie: Produktions- und Wartungskosten anwenden
-            var eco = economyManager;
-            double prodKosten = _controller.AktuellesRezept.ProductionCost * zyklen;
+            var eco = this.economyManager;
+            double prodKosten = this.controller.AktuellesRezept.ProductionCost * zyklen;
             if (prodKosten > 0 && eco != null)
             {
-                eco.ApplyProductionCost(this, _controller.AktuellesRezept.Id, prodKosten);
+                eco.ApplyProductionCost(this, this.controller.AktuellesRezept.Id, prodKosten);
             }
 
             // Wartung pro Tick (Kosten pro Stunde anteilig)
-            double sek = GetSekundenProProdTick();
-            double wartung = _controller.AktuellesRezept.MaintenanceCost * (sek / 3600.0);
+            double sek = this.GetSekundenProProdTick();
+            double wartung = this.controller.AktuellesRezept.MaintenanceCost * (sek / 3600.0);
             if (wartung > 0 && eco != null)
             {
-                eco.ApplyMaintenanceCost(this, _controller.AktuellesRezept.Id, wartung);
+                eco.ApplyMaintenanceCost(this, this.controller.AktuellesRezept.Id, wartung);
             }
 
-            DebugLogger.LogServices($"GrainFarm: +{add} Getreide (Zyklen: {zyklen}), Bestand: {Stock}");
+            DebugLogger.LogServices($"GrainFarm: +{add} Getreide (Zyklen: {zyklen}), Bestand: {this.Stock}");
         }
         else if (!canProduce)
         {
@@ -159,54 +161,54 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
 
     private double GetSekundenProProdTick()
     {
-        var rate = (productionManager != null && productionManager.ProduktionsTickRate > 0)
-            ? productionManager.ProduktionsTickRate
+        var rate = (this.productionManager != null && this.productionManager.ProduktionsTickRate > 0)
+            ? this.productionManager.ProduktionsTickRate
             : 1.0;
         return 1.0 / rate;
     }
 
     public string GetRecipeIdForUI()
     {
-        if (_controller != null && _controller.AktuellesRezept != null)
+        if (this.controller != null && this.controller.AktuellesRezept != null)
         {
-            return _controller.AktuellesRezeptId ?? HoleStandardRezeptId();
+            return this.controller.AktuellesRezeptId ?? this.HoleStandardRezeptId();
         }
 
-        if (!string.IsNullOrEmpty(RezeptIdOverride))
+        if (!string.IsNullOrEmpty(this.RezeptIdOverride))
         {
-            return RezeptIdOverride;
+            return this.RezeptIdOverride;
         }
 
-        return HoleStandardRezeptId();
+        return this.HoleStandardRezeptId();
     }
 
     public bool SetRecipeFromUI(string rezeptId)
     {
-        var standardId = HoleStandardRezeptId();
+        var standardId = this.HoleStandardRezeptId();
         var safeRezeptId = string.IsNullOrEmpty(rezeptId) ? standardId : rezeptId;
 
-        if (safeRezeptId != standardId)
+        if (!string.Equals(safeRezeptId, standardId, System.StringComparison.Ordinal))
         {
             DebugLogger.Log("debug_building", DebugLogger.LogLevel.Warn, () => $"GrainFarm: Ungueltiges Rezept '{safeRezeptId}', nutze Standard");
             return false;
         }
 
-        RezeptIdOverride = string.Empty; // Single-Recipe bleibt beim Standard
+        this.RezeptIdOverride = string.Empty; // Single-Recipe bleibt beim Standard
 
-        if (_controller == null)
+        if (this.controller == null)
         {
             DebugLogger.Log("debug_building", DebugLogger.LogLevel.Error, () => "GrainFarm: Kein Rezept-Controller fuer UI-Wechsel");
             return false;
         }
 
-        bool ok = _controller.SetzeRezept(standardId);
+        bool ok = this.controller.SetzeRezept(standardId);
         if (!ok)
         {
             DebugLogger.Log("debug_building", DebugLogger.LogLevel.Warn, () => $"GrainFarm: Rezept '{standardId}' konnte nicht gesetzt werden");
             return false;
         }
 
-        _eventHub?.EmitSignal(EventHub.SignalName.FarmStatusChanged);
+        this.eventHub?.EmitSignal(EventHub.SignalName.FarmStatusChanged);
         DebugLogger.LogServices("GrainFarm: Rezept bestaetigt (grain_production)");
         return true;
     }
@@ -215,15 +217,15 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
     public Godot.Collections.Dictionary GetNeedsForUI()
     {
         var d = new Godot.Collections.Dictionary();
-        if (_controller != null && _controller.AktuellesRezept != null)
+        if (this.controller != null && this.controller.AktuellesRezept != null)
         {
-            var bedarf = _controller.ErmittleTickBedarf();
+            var bedarf = this.controller.ErmittleTickBedarf();
             d["power"] = bedarf.TryGetValue(new StringName("power"), out var p) ? p : 0;
             d["water"] = bedarf.TryGetValue(new StringName("water"), out var w) ? w : 0;
         }
-        if (WorkerNeed > 0)
+        if (this.WorkerNeed > 0)
         {
-            d["workers"] = WorkerNeed;
+            d["workers"] = this.WorkerNeed;
         }
         return d;
     }
@@ -231,9 +233,9 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
     public Godot.Collections.Dictionary GetProductionForUI()
     {
         var d = new Godot.Collections.Dictionary();
-        if (_controller != null && _controller.AktuellesRezept != null)
+        if (this.controller != null && this.controller.AktuellesRezept != null)
         {
-            foreach (var output in _controller.AktuellesRezept.Outputs)
+            foreach (var output in this.controller.AktuellesRezept.Outputs)
             {
                 d[output.ResourceId] = Mathf.FloorToInt(output.PerMinute);
             }
@@ -248,14 +250,15 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
     public Godot.Collections.Dictionary GetInventoryForUI()
     {
         var d = new Godot.Collections.Dictionary();
-        d["grain"] = Stock;
+        d["grain"] = this.Stock;
         return d;
     }
 
-    public bool GetLastTickCanProduceForUI() => _uiLastCanProduce;
+    public bool GetLastTickCanProduceForUI() => this.uiLastCanProduce;
+
     public void SetLastNeedsCoverageForUI(Godot.Collections.Dictionary coverage)
     {
-        _uiLetzteAbdeckung.Clear();
+        this.uiLetzteAbdeckung.Clear();
         foreach (var key in coverage.Keys)
         {
             var id = new StringName(key.ToString());
@@ -276,15 +279,21 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
                         break;
                 }
             }
-            catch { }
-            _uiLetzteAbdeckung[id] = val;
+            catch
+            {
+            }
+            this.uiLetzteAbdeckung[id] = val;
         }
     }
+
     public Godot.Collections.Dictionary GetLastNeedsCoverageForUI()
     {
         var d = new Godot.Collections.Dictionary();
-        foreach (var kv in _uiLetzteAbdeckung)
+        foreach (var kv in this.uiLetzteAbdeckung)
+        {
             d[kv.Key.ToString()] = kv.Value;
+        }
+
         return d;
     }
 
@@ -292,30 +301,37 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
     {
         var data = base.GetInspectorData();
         var pairs = (Godot.Collections.Array)data["pairs"];
-        pairs.Add(new Godot.Collections.Array { "Getreide-Bestand", Stock });
+        pairs.Add(new Godot.Collections.Array { "Getreide-Bestand", this.Stock });
         return data;
     }
 
     private void SendeInventarSignale()
     {
-        _eventHub?.EmitSignal(EventHub.SignalName.InventoryChanged, this, "grain", (float)Stock);
+        this.eventHub?.EmitSignal(EventHub.SignalName.InventoryChanged, this, "grain", (float)this.Stock);
     }
 
     private string HoleStandardRezeptId()
     {
-        var def = GetBuildingDef();
+        var def = this.GetBuildingDef();
         if (def != null && !string.IsNullOrEmpty(def.DefaultRecipeId))
         {
             return def.DefaultRecipeId;
         }
         return "grain_production";
     }
+
     public override void InitializeDependencies(ProductionManager? productionManager, EconomyManager? economyManager, EventHub? eventHub)
     {
         if (productionManager != null)
         {
             this.productionManager = productionManager;
-            try { this.productionManager.RegisterProducer(this); } catch { }
+            try
+            {
+                this.productionManager.RegisterProducer(this);
+            }
+            catch
+            {
+            }
         }
         if (economyManager != null)
         {
@@ -323,14 +339,14 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
         }
         if (eventHub != null)
         {
-            this._eventHub = eventHub;
+            this.eventHub = eventHub;
         }
     }
 
     public override void OnRecipeStateRestored(string recipeId)
     {
         // Synchronize RezeptIdOverride with restored recipe state
-        RezeptIdOverride = recipeId ?? string.Empty;
+        this.RezeptIdOverride = recipeId ?? string.Empty;
         DebugLogger.LogLifecycle(() => $"GrainFarm: RezeptIdOverride synchronized to '{recipeId}' after load");
     }
 }

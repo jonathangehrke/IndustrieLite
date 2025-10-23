@@ -1,6 +1,6 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System.Collections.Generic;
+using Godot;
 
 /// <summary>
 /// Fleet: Godot-Adapter zum Instanziieren/Verwalten von Trucks (Nodes).
@@ -12,7 +12,7 @@ public partial class Fleet : Node
     public Truck SpawnTruck(Vector2 start, Vector2 ziel, int menge, double transportCost, GameManager game)
     {
         DebugLogger.Debug("debug_transport", "FleetSpawnTruck", $"Creating truck",
-            new System.Collections.Generic.Dictionary<string, object?> { { "amount", menge }, { "start", start }, { "target", ziel } });
+            new System.Collections.Generic.Dictionary<string, object?>(System.StringComparer.Ordinal) { { "amount", menge }, { "start", start }, { "target", ziel } });
 
         var t = new Truck();
         t.GlobalPosition = start;
@@ -20,16 +20,16 @@ public partial class Fleet : Node
         t.Amount = menge;
         t.TransportCost = transportCost;
         t.Game = game;
-        AddChild(t);
-        Trucks.Add(t);
+        this.AddChild(t);
+        this.Trucks.Add(t);
 
         DebugLogger.Info("debug_transport", "FleetSpawnTruckCreated", $"Truck created",
-            new System.Collections.Generic.Dictionary<string, object?> { { "amount", t.Amount } });
+            new System.Collections.Generic.Dictionary<string, object?>(System.StringComparer.Ordinal) { { "amount", t.Amount } });
         return t;
     }
 
     public void CleanupInvalid()
     {
-        Trucks.RemoveAll(t => t == null || !GodotObject.IsInstanceValid(t) || t.IsQueuedForDeletion());
+        this.Trucks.RemoveAll(t => t == null || !GodotObject.IsInstanceValid(t) || t.IsQueuedForDeletion());
     }
 }

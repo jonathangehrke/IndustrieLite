@@ -1,18 +1,18 @@
-﻿// SPDX-License-Identifier: MIT
-using System;
-using System.Collections.Generic;
-using Godot;
-using IndustrieLite.Transport.Core.Interfaces;
-using IndustrieLite.Transport.Core.Models;
-using JobManagerService = IndustrieLite.Transport.Core.Services.TransportJobManager;
-using OrderManagerService = IndustrieLite.Transport.Core.Services.TransportOrderManager;
-using PlanningService = IndustrieLite.Transport.Core.Services.TransportPlanningService;
-using SupplyService = IndustrieLite.Transport.Core.Services.TransportSupplyService;
-using PersistenceService = IndustrieLite.Transport.Core.Services.TransportPersistenceService;
-using EventService = IndustrieLite.Transport.Core.Services.TransportEventService;
-
+// SPDX-License-Identifier: MIT
 namespace IndustrieLite.Transport.Core
 {
+    using System;
+    using System.Collections.Generic;
+    using Godot;
+    using IndustrieLite.Transport.Core.Interfaces;
+    using IndustrieLite.Transport.Core.Models;
+    using EventService = IndustrieLite.Transport.Core.Services.TransportEventService;
+    using JobManagerService = IndustrieLite.Transport.Core.Services.TransportJobManager;
+    using OrderManagerService = IndustrieLite.Transport.Core.Services.TransportOrderManager;
+    using PersistenceService = IndustrieLite.Transport.Core.Services.TransportPersistenceService;
+    using PlanningService = IndustrieLite.Transport.Core.Services.TransportPlanningService;
+    using SupplyService = IndustrieLite.Transport.Core.Services.TransportSupplyService;
+
     /// <summary>
     /// Fassade für das Transport-Subsystem. Delegiert Arbeit an spezialisierte Services.
     /// </summary>
@@ -26,7 +26,8 @@ namespace IndustrieLite.Transport.Core
         private readonly ITransportEventService eventService;
         private bool disposed;
 
-        public TransportCoreService(ITransportJobManager jobManager,
+        public TransportCoreService(
+            ITransportJobManager jobManager,
                                     ITransportOrderManager orderManager,
                                     ITransportPlanningService planningService,
                                     ITransportSupplyService supplyService,
@@ -40,86 +41,138 @@ namespace IndustrieLite.Transport.Core
             this.persistenceService = persistenceService ?? throw new ArgumentNullException(nameof(persistenceService));
             this.eventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
 
-            InitializeServiceVerkabelung();
+            this.InitializeServiceVerkabelung();
         }
 
-        public TransportCoreService(OrderBook? orderBook = null,
+        public TransportCoreService(
+            OrderBook? orderBook = null,
                                     SupplyIndex? supplyIndex = null,
                                     Scheduler? scheduler = null,
                                     Router? router = null)
         {
-            jobManager = new JobManagerService();
-            supplyService = new SupplyService(supplyIndex);
-            orderManager = new OrderManagerService(orderBook);
-            planningService = new PlanningService(
+            this.jobManager = new JobManagerService();
+            this.supplyService = new SupplyService(supplyIndex);
+            this.orderManager = new OrderManagerService(orderBook);
+            this.planningService = new PlanningService(
                 scheduler ?? new Scheduler(),
                 router,
-                orderManager,
-                jobManager,
-                supplyService);
-            persistenceService = new PersistenceService();
-            eventService = new EventService();
+                this.orderManager,
+                this.jobManager,
+                this.supplyService);
+            this.persistenceService = new PersistenceService();
+            this.eventService = new EventService();
 
-            InitializeServiceVerkabelung();
+            this.InitializeServiceVerkabelung();
         }
 
-        public OrderBook Auftragsbuch => orderManager.Auftragsbuch;
-        public SupplyIndex LieferIndex => supplyService.LieferIndex;
-        public IReadOnlyDictionary<Guid, TransportJob> Jobs => jobManager.Jobs;
-        public IReadOnlyDictionary<int, DeliveryOrder> DeliveryOrders => orderManager.DeliveryOrders;
+        public OrderBook Auftragsbuch => this.orderManager.Auftragsbuch;
+
+        public SupplyIndex LieferIndex => this.supplyService.LieferIndex;
+
+        public IReadOnlyDictionary<Guid, TransportJob> Jobs => this.jobManager.Jobs;
+
+        public IReadOnlyDictionary<int, DeliveryOrder> DeliveryOrders => this.orderManager.DeliveryOrders;
 
         public event Action<TransportJob>? JobGeplant
         {
-            add { if (value != null) eventService.AddLegacyJobGeplantHandler(value); }
-            remove { if (value != null) eventService.RemoveLegacyJobGeplantHandler(value); }
+            add
+            {
+                if (value != null)
+                {
+                    this.eventService.AddLegacyJobGeplantHandler(value);
+                }
+            }
+            remove
+            {
+                if (value != null)
+                {
+                    this.eventService.RemoveLegacyJobGeplantHandler(value);
+                }
+            }
         }
 
         public event Action<TransportJob>? JobGestartet
         {
-            add { if (value != null) eventService.AddLegacyJobGestartetHandler(value); }
-            remove { if (value != null) eventService.RemoveLegacyJobGestartetHandler(value); }
+            add
+            {
+                if (value != null)
+                {
+                    this.eventService.AddLegacyJobGestartetHandler(value);
+                }
+            }
+            remove
+            {
+                if (value != null)
+                {
+                    this.eventService.RemoveLegacyJobGestartetHandler(value);
+                }
+            }
         }
 
         public event Action<TransportJob>? JobAbgeschlossen
         {
-            add { if (value != null) eventService.AddLegacyJobAbgeschlossenHandler(value); }
-            remove { if (value != null) eventService.RemoveLegacyJobAbgeschlossenHandler(value); }
+            add
+            {
+                if (value != null)
+                {
+                    this.eventService.AddLegacyJobAbgeschlossenHandler(value);
+                }
+            }
+            remove
+            {
+                if (value != null)
+                {
+                    this.eventService.RemoveLegacyJobAbgeschlossenHandler(value);
+                }
+            }
         }
 
         public event Action<TransportJob>? JobFehlgeschlagen
         {
-            add { if (value != null) eventService.AddLegacyJobFehlgeschlagenHandler(value); }
-            remove { if (value != null) eventService.RemoveLegacyJobFehlgeschlagenHandler(value); }
+            add
+            {
+                if (value != null)
+                {
+                    this.eventService.AddLegacyJobFehlgeschlagenHandler(value);
+                }
+            }
+            remove
+            {
+                if (value != null)
+                {
+                    this.eventService.RemoveLegacyJobFehlgeschlagenHandler(value);
+                }
+            }
         }
 
         public IDisposable AbonniereJobEvents(Action<string, TransportJob> handler)
         {
-            return eventService.SubscribeToJobEvents(handler);
+            return this.eventService.SubscribeToJobEvents(handler);
         }
 
         public StringName MappeProduktZuResourceId(string produkt)
         {
-            return supplyService.MappeProduktZuResourceId(produkt);
+            return this.supplyService.MappeProduktZuResourceId(produkt);
         }
 
         public void AktualisiereAuftragsbuch(IEnumerable<TransportAuftragsDaten> daten)
         {
-            orderManager.AktualisiereAuftragsbuch(daten);
+            this.orderManager.AktualisiereAuftragsbuch(daten);
         }
 
         public void AktualisiereLieferindex(IEnumerable<LieferantDaten> daten)
         {
-            supplyService.AktualisiereLieferindex(daten);
+            this.supplyService.AktualisiereLieferindex(daten);
         }
 
         public TransportCoreSaveData CaptureState()
         {
-            return persistenceService.CaptureState();
+            return this.persistenceService.CaptureState();
         }
 
         public void RestoreState(TransportCoreSaveData state, Func<Guid, Building?>? buildingResolver = null)
         {
-            persistenceService.RestoreState(state, buildingResolver);
+            this.persistenceService.RestoreState(state, buildingResolver);
         }
 
         /// <summary>
@@ -128,97 +181,121 @@ namespace IndustrieLite.Transport.Core
         /// </summary>
         public void ResetAllJobsToPlanned()
         {
-            jobManager.ResetAllJobsToPlanned();
+            this.jobManager.ResetAllJobsToPlanned();
         }
 
         public TransportPlanErgebnis PlaneLieferung(TransportPlanAnfrage anfrage)
         {
-            return planningService.PlaneLieferung(anfrage);
+            return this.planningService.PlaneLieferung(anfrage);
         }
 
         public TransportJob? HoleNaechstenJob()
         {
-            return jobManager.HoleNaechstenJob();
+            return this.jobManager.HoleNaechstenJob();
         }
 
         public void RequeueJob(Guid jobId)
         {
-            jobManager.RequeueJob(jobId);
+            this.jobManager.RequeueJob(jobId);
         }
 
         public void MeldeJobGestartet(Guid jobId, object? truckKontext)
         {
-            jobManager.MeldeJobGestartet(jobId, truckKontext);
+            this.jobManager.MeldeJobGestartet(jobId, truckKontext);
         }
 
         public void MeldeJobAbgeschlossen(Guid jobId, int gelieferteMenge)
         {
-            if (jobManager.Jobs.TryGetValue(jobId, out var job))
+            if (this.jobManager.Jobs.TryGetValue(jobId, out var job))
             {
-                orderManager.VerarbeiteJobAbschluss(job, gelieferteMenge);
+                this.orderManager.VerarbeiteJobAbschluss(job, gelieferteMenge);
             }
 
-            jobManager.MeldeJobAbgeschlossen(jobId, gelieferteMenge);
+            this.jobManager.MeldeJobAbgeschlossen(jobId, gelieferteMenge);
         }
 
         public void MeldeJobFehlgeschlagen(Guid jobId)
         {
-            if (jobManager.Jobs.TryGetValue(jobId, out var job))
+            if (this.jobManager.Jobs.TryGetValue(jobId, out var job))
             {
-                orderManager.VerarbeiteJobFehler(job);
+                this.orderManager.VerarbeiteJobFehler(job);
             }
 
-            jobManager.MeldeJobFehlgeschlagen(jobId);
+            this.jobManager.MeldeJobFehlgeschlagen(jobId);
         }
 
         public void CancelJobsForNode(Node node)
         {
             if (node == null)
+            {
                 return;
+            }
 
-            foreach (var job in jobManager.Jobs.Values)
+            foreach (var job in this.jobManager.Jobs.Values)
             {
                 if (ReferenceEquals(job.LieferantKontext, node) || ReferenceEquals(job.ZielKontext, node))
                 {
-                    orderManager.VerarbeiteJobFehler(job);
+                    this.orderManager.VerarbeiteJobFehler(job);
                 }
             }
 
-            jobManager.CancelJobsForNode(node);
+            this.jobManager.CancelJobsForNode(node);
         }
 
         public DeliveryOrder? HoleDeliveryOrder(int orderId)
         {
-            return orderManager.HoleDeliveryOrder(orderId);
+            return this.orderManager.HoleDeliveryOrder(orderId);
         }
 
         private void InitializeServiceVerkabelung()
         {
-            persistenceService.SetServiceReferences(jobManager, orderManager, supplyService, planningService);
-            eventService.ConnectJobManager(jobManager);
-            eventService.ConnectPlanningService(planningService);
+            this.persistenceService.SetServiceReferences(this.jobManager, this.orderManager, this.supplyService, this.planningService);
+            this.eventService.ConnectJobManager(this.jobManager);
+            this.eventService.ConnectPlanningService(this.planningService);
         }
 
         public void Dispose()
         {
-            if (disposed) return;
+            if (this.disposed)
+            {
+                return;
+            }
+
             try
             {
-                try { eventService.DisconnectJobManager(jobManager); } catch { }
-                try { eventService.DisconnectPlanningService(planningService); } catch { }
-                if (eventService is IDisposable d)
+                try
                 {
-                    try { d.Dispose(); } catch { }
+                    this.eventService.DisconnectJobManager(this.jobManager);
+                }
+                catch
+                {
+                }
+                try
+                {
+                    this.eventService.DisconnectPlanningService(this.planningService);
+                }
+                catch
+                {
+                }
+                if (this.eventService is IDisposable d)
+                {
+                    try
+                    {
+                        d.Dispose();
+                    }
+                    catch
+                    {
+                    }
                 }
             }
             finally
             {
-                disposed = true;
+                this.disposed = true;
             }
         }
 
         /// <summary>
-        /// Clears all transport data - for lifecycle management
+        /// Clears all transport data - for lifecycle management.
         /// </summary>
         public void ClearAllData()
         {

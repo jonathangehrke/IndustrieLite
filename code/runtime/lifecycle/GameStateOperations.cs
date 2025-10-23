@@ -1,8 +1,8 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Godot;
 
 /// <summary>
 /// Helper-Klasse für Game-State-Operationen im GameLifecycleManager.
@@ -18,7 +18,7 @@ internal class GameStateOperations
     }
 
     /// <summary>
-    /// Start a new game with default settings
+    /// Start a new game with default settings.
     /// </summary>
     public void ExecuteNewGame(ServiceResolver.ServiceReferences services)
     {
@@ -31,23 +31,29 @@ internal class GameStateOperations
         }
 
         // Clear existing game state
-        ClearGameState(services);
+        this.ClearGameState(services);
 
         // Initialize new game state
-        InitializeNewGame(services);
+        this.InitializeNewGame(services);
 
         // GameTime zurücksetzen auf Startdatum
         var scGtm = ServiceContainer.Instance;
         GameTimeManager? gtm = null;
         if (scGtm != null)
+        {
             scGtm.TryGetNamedService<GameTimeManager>("GameTimeManager", out gtm);
+        }
+
         gtm?.ResetToStart();
 
         // LevelManager zurücksetzen (Level 1, Revenue 0)
         var sc = ServiceContainer.Instance;
         LevelManager? levelManager = null;
         if (sc != null)
+        {
             sc.TryGetNamedService<LevelManager>("LevelManager", out levelManager);
+        }
+
         if (levelManager != null)
         {
             levelManager.Reset();
@@ -57,7 +63,10 @@ internal class GameStateOperations
         // InputManager zurücksetzen (Mode auf None)
         InputManager? inputManager = null;
         if (sc != null)
+        {
             sc.TryGetNamedService<InputManager>("InputManager", out inputManager);
+        }
+
         if (inputManager != null)
         {
             inputManager.SetMode(InputManager.InputMode.None);
@@ -67,7 +76,10 @@ internal class GameStateOperations
         // CameraController auf Start-Position zurücksetzen
         CameraController? cameraController = null;
         if (sc != null)
+        {
             sc.TryGetNamedService<CameraController>("CameraController", out cameraController);
+        }
+
         if (cameraController != null && services.LandManager != null && services.BuildingManager != null)
         {
             int worldW = services.LandManager.GridW * services.BuildingManager.TileSize;
@@ -81,7 +93,10 @@ internal class GameStateOperations
         var scEh = ServiceContainer.Instance;
         EventHub? eventHub = null;
         if (scEh != null)
+        {
             scEh.TryGetNamedService<EventHub>("EventHub", out eventHub);
+        }
+
         if (eventHub != null)
         {
             eventHub.EmitSignal(EventHub.SignalName.MoneyChanged, services.EconomyManager?.GetMoney() ?? 0.0);
@@ -97,7 +112,7 @@ internal class GameStateOperations
     }
 
     /// <summary>
-    /// Save current game state to file
+    /// Save current game state to file.
     /// </summary>
     public void ExecuteSaveGame(string filePath, ServiceResolver.ServiceReferences services)
     {
@@ -124,8 +139,9 @@ internal class GameStateOperations
     }
 
     /// <summary>
-    /// Save current game state to file (asynchron)
+    /// Save current game state to file (asynchron).
     /// </summary>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     public async Task ExecuteSaveGameAsync(string filePath, ServiceResolver.ServiceReferences services)
     {
         if (services.SaveLoadService == null)
@@ -173,7 +189,7 @@ internal class GameStateOperations
     }
 
     /// <summary>
-    /// Load game state from file
+    /// Load game state from file.
     /// </summary>
     public void ExecuteLoadGame(string filePath, ServiceResolver.ServiceReferences services)
     {
@@ -203,7 +219,7 @@ internal class GameStateOperations
             services.Map.QueueRedraw();
 
             // Deferred backup redraw for edge cases
-            _ = RepaintDeferredAsync(services.Map);
+            _ = this.RepaintDeferredAsync(services.Map);
 
             // Nach dem Laden Trucks zurücksetzen und Jobs neu starten
             services.TransportManager?.RestartPendingJobs();
@@ -222,8 +238,9 @@ internal class GameStateOperations
     }
 
     /// <summary>
-    /// Load game state from file (asynchron)
+    /// Load game state from file (asynchron).
     /// </summary>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     public async Task ExecuteLoadGameAsync(string filePath, ServiceResolver.ServiceReferences services)
     {
         DebugLogger.LogLifecycle(() => $"GameStateOperations: Loading game (async) from {filePath}");
@@ -249,7 +266,7 @@ internal class GameStateOperations
             services.Map.RequestRedraw();
             services.Map.QueueRedraw();
 
-            _ = RepaintDeferredAsync(services.Map);
+            _ = this.RepaintDeferredAsync(services.Map);
             services.TransportManager?.RestartPendingJobs();
             DebugLogger.LogLifecycle("GameStateOperations: Game loaded successfully (async)");
         }
@@ -290,7 +307,7 @@ internal class GameStateOperations
             services.Map.RequestRedraw();
             services.Map.QueueRedraw();
 
-            _ = RepaintDeferredAsync(services.Map);
+            _ = this.RepaintDeferredAsync(services.Map);
             services.TransportManager?.RestartPendingJobs();
             DebugLogger.LogLifecycle("GameStateOperations: Game loaded successfully (async)");
         }
@@ -307,7 +324,7 @@ internal class GameStateOperations
     }
 
     /// <summary>
-    /// Clear all existing game state
+    /// Clear all existing game state.
     /// </summary>
     private void ClearGameState(ServiceResolver.ServiceReferences services)
     {
@@ -340,7 +357,10 @@ internal class GameStateOperations
             var scPs = ServiceContainer.Instance;
             ProductionSystem? ps = null;
             if (scPs != null)
+            {
                 scPs.TryGetNamedService<ProductionSystem>("ProductionSystem", out ps);
+            }
+
             if (ps != null)
             {
                 ps.Reset();
@@ -363,32 +383,35 @@ internal class GameStateOperations
     }
 
     /// <summary>
-    /// Initialize new game with starting conditions
+    /// Initialize new game with starting conditions.
     /// </summary>
     private void InitializeNewGame(ServiceResolver.ServiceReferences services)
     {
         using (Simulation.EnterDeterministicTestScope())
         {
             // Place starting city
-            PlaceStartingCity(services);
+            this.PlaceStartingCity(services);
 
             // Set up initial land ownership around starting city
-            SetupInitialLandOwnership(services);
+            this.SetupInitialLandOwnership(services);
 
             // Initialize starting resources
-            InitializeStartingResources(services);
+            this.InitializeStartingResources(services);
         }
     }
 
     /// <summary>
-    /// Place the starting city in center of map
+    /// Place the starting city in center of map.
     /// </summary>
     private void PlaceStartingCity(ServiceResolver.ServiceReferences services)
     {
-        if (services.LandManager == null || services.BuildingManager == null) return;
+        if (services.LandManager == null || services.BuildingManager == null)
+        {
+            return;
+        }
 
-        int sx = services.LandManager.GridW / 2 - 5;
-        int sy = services.LandManager.GridH / 2 - 4;
+        int sx = (services.LandManager.GridW / 2) - 5;
+        int sy = (services.LandManager.GridH / 2) - 4;
         var cityPosition = new Vector2I(sx + 12, sy + 2);
 
         using (Simulation.EnterDeterministicTestScope())
@@ -407,11 +430,14 @@ internal class GameStateOperations
     }
 
     /// <summary>
-    /// Set up initial land ownership around starting city
+    /// Set up initial land ownership around starting city.
     /// </summary>
     private void SetupInitialLandOwnership(ServiceResolver.ServiceReferences services)
     {
-        if (services.LandManager == null) return;
+        if (services.LandManager == null)
+        {
+            return;
+        }
 
         // Startgebiet inkl. Flag setzen (verkaufs-geschützt)
         services.LandManager.InitializeStartRegion();
@@ -419,11 +445,14 @@ internal class GameStateOperations
     }
 
     /// <summary>
-    /// Initialize starting resources
+    /// Initialize starting resources.
     /// </summary>
     private void InitializeStartingResources(ServiceResolver.ServiceReferences services)
     {
-        if (services.ResourceManager == null) return;
+        if (services.ResourceManager == null)
+        {
+            return;
+        }
 
         foreach (var pair in GameConstants.Startup.InitialResources)
         {
@@ -436,15 +465,15 @@ internal class GameStateOperations
 
     /// <summary>
     /// Deferred map redraw for edge cases where immediate redraw might not work
-    /// Waits 2 frames before executing backup redraw
+    /// Waits 2 frames before executing backup redraw.
     /// </summary>
     private async System.Threading.Tasks.Task RepaintDeferredAsync(Map map)
     {
         try
         {
             // Wait 2 frames to ensure everything is properly initialized
-            await ownerNode.ToSignal(ownerNode.GetTree(), SceneTree.SignalName.ProcessFrame); // Frame 1
-            await ownerNode.ToSignal(ownerNode.GetTree(), SceneTree.SignalName.ProcessFrame); // Frame 2
+            await this.ownerNode.ToSignal(this.ownerNode.GetTree(), SceneTree.SignalName.ProcessFrame); // Frame 1
+            await this.ownerNode.ToSignal(this.ownerNode.GetTree(), SceneTree.SignalName.ProcessFrame); // Frame 2
 
             map.QueueRedraw();
             DebugLogger.LogLifecycle("GameStateOperations: Deferred map redraw executed successfully");

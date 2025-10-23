@@ -1,6 +1,6 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System.IO;
+using Godot;
 
 /// <summary>
 /// Hilfsfunktionen fuer Speicherpfade.

@@ -1,14 +1,14 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
-/// LandManager: Explizite Dependency Injection (neue DI-Architektur)
+/// LandManager: Explizite Dependency Injection (neue DI-Architektur).
 /// </summary>
 public partial class LandManager
 {
-    private bool _initialized;
-    private EconomyManager? _economyManager;
-    private EventHub? _eventHub;
+    private bool initialized;
+    private EconomyManager? economyManager;
+    private EventHub? eventHub;
 
     /// <summary>
     /// Explizite Dependency Injection (neue Architektur).
@@ -16,21 +16,21 @@ public partial class LandManager
     /// </summary>
     public void Initialize(EconomyManager economyManager, EventHub? eventHub)
     {
-        if (_initialized)
+        if (this.initialized)
         {
             DebugLogger.LogServices("LandManager.Initialize(): Bereits initialisiert, überspringe");
             return;
         }
 
-        _economyManager = economyManager;
-        _eventHub = eventHub;
+        this.economyManager = economyManager;
+        this.eventHub = eventHub;
 
         // Grid-Initialisierung
-        Land = new bool[GridW, GridH];
-        StartLand = new bool[GridW, GridH];
-        InitializeStartingLand();
+        this.Land = new bool[this.GridW, this.GridH];
+        this.StartLand = new bool[this.GridW, this.GridH];
+        this.InitializeStartingLand();
 
-        _initialized = true;
-        DebugLogger.LogServices($"LandManager.Initialize(): Initialisiert mit GridW={GridW}, GridH={GridH}, EconomyManager={((economyManager != null) ? "✓" : "null")}, EventHub={((eventHub != null) ? "✓" : "null")}");
+        this.initialized = true;
+        DebugLogger.LogServices($"LandManager.Initialize(): Initialisiert mit GridW={this.GridW}, GridH={this.GridH}, EconomyManager={((economyManager != null) ? "✓" : "null")}, EventHub={((eventHub != null) ? "✓" : "null")}");
     }
 }

@@ -1,9 +1,9 @@
-﻿// SPDX-License-Identifier: MIT
-using System;
-using System.Threading.Tasks;
-
+// SPDX-License-Identifier: MIT
 namespace IndustrieLite.Runtime.Lifecycle
 {
+    using System;
+    using System.Threading.Tasks;
+
     public class NewGameCommand : IGameLifecycleCommand
     {
         public string Name => "NewGame";
@@ -11,15 +11,19 @@ namespace IndustrieLite.Runtime.Lifecycle
         public bool CanExecute(GameLifecycleContext context)
         {
             if (context == null)
+            {
                 return false;
+            }
 
             return context.HasRequiredManagersForNewGame();
         }
 
-        public async Task<GameLifecycleResult> ExecuteAsync(GameLifecycleContext context)
+        public Task<GameLifecycleResult> ExecuteAsync(GameLifecycleContext context)
         {
-            if (!CanExecute(context))
-                return GameLifecycleResult.CreateError("Cannot execute NewGame: missing required dependencies");
+            if (!this.CanExecute(context))
+            {
+                return Task.FromResult(GameLifecycleResult.CreateError("Cannot execute NewGame: missing required dependencies"));
+            }
 
             try
             {
@@ -42,7 +46,7 @@ namespace IndustrieLite.Runtime.Lifecycle
                     () => "NewGameCommand: Successfully initialized new game");
 
                 context.OnSuccess?.Invoke();
-                return GameLifecycleResult.CreateSuccess();
+                return Task.FromResult(GameLifecycleResult.CreateSuccess());
             }
             catch (Exception ex)
             {
@@ -50,7 +54,7 @@ namespace IndustrieLite.Runtime.Lifecycle
                 DebugLogger.Log("debug_lifecycle", DebugLogger.LogLevel.Error, () => errorMessage);
 
                 context.OnError?.Invoke(ex);
-                return GameLifecycleResult.CreateError(errorMessage, ex);
+                return Task.FromResult(GameLifecycleResult.CreateError(errorMessage, ex));
             }
         }
     }

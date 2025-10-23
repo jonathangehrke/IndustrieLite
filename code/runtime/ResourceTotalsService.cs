@@ -1,14 +1,15 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
-using System.Linq;
+// SPDX-License-Identifier: MIT
 using System.Collections.Generic;
+using System.Linq;
+using Godot;
 
 public partial class ResourceTotalsService : Node, ITickable, ILifecycleScope
 {
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
 
     // SC-only: keine NodePath-DI
-    [Export] public bool SignaleAktiv { get; set; } = true;
+    [Export]
+    public bool SignaleAktiv { get; set; } = true;
 
     private Database? database;
     private BuildingManager? buildingManager;
@@ -20,11 +21,14 @@ public partial class ResourceTotalsService : Node, ITickable, ILifecycleScope
     private ProductionSystem? productionSystem;
     private GameClockManager? gameClockManager;
 
-    private double _emitAccum = 0.0;
-    [Export] public double EmitIntervalSec { get; set; } = 0.5;
+    private double emitAccum = 0.0;
+
+    [Export]
+    public double EmitIntervalSec { get; set; } = 0.5;
+
     // Verlauf fuer abgeleitete Netto-/Sekundenwerte (aus Lager-Differenzen)
-    private readonly Dictionary<string, double> _lastStockById = new();
-    private double _lastEmitGameTime = 0.0;
+    private readonly Dictionary<string, double> lastStockById = new(System.StringComparer.Ordinal);
+    private double lastEmitGameTime = 0.0;
 
     /// <summary>
     /// Explicit DI initialization to avoid Service Locator usage.
@@ -57,7 +61,7 @@ public partial class ResourceTotalsService : Node, ITickable, ILifecycleScope
             DebugLogger.Info("debug_services", "ResourceTotalsServiceRegistered", "Registered with Simulation");
         }
 
-        EmitTotals();
+        this.EmitTotals();
     }
 
     public override void _Ready()
@@ -67,26 +71,38 @@ public partial class ResourceTotalsService : Node, ITickable, ILifecycleScope
         sc?.RegisterNamedService("ResourceTotalsService", this);
 
         // Validate that Initialize() was called properly
-        if (database == null || buildingManager == null || resourceManager == null)
+        if (this.database == null || this.buildingManager == null || this.resourceManager == null)
         {
             DebugLogger.Error("debug_services", "ResourceTotalsServiceNotInitialized", "Initialize() was not called! Dependencies not injected.");
             DebugLogger.Error("debug_services", "ResourceTotalsServiceDIEnsure", "Ensure DIContainer calls Initialize() for ResourceTotalsService.");
             // Do not attempt fallback - fail fast to detect configuration errors
         }
     }
+
     public override void _ExitTree()
     {
-        try { simulation?.Unregister(this); } catch { }
+        try
+        {
+            this.simulation?.Unregister(this);
+        }
+        catch
+        {
+        }
         base._ExitTree();
     }
+
     public void Tick(double dt)
     {
-        if (EmitIntervalSec <= 0) { EmitTotals(); return; }
-        _emitAccum += dt;
-        while (_emitAccum >= EmitIntervalSec)
+        if (this.EmitIntervalSec <= 0)
         {
-            EmitTotals();
-            _emitAccum -= EmitIntervalSec;
+            this.EmitTotals();
+            return;
+        }
+        this.emitAccum += dt;
+        while (this.emitAccum >= this.EmitIntervalSec)
+        {
+            this.EmitTotals();
+            this.emitAccum -= this.EmitIntervalSec;
         }
     }
 
@@ -102,18 +118,27 @@ public partial class ResourceTotalsService : Node, ITickable, ILifecycleScope
         var totals = new Godot.Collections.Dictionary();
 
         // Datengestützt: Alle bekannten Ressourcen aus der Database
-        IEnumerable<string> resourceIds = (database != null && database.ResourcesById != null)
-            ? database.ResourcesById.Keys
-            : new [] { ResourceIds.Power, ResourceIds.Water, ResourceIds.Chickens }; // Fallback
+        IEnumerable<string> resourceIds = (this.database != null && this.database.ResourcesById != null)
+            ? this.database.ResourcesById.Keys
+            : new[] { ResourceIds.Power, ResourceIds.Water, ResourceIds.Chickens }; // Fallback
 
         // Optional: Neue Produktion verwenden (Totals aus ProductionSystem)
         bool useNew = false;
-        if (devFlags != null) { try { useNew = (bool)devFlags.Get("use_new_production"); } catch { } }
+        if (this.devFlags != null)
+        {
+            try
+            {
+                useNew = (bool)this.devFlags.Get("use_new_production");
+            }
+            catch
+            {
+            }
+        }
 
         // Wenn neue Produktion aktiv: aus ProductionSystem spiegeln
         if (useNew)
         {
-            var ps = productionSystem;
+            var ps = this.productionSystem;
             if (ps != null)
             {
                 var t = ps.GetTotals();
@@ -151,47 +176,52 @@ public partial class ResourceTotalsService : Node, ITickable, ILifecycleScope
         foreach (var id in resourceIds)
         {
             double stock = 0;
-            double prod  = 0;
-            double cons  = 0;
+            double prod = 0;
+            double cons = 0;
 
             // Legacy-/Übergangslogik:
             // - Strom/Wasser-Produktion & -Verbrauch aus ResourceManager
             // - Bestände (z. B. Hühner) direkt aus Gebäuden
-            if (resourceManager != null)
+            if (this.resourceManager != null)
             {
-                if (id == ResourceIds.Power)
+                if (string.Equals(id, ResourceIds.Power, System.StringComparison.Ordinal))
                 {
-                    prod = resourceManager.GetPowerProduction();
-                    cons = resourceManager.GetPotentialPowerConsumption();
+                    prod = this.resourceManager.GetPowerProduction();
+                    cons = this.resourceManager.GetPotentialPowerConsumption();
                 }
-                else if (id == ResourceIds.Water)
+                else if (string.Equals(id, ResourceIds.Water, System.StringComparison.Ordinal))
                 {
-                    prod = resourceManager.GetWaterProduction();
-                    cons = resourceManager.GetPotentialWaterConsumption();
+                    prod = this.resourceManager.GetWaterProduction();
+                    cons = this.resourceManager.GetPotentialWaterConsumption();
                 }
             }
 
-            if (buildingManager != null)
+            if (this.buildingManager != null)
             {
                 // Beispiel: Hühner-Bestand aus ChickenFarm.Stock aggregieren
-                if (id == ResourceIds.Chickens)
+                if (string.Equals(id, ResourceIds.Chickens, System.StringComparison.Ordinal))
                 {
-                    var snapshot = buildingManager.Buildings.ToArray();
+                    var snapshot = this.buildingManager.Buildings.ToArray();
                     foreach (var b in snapshot)
                     {
                         if (!IstGebaeudeGueltig(b))
+                        {
                             continue;
+                        }
+
                         if (b is ChickenFarm farm)
+                        {
                             stock += farm.Stock;
+                        }
                     }
                 }
             }
 
             var dict = new Godot.Collections.Dictionary();
-            dict["stock"]   = stock;
+            dict["stock"] = stock;
             dict["prod_ps"] = prod;
             dict["cons_ps"] = cons;
-            dict["net_ps"]  = prod - cons;
+            dict["net_ps"] = prod - cons;
 
             totals[id] = dict;
         }
@@ -205,57 +235,62 @@ public partial class ResourceTotalsService : Node, ITickable, ILifecycleScope
 
         // Dynamisch: bevorzugt ResourceRegistry, sonst Database, sonst Fallback-Standard
         IEnumerable<string> resourceIds;
-        var idsFromRegistry = resourceRegistry?.GetAllResourceIds();
+        var idsFromRegistry = this.resourceRegistry?.GetAllResourceIds();
         if (idsFromRegistry != null && idsFromRegistry.Count > 0)
         {
             resourceIds = idsFromRegistry.Select(id => id.ToString());
         }
-        else if (database != null && database.ResourcesById != null && database.ResourcesById.Count > 0)
+        else if (this.database != null && this.database.ResourcesById != null && this.database.ResourcesById.Count > 0)
         {
-            resourceIds = database.ResourcesById.Keys;
+            resourceIds = this.database.ResourcesById.Keys;
         }
         else
         {
-            resourceIds = new [] { ResourceIds.Power, ResourceIds.Water, ResourceIds.Workers, ResourceIds.Chickens };
+            resourceIds = new[] { ResourceIds.Power, ResourceIds.Water, ResourceIds.Workers, ResourceIds.Chickens };
         }
 
         foreach (var id in resourceIds)
         {
             double stock = 0;
-            double prod  = 0;
-            double cons  = 0;
+            double prod = 0;
+            double cons = 0;
 
             // Produktion/Verbrauch dynamisch ueber ResourceManager (StringName)
-            if (resourceManager != null)
+            if (this.resourceManager != null)
             {
-                var info = resourceManager.GetResourceInfo(new StringName(id));
+                var info = this.resourceManager.GetResourceInfo(new StringName(id));
                 prod = info.Production;
                 cons = info.Consumption;
             }
 
             // Bestandsaggregation: IHasInventory ueber alle Gebaeude
-            if (buildingManager != null)
+            if (this.buildingManager != null)
             {
                 var rid = new StringName(id);
-                var snapshot = buildingManager.Buildings.ToArray();
+                var snapshot = this.buildingManager.Buildings.ToArray();
                 foreach (var b in snapshot)
                 {
                     if (!IstGebaeudeGueltig(b))
+                    {
                         continue;
+                    }
+
                     if (b is IHasInventory inv)
                     {
                         var invDict = inv.GetInventory();
                         if (invDict.TryGetValue(rid, out var amount))
+                        {
                             stock += amount;
+                        }
                     }
                 }
             }
 
             var dict = new Godot.Collections.Dictionary();
-            dict["stock"]   = stock;
+            dict["stock"] = stock;
             dict["prod_ps"] = prod;
             dict["cons_ps"] = cons;
-            dict["net_ps"]  = prod - cons;
+            dict["net_ps"] = prod - cons;
 
             totals[id] = dict;
         }
@@ -265,23 +300,28 @@ public partial class ResourceTotalsService : Node, ITickable, ILifecycleScope
 
     private void EmitTotals()
     {
-        if (eventHub == null || !SignaleAktiv) return;
+        if (this.eventHub == null || !this.SignaleAktiv)
+        {
+            return;
+        }
 
-        var data = CalculateTotalsDynamic();
+        var data = this.CalculateTotalsDynamic();
 
         // Zusätzliche Ableitungen ohne Variant-Konvertierung: arbeite mit eigenen Maps
-        var nominal = ComputeNominalOutputsPerSecond();
-        var stocks = ComputeStocksSnapshot();
+        var nominal = this.ComputeNominalOutputsPerSecond();
+        var stocks = this.ComputeStocksSnapshot();
 
-        double now = gameClockManager != null ? gameClockManager.TotalSimTime : (double)Time.GetTicksMsec() / 1000.0;
-        double dt = _lastEmitGameTime > 0.0 ? System.Math.Max(0.0001, now - _lastEmitGameTime) : 0.0;
+        double now = this.gameClockManager != null ? this.gameClockManager.TotalSimTime : (double)Time.GetTicksMsec() / 1000.0;
+        double dt = this.lastEmitGameTime > 0.0 ? System.Math.Max(0.0001, now - this.lastEmitGameTime) : 0.0;
 
-        var baseIds = new System.Collections.Generic.HashSet<string>(new [] { ResourceIds.Power, ResourceIds.Water });
+        var baseIds = new System.Collections.Generic.HashSet<string>(new[] { ResourceIds.Power, ResourceIds.Water }, System.StringComparer.Ordinal);
 
         // Iteriere über Schlüssel als Strings, ohne Variant zu casten
         var ids = new System.Collections.Generic.List<string>();
         foreach (var k in data.Keys)
+        {
             ids.Add(k.ToString());
+        }
 
         foreach (var id in ids)
         {
@@ -296,48 +336,57 @@ public partial class ResourceTotalsService : Node, ITickable, ILifecycleScope
             // Delta-Messung aus Lagerbestand, wenn verfügbar
             if (stocks.TryGetValue(id, out var stockNow))
             {
-                if (dt > 0.0 && _lastStockById.TryGetValue(id, out var last))
+                if (dt > 0.0 && this.lastStockById.TryGetValue(id, out var last))
                 {
                     var measured = (stockNow - last) / dt;
                     if (System.Math.Abs(measured) > 0.00001)
+                    {
                         dict["net_ps"] = measured;
+                    }
                 }
-                _lastStockById[id] = stockNow;
+                this.lastStockById[id] = stockNow;
             }
         }
 
-        _lastEmitGameTime = now;
+        this.lastEmitGameTime = now;
 
-        eventHub.EmitSignal(EventHub.SignalName.ResourceTotalsChanged, data);
+        this.eventHub.EmitSignal(EventHub.SignalName.ResourceTotalsChanged, data);
     }
 
     // Optionaler API-Zugriff für UI-Fallbacks
     public Godot.Collections.Dictionary GetTotals()
-        => CalculateTotalsDynamic();
+        => this.CalculateTotalsDynamic();
 
     // --- Hilfsmethoden ---
     private System.Collections.Generic.Dictionary<string, double> ComputeNominalOutputsPerSecond()
     {
-        var result = new System.Collections.Generic.Dictionary<string, double>();
-        if (buildingManager == null)
+        var result = new System.Collections.Generic.Dictionary<string, double>(System.StringComparer.Ordinal);
+        if (this.buildingManager == null)
+        {
             return result;
+        }
 
-        var snapshot = buildingManager.Buildings.ToArray();
+        var snapshot = this.buildingManager.Buildings.ToArray();
         foreach (var b in snapshot)
         {
             if (!IstGebaeudeGueltig(b))
+            {
                 continue;
+            }
             // Suche Rezept-Controller als Kindknoten
             RecipeProductionController? rpc = null;
             foreach (var child in b.GetChildren())
             {
                 if (child is RecipeProductionController c)
                 {
-                    rpc = c; break;
+                    rpc = c;
+                    break;
                 }
             }
             if (rpc == null || rpc.AktuellesRezept == null)
+            {
                 continue;
+            }
 
             var rec = rpc.AktuellesRezept;
             // Outputs pro Sekunde aus PerMinute ableiten
@@ -345,8 +394,16 @@ public partial class ResourceTotalsService : Node, ITickable, ILifecycleScope
             {
                 var id = amt.ResourceId;
                 var perSecond = amt.PerMinute / 60.0;
-                if (perSecond <= 0) continue;
-                if (!result.ContainsKey(id)) result[id] = 0.0;
+                if (perSecond <= 0)
+                {
+                    continue;
+                }
+
+                if (!result.ContainsKey(id))
+                {
+                    result[id] = 0.0;
+                }
+
                 result[id] += perSecond;
             }
         }
@@ -355,33 +412,44 @@ public partial class ResourceTotalsService : Node, ITickable, ILifecycleScope
 
     private System.Collections.Generic.Dictionary<string, double> ComputeStocksSnapshot()
     {
-        var result = new System.Collections.Generic.Dictionary<string, double>();
+        var result = new System.Collections.Generic.Dictionary<string, double>(System.StringComparer.Ordinal);
         // Ressourcen-IDs analog CalculateTotalsDynamic bestimmen
         System.Collections.Generic.IEnumerable<string> resourceIds;
-        var idsFromRegistry = resourceRegistry?.GetAllResourceIds();
+        var idsFromRegistry = this.resourceRegistry?.GetAllResourceIds();
         if (idsFromRegistry != null && idsFromRegistry.Count > 0)
+        {
             resourceIds = idsFromRegistry.Select(id => id.ToString());
-        else if (database != null && database.ResourcesById != null && database.ResourcesById.Count > 0)
-            resourceIds = database.ResourcesById.Keys;
+        }
+        else if (this.database != null && this.database.ResourcesById != null && this.database.ResourcesById.Count > 0)
+        {
+            resourceIds = this.database.ResourcesById.Keys;
+        }
         else
-            resourceIds = new [] { "power", "water", "workers", "chickens" };
+        {
+            resourceIds = new[] { "power", "water", "workers", "chickens" };
+        }
 
         foreach (var id in resourceIds)
         {
             double stock = 0;
-            if (buildingManager != null)
+            if (this.buildingManager != null)
             {
                 var rid = new StringName(id);
-                var snapshot2 = buildingManager.Buildings.ToArray();
+                var snapshot2 = this.buildingManager.Buildings.ToArray();
                 foreach (var b in snapshot2)
                 {
                     if (!IstGebaeudeGueltig(b))
+                    {
                         continue;
+                    }
+
                     if (b is IHasInventory inv)
                     {
                         var invDict = inv.GetInventory();
                         if (invDict.TryGetValue(rid, out var amount))
+                        {
                             stock += amount;
+                        }
                     }
                 }
             }

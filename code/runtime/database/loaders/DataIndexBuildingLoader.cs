@@ -1,8 +1,8 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Godot;
 
 /// <summary>
 /// Laedt Gebaeude ueber das DataIndex Autoload.
@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 public sealed class DataIndexBuildingLoader : IDataLoader<BuildingDef>
 {
     public string LoaderName => nameof(DataIndexBuildingLoader);
+
     public int Priority => 0;
 
     public Task<IReadOnlyCollection<BuildingDef>> LoadAsync(SceneTree sceneTree)

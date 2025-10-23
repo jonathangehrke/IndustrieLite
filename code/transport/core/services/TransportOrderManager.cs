@@ -1,11 +1,11 @@
-﻿// SPDX-License-Identifier: MIT
-using System;
-using System.Collections.Generic;
-using IndustrieLite.Transport.Core.Interfaces;
-using IndustrieLite.Transport.Core.Models;
-
+// SPDX-License-Identifier: MIT
 namespace IndustrieLite.Transport.Core.Services
 {
+    using System;
+    using System.Collections.Generic;
+    using IndustrieLite.Transport.Core.Interfaces;
+    using IndustrieLite.Transport.Core.Models;
+
     /// <summary>
     /// Verwaltet das Auftragsbuch und die Zuordnung zwischen Aufträgen und Jobs.
     /// </summary>
@@ -16,11 +16,12 @@ namespace IndustrieLite.Transport.Core.Services
 
         public TransportOrderManager(OrderBook? orderBook = null)
         {
-            auftragsbuch = orderBook ?? new OrderBook();
+            this.auftragsbuch = orderBook ?? new OrderBook();
         }
 
-        public IReadOnlyDictionary<int, DeliveryOrder> DeliveryOrders => deliveryOrders;
-        public OrderBook Auftragsbuch => auftragsbuch;
+        public IReadOnlyDictionary<int, DeliveryOrder> DeliveryOrders => this.deliveryOrders;
+
+        public OrderBook Auftragsbuch => this.auftragsbuch;
 
         public void AktualisiereAuftragsbuch(IEnumerable<TransportAuftragsDaten> daten)
         {
@@ -37,12 +38,12 @@ namespace IndustrieLite.Transport.Core.Services
                     ExpiresOn = auftrag.GueltigBis,
                     QuelleReferenz = auftrag.QuelleReferenz,
                     ZielReferenz = auftrag.ZielReferenz,
-                    Accepted = auftrag.IstAkzeptiert
+                    Accepted = auftrag.IstAkzeptiert,
                 };
 
-                auftragsbuch.AddOrUpdate(info);
+                this.auftragsbuch.AddOrUpdate(info);
 
-                var delivery = EnsureDeliveryOrder(auftrag);
+                var delivery = this.EnsureDeliveryOrder(auftrag);
                 delivery.Remaining = auftrag.Restmenge <= 0 ? auftrag.Gesamtmenge : auftrag.Restmenge;
                 delivery.PreisProEinheit = auftrag.PreisProEinheit;
                 if (delivery.JobIds.Count == 0)
@@ -54,13 +55,13 @@ namespace IndustrieLite.Transport.Core.Services
 
         public DeliveryOrder EnsureDeliveryOrder(TransportAuftragsDaten daten)
         {
-            if (!deliveryOrders.TryGetValue(daten.AuftragId, out var delivery))
+            if (!this.deliveryOrders.TryGetValue(daten.AuftragId, out var delivery))
             {
                 delivery = new DeliveryOrder(daten.AuftragId, daten.ResourceId, daten.ProduktName, daten.Gesamtmenge, daten.PreisProEinheit, daten.QuelleReferenz, daten.ZielReferenz)
                 {
-                    Remaining = daten.Restmenge <= 0 ? daten.Gesamtmenge : daten.Restmenge
+                    Remaining = daten.Restmenge <= 0 ? daten.Gesamtmenge : daten.Restmenge,
                 };
-                deliveryOrders[daten.AuftragId] = delivery;
+                this.deliveryOrders[daten.AuftragId] = delivery;
             }
 
             return delivery;
@@ -68,13 +69,15 @@ namespace IndustrieLite.Transport.Core.Services
 
         public DeliveryOrder? HoleDeliveryOrder(int orderId)
         {
-            return deliveryOrders.TryGetValue(orderId, out var order) ? order : null;
+            return this.deliveryOrders.TryGetValue(orderId, out var order) ? order : null;
         }
 
         public void RemoveJobFromDeliveryOrder(Guid jobId, int orderId)
         {
-            if (!deliveryOrders.TryGetValue(orderId, out var order))
+            if (!this.deliveryOrders.TryGetValue(orderId, out var order))
+            {
                 return;
+            }
 
             order.JobIds.Remove(jobId);
             if (order.JobIds.Count == 0 && order.Status != DeliveryOrderStatus.Abgeschlossen && order.Remaining > 0)
@@ -86,11 +89,13 @@ namespace IndustrieLite.Transport.Core.Services
         public void VerarbeiteJobAbschluss(TransportJob job, int gelieferteMenge)
         {
             if (job == null)
+            {
                 throw new ArgumentNullException(nameof(job));
+            }
 
-            RemoveJobFromDeliveryOrder(job.JobId, job.OrderId);
+            this.RemoveJobFromDeliveryOrder(job.JobId, job.OrderId);
 
-            if (deliveryOrders.TryGetValue(job.OrderId, out var order))
+            if (this.deliveryOrders.TryGetValue(job.OrderId, out var order))
             {
                 order.Remaining = Math.Max(0, order.Remaining - gelieferteMenge);
                 if (order.Remaining <= 0)
@@ -103,22 +108,26 @@ namespace IndustrieLite.Transport.Core.Services
         public void VerarbeiteJobFehler(TransportJob job)
         {
             if (job == null)
+            {
                 throw new ArgumentNullException(nameof(job));
+            }
 
-            RemoveJobFromDeliveryOrder(job.JobId, job.OrderId);
+            this.RemoveJobFromDeliveryOrder(job.JobId, job.OrderId);
         }
 
         public void RegistriereWiederhergestelltenAuftrag(DeliveryOrder order)
         {
             if (order == null)
+            {
                 throw new ArgumentNullException(nameof(order));
+            }
 
-            deliveryOrders[order.OrderId] = order;
+            this.deliveryOrders[order.OrderId] = order;
         }
 
         public void EntferneAlleOrders()
         {
-            deliveryOrders.Clear();
+            this.deliveryOrders.Clear();
         }
     }
 }

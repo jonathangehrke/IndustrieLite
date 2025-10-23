@@ -1,46 +1,51 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System.Linq;
+using Godot;
 
 /// <summary>
-/// UIService.Resources: Dynamische Ressourcen-IDs und Totals fuer die UI
+/// UIService.Resources: Dynamische Ressourcen-IDs und Totals fuer die UI.
 /// </summary>
 public partial class UIService
 {
-    private ResourceRegistry? _resourceRegistry;
-    private ResourceTotalsService? _totalsService;
-    private ResourceManager? _resourceManager;
+    private ResourceRegistry? resourceRegistry;
+    private ResourceTotalsService? totalsService;
+    private ResourceManager? resourceManager;
 
     private void EnsureResourceServices()
     {
-        
-        
-        if (_resourceManager == null)
+        if (this.resourceManager == null)
         {
-            _resourceManager = gameManager?.GetNodeOrNull<ResourceManager>("ResourceManager");
+            this.resourceManager = this.gameManager?.GetNodeOrNull<ResourceManager>("ResourceManager");
         }
     }
 
     /// <summary>
     /// Liefert die bekannten Ressourcen-IDs als Array von Strings (fuer GDScript-UI)
-    /// Quelle: ResourceRegistry, Fallback: Database, Default-Liste
+    /// Quelle: ResourceRegistry, Fallback: Database, Default-Liste.
     /// </summary>
+    /// <returns></returns>
     public Godot.Collections.Array<string> GetResourceIds()
     {
-        EnsureResourceServices();
+        this.EnsureResourceServices();
 
         var result = new Godot.Collections.Array<string>();
-        var ids = _resourceRegistry?.GetAllResourceIds();
+        var ids = this.resourceRegistry?.GetAllResourceIds();
         if (ids != null && ids.Count > 0)
         {
             foreach (var id in ids)
+            {
                 result.Add(id.ToString());
+            }
+
             return result;
         }
-        if (database != null && database.ResourcesById != null && database.ResourcesById.Count > 0)
+        if (this.database != null && this.database.ResourcesById != null && this.database.ResourcesById.Count > 0)
         {
-            foreach (var id in database.ResourcesById.Keys)
+            foreach (var id in this.database.ResourcesById.Keys)
+            {
                 result.Add(id);
+            }
+
             return result;
         }
         // Default-Fallback
@@ -53,38 +58,43 @@ public partial class UIService
 
     /// <summary>
     /// Liefert die dynamischen Totals pro Ressource
-    /// Struktur je Eintrag: { stock, prod_ps, cons_ps, net_ps }
+    /// Struktur je Eintrag: { stock, prod_ps, cons_ps, net_ps }.
     /// </summary>
+    /// <returns></returns>
     public Godot.Collections.Dictionary GetResourceTotals()
     {
-        EnsureResourceServices();
-        if (_totalsService != null)
-            return _totalsService.GetTotals();
+        this.EnsureResourceServices();
+        if (this.totalsService != null)
+        {
+            return this.totalsService.GetTotals();
+        }
 
         // Fallback: direkt aus ResourceManager + Inventaren aggregieren
         var totals = new Godot.Collections.Dictionary();
-        var ids = GetResourceIds();
+        var ids = this.GetResourceIds();
         foreach (string id in ids)
         {
             double stock = 0;
             double prod = 0;
             double cons = 0;
-            if (_resourceManager != null)
+            if (this.resourceManager != null)
             {
-                var info = _resourceManager.GetResourceInfo(new StringName(id));
+                var info = this.resourceManager.GetResourceInfo(new StringName(id));
                 prod = info.Production;
                 cons = info.Consumption;
             }
-            if (buildingManager != null)
+            if (this.buildingManager != null)
             {
                 var rid = new StringName(id);
-                foreach (var b in buildingManager.Buildings)
+                foreach (var b in this.buildingManager.Buildings)
                 {
                     if (b is IHasInventory inv)
                     {
                         var invDict = inv.GetInventory();
                         if (invDict.TryGetValue(rid, out var amount))
+                        {
                             stock += amount;
+                        }
                     }
                 }
             }

@@ -1,6 +1,6 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
+using Godot;
 
 /// <summary>
 /// CityGrowthManager: reagiert auf Monatswechsel und steuert (zukünftiges) Stadtwachstum.
@@ -9,8 +9,9 @@ using System;
 public partial class CityGrowthManager : Node, ILifecycleScope
 {
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
+
     private EventHub? eventHub;
-    private readonly AboVerwalter _abos = new();
+    private readonly AboVerwalter abos = new();
 
     public override void _Ready()
     {
@@ -37,7 +38,7 @@ public partial class CityGrowthManager : Node, ILifecycleScope
 
     public override void _ExitTree()
     {
-        _abos.DisposeAll();
+        this.abos.DisposeAll();
         base._ExitTree();
     }
 }

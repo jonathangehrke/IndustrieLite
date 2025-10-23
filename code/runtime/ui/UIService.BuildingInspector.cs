@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 public partial class UIService
@@ -6,6 +6,7 @@ public partial class UIService
     /// <summary>
     /// Liefert Inspektor-Daten eines Gebaeudes fuer die UI.
     /// </summary>
+    /// <returns></returns>
     public Godot.Collections.Dictionary GetBuildingInspectorData(Node building)
     {
         if (building == null)
@@ -25,6 +26,7 @@ public partial class UIService
     /// <summary>
     /// Liefert Ressourcen-Bedarf eines Gebaeudes fuer die UI.
     /// </summary>
+    /// <returns></returns>
     public Godot.Collections.Dictionary GetBuildingNeeds(Node building)
     {
         if (building == null)
@@ -44,6 +46,7 @@ public partial class UIService
     /// <summary>
     /// Liefert Produktionsdaten eines Gebaeudes fuer die UI.
     /// </summary>
+    /// <returns></returns>
     public Godot.Collections.Dictionary GetBuildingProduction(Node building)
     {
         if (building == null)
@@ -63,6 +66,7 @@ public partial class UIService
     /// <summary>
     /// Liefert Inventar-Daten eines Gebaeudes fuer die UI.
     /// </summary>
+    /// <returns></returns>
     public Godot.Collections.Dictionary GetBuildingInventory(Node building)
     {
         if (building == null)
@@ -82,6 +86,7 @@ public partial class UIService
     /// <summary>
     /// Liefert die Groesse eines Gebaeudes (in Zellen) fuer die UI.
     /// </summary>
+    /// <returns></returns>
     public Vector2 GetBuildingSize(Node building)
     {
         if (building == null)
@@ -101,6 +106,7 @@ public partial class UIService
     /// <summary>
     /// Liefert die Raster-Position eines Gebaeudes fuer die UI.
     /// </summary>
+    /// <returns></returns>
     public Vector2I GetBuildingPosition(Node building)
     {
         if (building == null)

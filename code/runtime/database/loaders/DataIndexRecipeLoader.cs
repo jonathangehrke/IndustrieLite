@@ -1,8 +1,8 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Godot;
 
 /// <summary>
 /// Laedt Rezepte ueber den DataIndex.
@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 public sealed class DataIndexRecipeLoader : IDataLoader<RecipeDef>
 {
     public string LoaderName => nameof(DataIndexRecipeLoader);
+
     public int Priority => 0;
 
     public Task<IReadOnlyCollection<RecipeDef>> LoadAsync(SceneTree sceneTree)

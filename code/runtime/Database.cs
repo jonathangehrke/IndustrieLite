@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
@@ -8,11 +8,12 @@ using Godot;
 public partial class Database : DatabaseLegacyAdapter, ILifecycleScope
 {
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Singleton;
+
     [Export]
     public bool AllowLegacyFallbackInRelease
     {
-        get => LegacyFallbackErlaubt;
-        set => LegacyFallbackErlaubt = value;
+        get => this.LegacyFallbackErlaubt;
+        set => this.LegacyFallbackErlaubt = value;
     }
 
     private GameDatabase? gameDatabase;
@@ -22,28 +23,27 @@ public partial class Database : DatabaseLegacyAdapter, ILifecycleScope
         ServiceContainer.Instance?.RegisterNamedService("Database", this);
         ServiceContainer.Instance?.RegisterNamedService("DatabaseLegacy", this);
         // Typed-Registration entfernt (Autoload registriert sich nur Named)
-
-        gameDatabase = new GameDatabase
+        this.gameDatabase = new GameDatabase
         {
-            AllowLegacyFallbackInRelease = LegacyFallbackErlaubt,
-            Name = nameof(GameDatabase)
+            AllowLegacyFallbackInRelease = this.LegacyFallbackErlaubt,
+            Name = nameof(GameDatabase),
         };
 
-        AddChild(gameDatabase);
-        VerbindeMitGameDatabase(gameDatabase);
+        this.AddChild(this.gameDatabase);
+        this.VerbindeMitGameDatabase(this.gameDatabase);
 
-        CallDeferred(nameof(StartInitialisierung));
+        this.CallDeferred(nameof(this.StartInitialisierung));
     }
 
     private async void StartInitialisierung()
     {
-        if (gameDatabase == null)
+        if (this.gameDatabase == null)
         {
             return;
         }
 
-        await gameDatabase.InitializeAsync();
-        LogMigrationStatus();
+        await this.gameDatabase.InitializeAsync();
+        this.LogMigrationStatus();
     }
 }
 #pragma warning restore CA1050

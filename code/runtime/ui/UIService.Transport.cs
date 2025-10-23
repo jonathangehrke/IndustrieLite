@@ -1,19 +1,25 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
-/// UIService.Transport: Orders/AcceptOrder/Profit-Schaetzung
+/// UIService.Transport: Orders/AcceptOrder/Profit-Schaetzung.
 /// </summary>
 public partial class UIService
 {
     // === Order/Transport Schaetzungen (UI) ===
+
     /// <summary>
     /// Schaetzt den Profit eines Auftrags (Erloes minus Transportkosten).
     /// Erwartet ein Dictionary wie aus TransportManager.GetOrders() (city, product, amount, ppu).
     /// </summary>
+    /// <returns></returns>
     public double EstimateOrderProfit(Godot.Collections.Dictionary order)
     {
-        if (order == null) return 0.0;
+        if (order == null)
+        {
+            return 0.0;
+        }
+
         try
         {
             // Felder extrahieren (robust gegen fehlende Keys)
@@ -24,29 +30,40 @@ public partial class UIService
 
             double revenue = amount * ppu;
 
-            if (!servicesInitialized) InitializeServices();
-            if (buildingManager == null)
+            if (!this.servicesInitialized)
+            {
+                this.InitializeServices();
+            }
+
+            if (this.buildingManager == null)
+            {
                 return revenue;
+            }
 
             // City finden
             City? targetCity = null;
-            foreach (var c in buildingManager.Cities)
+            foreach (var c in this.buildingManager.Cities)
             {
                 if (string.Equals(c.CityName, city, System.StringComparison.OrdinalIgnoreCase))
                 {
-                    targetCity = c; break;
+                    targetCity = c;
+                    break;
                 }
             }
             if (targetCity == null)
+            {
                 return revenue;
+            }
 
             // Naechste Quelle fuer Produkt bestimmen (derzeit: Huehner -> ChickenFarm)
             // Wir verwenden die kuerzeste Distanz von irgendeiner Farm zur Stadt.
-            var farms = buildingManager.GetChickenFarms();
+            var farms = this.buildingManager.GetChickenFarms();
             if (farms == null || farms.Count == 0)
+            {
                 return revenue;
+            }
 
-            var tileSize = buildingManager.TileSize;
+            var tileSize = this.buildingManager.TileSize;
             Vector2 CityCenter(City c)
                 => c.GlobalPosition + new Vector2(c.Size.X * tileSize / 2f, c.Size.Y * tileSize / 2f);
             Vector2 FarmCenter(ChickenFarm f)
@@ -54,7 +71,7 @@ public partial class UIService
 
             var cityCenter = CityCenter(targetCity);
             double bestCost = double.MaxValue;
-            double basePerTile = (transportManager != null ? transportManager.CostPerUnitPerTile : 0.05) * amount;
+            double basePerTile = (this.transportManager != null ? this.transportManager.CostPerUnitPerTile : 0.05) * amount;
 
             // Bevorzugt: Kosten anhand des tatsaechlichen Strassenpfads (RoadManager) berechnen
             var roadManager = this.roadManager;
@@ -81,10 +98,17 @@ public partial class UIService
                     // Fallback: Distanz-Schaetzung ohne RoadManager
                     cost = DistanceCalculator.GetTransportCost(start, cityCenter, basePerTile, tileSize);
                 }
-                if (cost < bestCost) bestCost = cost;
+                if (cost < bestCost)
+                {
+                    bestCost = cost;
+                }
             }
 
-            if (bestCost == double.MaxValue) bestCost = 0.0;
+            if (bestCost == double.MaxValue)
+            {
+                bestCost = 0.0;
+            }
+
             return revenue - bestCost;
         }
         catch
@@ -94,36 +118,37 @@ public partial class UIService
     }
 
     /// <summary>
-    /// Get available transport orders
+    /// Get available transport orders.
     /// </summary>
+    /// <returns></returns>
     public Godot.Collections.Array<Godot.Collections.Dictionary> GetTransportOrders()
     {
-        if (transportManager == null)
+        if (this.transportManager == null)
         {
-            InitializeServices();
+            this.InitializeServices();
         }
 
-        if (transportManager == null)
+        if (this.transportManager == null)
         {
             DebugLogger.Log("debug_services", DebugLogger.LogLevel.Error, () => "UIService: TransportManager not available for GetTransportOrders()");
             return new Godot.Collections.Array<Godot.Collections.Dictionary>();
         }
 
-        var orders = transportManager.GetOrders();
-        DebugLogger.LogServices(() => $"UIService: GetTransportOrders() returned {orders.Count} orders", DebugLogs);
+        var orders = this.transportManager.GetOrders();
+        DebugLogger.LogServices(() => $"UIService: GetTransportOrders() returned {orders.Count} orders", this.DebugLogs);
         return orders;
     }
 
     /// <summary>
-    /// Accept a transport/market order by ID
+    /// Accept a transport/market order by ID.
     /// </summary>
     public void AcceptTransportOrder(int orderId)
     {
         // Try MarketService first (for market orders)
-        if (marketService != null)
+        if (this.marketService != null)
         {
             // Find the order in transport orders (which are actually market orders from cities)
-            var orders = GetTransportOrders();
+            var orders = this.GetTransportOrders();
             foreach (var orderDict in orders)
             {
                 if (orderDict.TryGetValue("id", out var idVariant) && idVariant.AsInt32() == orderId)
@@ -135,27 +160,27 @@ public partial class UIService
 
                     var marketOrder = new MarketOrder(product, amount, pricePerUnit);
 
-                    DebugLogger.LogServices(() => $"UIService: Accepting market order {orderId} ({product} x{amount})", DebugLogs);
+                    DebugLogger.LogServices(() => $"UIService: Accepting market order {orderId} ({product} x{amount})", this.DebugLogs);
 
-                    if (marketService.AcceptMarketOrder(marketOrder))
+                    if (this.marketService.AcceptMarketOrder(marketOrder))
                     {
                         // Mark order as accepted in TransportManager
-                        if (transportManager != null)
+                        if (this.transportManager != null)
                         {
-                            transportManager.AcceptOrder(orderId);
+                            this.transportManager.AcceptOrder(orderId);
                         }
 
-                        DebugLogger.LogServices(() => $"UIService: Market order {orderId} accepted successfully", DebugLogs);
+                        DebugLogger.LogServices(() => $"UIService: Market order {orderId} accepted successfully", this.DebugLogs);
                     }
                     else
                     {
-                        DebugLogger.LogServices(() => $"UIService: Market order {orderId} acceptance failed", DebugLogs);
+                        DebugLogger.LogServices(() => $"UIService: Market order {orderId} acceptance failed", this.DebugLogs);
                     }
 
                     // Emit event for UI updates
-                    if (eventHub != null)
+                    if (this.eventHub != null)
                     {
-                        eventHub.EmitSignal(EventHub.SignalName.MarketOrdersChanged);
+                        this.eventHub.EmitSignal(EventHub.SignalName.MarketOrdersChanged);
                     }
                     return;
                 }
@@ -163,33 +188,43 @@ public partial class UIService
         }
 
         // Fallback: try TransportManager (for actual transport orders)
-        if (transportManager == null)
+        if (this.transportManager == null)
         {
-            InitializeServices();
+            this.InitializeServices();
         }
 
-        if (transportManager == null)
+        if (this.transportManager == null)
         {
             DebugLogger.Log("debug_services", DebugLogger.LogLevel.Error, () => "UIService: Neither MarketService nor TransportManager available for AcceptTransportOrder()");
             return;
         }
 
-        DebugLogger.LogServices(() => $"UIService: Accepting transport order {orderId}", DebugLogs);
-        var res = transportManager.TryAcceptOrder(orderId);
+        DebugLogger.LogServices(() => $"UIService: Accepting transport order {orderId}", this.DebugLogs);
+        var res = this.transportManager.TryAcceptOrder(orderId);
         if (!res.Ok)
         {
             var code = res.ErrorInfo?.Code ?? ErrorIds.TransportPlanningFailedName;
             var msg = res.ErrorInfo?.Message ?? res.Error;
             DebugLogger.Warn("debug_services", "UIAcceptOrderFailed", msg,
-                new System.Collections.Generic.Dictionary<string, object?> { { "orderId", orderId }, { "code", code } });
-            if (eventHub == null) InitializeServices();
-            try { eventHub?.EmitSignal(EventHub.SignalName.ToastRequested, $"Auftrag {orderId} fehlgeschlagen: {msg}", "warn"); } catch { }
+                new System.Collections.Generic.Dictionary<string, object?>(System.StringComparer.Ordinal) { { "orderId", orderId }, { "code", code } });
+            if (this.eventHub == null)
+            {
+                this.InitializeServices();
+            }
+
+            try
+            {
+                this.eventHub?.EmitSignal(EventHub.SignalName.ToastRequested, $"Auftrag {orderId} fehlgeschlagen: {msg}", "warn");
+            }
+            catch
+            {
+            }
         }
 
         // Emit event for UI updates
-        if (eventHub != null)
+        if (this.eventHub != null)
         {
-            eventHub.EmitSignal(EventHub.SignalName.MarketOrdersChanged);
+            this.eventHub.EmitSignal(EventHub.SignalName.MarketOrdersChanged);
         }
     }
 }

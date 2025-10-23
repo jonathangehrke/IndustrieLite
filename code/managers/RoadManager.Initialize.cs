@@ -1,12 +1,12 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
-/// RoadManager: Explizite Dependency Injection (neue DI-Architektur)
+/// RoadManager: Explizite Dependency Injection (neue DI-Architektur).
 /// </summary>
 public partial class RoadManager
 {
-    private bool _initialized;
+    private bool initialized;
 
     /// <summary>
     /// Explizite Dependency Injection (neue Architektur).
@@ -14,7 +14,7 @@ public partial class RoadManager
     /// </summary>
     public void Initialize(LandManager landManager, BuildingManager buildingManager, EconomyManager economyManager, EventHub? eventHub, CameraController? camera)
     {
-        if (_initialized)
+        if (this.initialized)
         {
             DebugLogger.LogRoad(() => "RoadManager.Initialize(): Bereits initialisiert, überspringe");
             return;
@@ -26,18 +26,24 @@ public partial class RoadManager
         this.eventHub = eventHub;
 
         // Grid und Sub-Systeme initialisieren
-        grid = new RoadGrid(landManager.GridW, landManager.GridH);
-        pathfinder = new RoadPathfinder(grid, buildingManager.TileSize, MaxNearestRoadRadius, EnablePathDebug, UseQuadtreeNearest);
-        renderer = new RoadRenderer();
-        AddChild(renderer);
-        renderer.Init(grid, buildingManager);
+        this.grid = new RoadGrid(landManager.GridW, landManager.GridH);
+        this.pathfinder = new RoadPathfinder(this.grid, buildingManager.TileSize, this.MaxNearestRoadRadius, this.EnablePathDebug, this.UseQuadtreeNearest);
+        this.renderer = new RoadRenderer();
+        this.AddChild(this.renderer);
+        this.renderer.Init(this.grid, buildingManager);
 
         if (camera != null)
         {
-            try { renderer.SetCamera(camera); } catch { }
+            try
+            {
+                this.renderer.SetCamera(camera);
+            }
+            catch
+            {
+            }
         }
 
-        _initialized = true;
+        this.initialized = true;
         DebugLogger.LogRoad(() => $"RoadManager.Initialize(): Initialisiert OK (Land={landManager != null}, Building={buildingManager != null}, Economy={economyManager != null})");
     }
 }

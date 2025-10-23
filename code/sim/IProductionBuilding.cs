@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot.Collections;
 
 /// <summary>
@@ -8,8 +8,11 @@ using Godot.Collections;
 public interface IProductionBuilding
 {
     string GetRecipeIdForUI();
+
     bool SetRecipeFromUI(string rezeptId);
+
     Dictionary GetProductionForUI();
+
     Dictionary GetNeedsForUI();
 }
 

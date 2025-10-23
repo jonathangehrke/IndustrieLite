@@ -1,9 +1,9 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
+using Godot;
 
 /// <summary>
 /// Centralized Service Container for Dependency Injection.
@@ -11,25 +11,29 @@ using System.Threading;
 /// </summary>
 public partial class ServiceContainer : Node
 {
-    private static ServiceContainer? _instance;
+    private static ServiceContainer? instance;
+
     public static ServiceContainer? Instance
     {
         get
         {
-            var inst = Volatile.Read(ref _instance);
+            var inst = Volatile.Read(ref instance);
             if (inst != null && !GodotObject.IsInstanceValid(inst))
+            {
                 return null;
+            }
+
             return inst;
         }
     }
 
     // Zentrales Lock-Objekt fuer Thread-Safety aller Collections
-    private readonly object _gate = new object();
+    private readonly object gate = new object();
 
-    private readonly Dictionary<string, (Node service, ServiceLifecycle lifecycle)> _namedServices = new();
-    private readonly Dictionary<string, List<TaskCompletionSource<Node>>> _waitingNamedServices = new();
+    private readonly Dictionary<string, (Node service, ServiceLifecycle lifecycle)> namedServices = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, List<TaskCompletionSource<Node>>> waitingNamedServices = new(StringComparer.Ordinal);
     // Removed _valueServices - no longer supporting non-Node services (Clean Architecture)
-    private readonly HashSet<string> _missingNamedWarnings = new();
+    private readonly HashSet<string> missingNamedWarnings = new(StringComparer.Ordinal);
 
     [Signal]
     public delegate void ServiceRegisteredEventHandler(string serviceName, Node service);
@@ -39,11 +43,11 @@ public partial class ServiceContainer : Node
         base._EnterTree();
         // Initialize instance as early as possible (in _EnterTree instead of _Ready)
         // This ensures ServiceContainer.Instance is available when GameManager._EnterTree calls DIContainer
-        var previous = Interlocked.CompareExchange(ref _instance, this, null);
+        var previous = Interlocked.CompareExchange(ref instance, this, null);
         if (previous != null && !ReferenceEquals(previous, this))
         {
             DebugLogger.Error("debug_services", "ServiceContainerMultipleInstances", "Multiple instances detected! Removing duplicate.");
-            QueueFree();
+            this.QueueFree();
             return;
         }
         DebugLogger.Info("debug_services", "ServiceContainerInitialized", "Initialized");
@@ -54,7 +58,6 @@ public partial class ServiceContainer : Node
         // Instance already set in _EnterTree
     }
 
-
     /// <summary>
     /// Register a service with a custom name.
     /// Automatically detects lifecycle scope if service implements ILifecycleScope.
@@ -62,9 +65,14 @@ public partial class ServiceContainer : Node
     public void RegisterNamedService(string name, Node service, ServiceLifecycle? lifecycle = null)
     {
         if (string.IsNullOrWhiteSpace(name))
+        {
             throw new ArgumentException("Service name cannot be null or empty", nameof(name));
+        }
+
         if (service == null)
+        {
             throw new ArgumentNullException(nameof(service), "Cannot register null service");
+        }
 
         try
         {
@@ -85,19 +93,21 @@ public partial class ServiceContainer : Node
             }
 
             bool isNewRegistration;
-            lock (_gate)
+            lock (this.gate)
             {
                 // Only print if this is a new registration, not a re-registration
-                isNewRegistration = !_namedServices.ContainsKey(name);
-                _namedServices[name] = (service, effectiveLifecycle);
+                isNewRegistration = !this.namedServices.ContainsKey(name);
+                this.namedServices[name] = (service, effectiveLifecycle);
             }
 
             if (isNewRegistration)
-                DebugLogger.Debug("debug_services", "ServiceRegistered", $"Registered named service", new System.Collections.Generic.Dictionary<string, object?> { { "name", name }, { "type", service.GetType().Name }, { "lifecycle", effectiveLifecycle } });
+            {
+                DebugLogger.Debug("debug_services", "ServiceRegistered", $"Registered named service", new System.Collections.Generic.Dictionary<string, object?>(StringComparer.Ordinal) { { "name", name }, { "type", service.GetType().Name }, { "lifecycle", effectiveLifecycle } });
+            }
 
             // Waiter ausserhalb des Locks erfuellen
-            FulfilNamedWaiters(name, service);
-            EmitSignal(SignalName.ServiceRegistered, name, service);
+            this.FulfilNamedWaiters(name, service);
+            this.EmitSignal(SignalName.ServiceRegistered, name, service);
         }
         catch (Exception ex)
         {
@@ -109,23 +119,24 @@ public partial class ServiceContainer : Node
     // RegisterValue and GetValue methods removed - no longer supporting non-Node services
     // All services must be Node-based for proper lifecycle management (Clean Architecture)
 
-
     /// <summary>
     /// Versucht, einen benannten Service zu holen. Keine Logs bei Fehlschlag.
     /// </summary>
-    public bool TryGetNamedService<T>(string name, out T? service) where T : Node
+    /// <returns></returns>
+    public bool TryGetNamedService<T>(string name, out T? service)
+        where T : Node
     {
         Node? s = null;
         if (!string.IsNullOrWhiteSpace(name))
         {
-            lock (_gate)
+            lock (this.gate)
             {
-                if (_namedServices.TryGetValue(name, out var existing))
+                if (this.namedServices.TryGetValue(name, out var existing))
                 {
                     s = existing.service; // Access service from tuple
                     if (s == null || !IsInstanceValid(s))
                     {
-                        _namedServices.Remove(name);
+                        this.namedServices.Remove(name);
                         s = null;
                     }
                 }
@@ -135,50 +146,60 @@ public partial class ServiceContainer : Node
         return service != null;
     }
 
-
     /// <summary>
     /// Gibt einen benannten Service zurueck oder wirft eine Exception, wenn nicht vorhanden.
     /// </summary>
-    public T RequireNamedService<T>(string name) where T : Node
+    /// <returns></returns>
+    public T RequireNamedService<T>(string name)
+        where T : Node
     {
-        var s = GetNamedService<T>(name);
+        var s = this.GetNamedService<T>(name);
         if (s == null)
+        {
             throw new InvalidOperationException($"ServiceContainer: Erforderlicher benannter Service '{name}' ({typeof(T).Name}) nicht vorhanden");
+        }
+
         return s;
     }
 
     /// <summary>
     /// Get a named service.
     /// </summary>
-    public T? GetNamedService<T>(string name) where T : Node
+    /// <returns></returns>
+    public T? GetNamedService<T>(string name)
+        where T : Node
     {
         if (string.IsNullOrWhiteSpace(name))
+        {
             return null;
+        }
 
         try
         {
             Node? service;
             bool firstWarn = false;
-            lock (_gate)
+            lock (this.gate)
             {
-                if (_namedServices.TryGetValue(name, out var s))
+                if (this.namedServices.TryGetValue(name, out var s))
                 {
                     service = s.service; // Access service from tuple
                     if (service == null || !IsInstanceValid(service))
                     {
-                        _namedServices.Remove(name);
+                        this.namedServices.Remove(name);
                         service = null;
                     }
                 }
                 else
                 {
                     service = null;
-                    firstWarn = _missingNamedWarnings.Add(name);
+                    firstWarn = this.missingNamedWarnings.Add(name);
                 }
             }
 
             if (service != null)
+            {
                 return service as T;
+            }
 
             if (firstWarn)
             {
@@ -197,32 +218,36 @@ public partial class ServiceContainer : Node
     public Node? GetNamedService(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
+        {
             return null;
+        }
 
         try
         {
             Node? service;
             bool firstWarn = false;
-            lock (_gate)
+            lock (this.gate)
             {
-                if (_namedServices.TryGetValue(name, out var s))
+                if (this.namedServices.TryGetValue(name, out var s))
                 {
                     service = s.service; // Access service from tuple
                     if (service == null || !IsInstanceValid(service))
                     {
-                        _namedServices.Remove(name);
+                        this.namedServices.Remove(name);
                         service = null;
                     }
                 }
                 else
                 {
                     service = null;
-                    firstWarn = _missingNamedWarnings.Add(name);
+                    firstWarn = this.missingNamedWarnings.Add(name);
                 }
             }
 
             if (service != null)
+            {
                 return service;
+            }
 
             if (firstWarn)
             {
@@ -237,31 +262,31 @@ public partial class ServiceContainer : Node
         }
     }
 
-
     public bool HasNamedService(string name)
     {
-        lock (_gate)
+        lock (this.gate)
         {
-            return _namedServices.ContainsKey(name);
+            return this.namedServices.ContainsKey(name);
         }
     }
-
 
     /// <summary>
     /// Waits asynchronously until a named service is registered.
     /// </summary>
-    public async Task<T?> WaitForNamedService<T>(string serviceName) where T : Node
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+    public async Task<T?> WaitForNamedService<T>(string serviceName)
+        where T : Node
     {
         Task<Node> waiterTask;
-        lock (_gate)
+        lock (this.gate)
         {
-            if (_namedServices.TryGetValue(serviceName, out var existing))
+            if (this.namedServices.TryGetValue(serviceName, out var existing))
             {
                 return existing.service as T; // Access service from tuple
             }
 
             var tcs = new TaskCompletionSource<Node>(TaskCreationOptions.RunContinuationsAsynchronously);
-            AddNamedWaiter(serviceName, tcs);
+            this.AddNamedWaiter(serviceName, tcs);
             waiterTask = tcs.Task;
         }
         var result = await waiterTask.ConfigureAwait(false);
@@ -271,17 +296,19 @@ public partial class ServiceContainer : Node
     /// <summary>
     /// Wartet asynchron auf einen benannten Service mit optionaler Cancellation/Timeout.
     /// </summary>
-    public async Task<T?> WaitForNamedService<T>(string serviceName, CancellationToken ct, TimeSpan? timeout = null) where T : Node
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+    public async Task<T?> WaitForNamedService<T>(string serviceName, CancellationToken ct, TimeSpan? timeout = null)
+        where T : Node
     {
         TaskCompletionSource<Node> tcs;
-        lock (_gate)
+        lock (this.gate)
         {
-            if (_namedServices.TryGetValue(serviceName, out var existing))
+            if (this.namedServices.TryGetValue(serviceName, out var existing))
             {
                 return existing.service as T; // Access service from tuple
             }
             tcs = new TaskCompletionSource<Node>(TaskCreationOptions.RunContinuationsAsynchronously);
-            AddNamedWaiter(serviceName, tcs);
+            this.AddNamedWaiter(serviceName, tcs);
         }
 
         CancellationTokenSource? timeoutCts = null;
@@ -292,12 +319,12 @@ public partial class ServiceContainer : Node
 
         await using var reg1 = ct.CanBeCanceled ? ct.Register(() =>
         {
-            RemoveNamedWaiter(serviceName, tcs);
+            this.RemoveNamedWaiter(serviceName, tcs);
             tcs.TrySetCanceled();
         }) : default;
         await using var reg2 = (timeoutCts != null) ? timeoutCts.Token.Register(() =>
         {
-            RemoveNamedWaiter(serviceName, tcs);
+            this.RemoveNamedWaiter(serviceName, tcs);
             tcs.TrySetCanceled();
         }) : default;
 
@@ -318,9 +345,9 @@ public partial class ServiceContainer : Node
     {
         // Snapshot unter Lock erstellen, dann ausserhalb drucken (vermeidet Race Conditions)
         Dictionary<string, (Node service, ServiceLifecycle lifecycle)> namedSnapshot;
-        lock (_gate)
+        lock (this.gate)
         {
-            namedSnapshot = new Dictionary<string, (Node service, ServiceLifecycle lifecycle)>(_namedServices);
+            namedSnapshot = new Dictionary<string, (Node service, ServiceLifecycle lifecycle)>(this.namedServices, StringComparer.Ordinal);
         }
 
         DebugLogger.Debug("debug_services", "ServicesListStart", "=== ServiceContainer Registered Services ===");
@@ -334,7 +361,7 @@ public partial class ServiceContainer : Node
     }
 
     /// <summary>
-    /// Clear all services - for scene restart/cleanup
+    /// Clear all services - for scene restart/cleanup.
     /// </summary>
     public void ClearAllServices()
     {
@@ -342,26 +369,32 @@ public partial class ServiceContainer : Node
 
         // Clear all dictionaries
         List<TaskCompletionSource<Node>> waitersToCancel = new();
-        lock (_gate)
+        lock (this.gate)
         {
-            _namedServices.Clear();
+            this.namedServices.Clear();
             // _valueServices removed - no longer supporting non-Node services
 
             // Alle wartenden Tasks einsammeln und danach leeren
-            foreach (var kv in _waitingNamedServices)
+            foreach (var kv in this.waitingNamedServices)
             {
                 waitersToCancel.AddRange(kv.Value);
             }
-            _waitingNamedServices.Clear();
+            this.waitingNamedServices.Clear();
 
             // Reset warning sets
-            _missingNamedWarnings.Clear();
+            this.missingNamedWarnings.Clear();
         }
 
         // Ausserhalb des Locks canceln, um Deadlocks zu vermeiden
         foreach (var tcs in waitersToCancel)
         {
-            try { tcs?.TrySetCanceled(); } catch { }
+            try
+            {
+                tcs?.TrySetCanceled();
+            }
+            catch
+            {
+            }
         }
 
         DebugLogger.Info("debug_services", "ServicesClearedAll", "All services cleared");
@@ -369,7 +402,7 @@ public partial class ServiceContainer : Node
 
     /// <summary>
     /// Clear only game-session specific services - preserves Singleton-scoped services
-    /// Uses ServiceLifecycle to automatically determine which services to preserve
+    /// Uses ServiceLifecycle to automatically determine which services to preserve.
     /// </summary>
     public void ClearGameSessionServices()
     {
@@ -380,9 +413,9 @@ public partial class ServiceContainer : Node
             // Clear game-specific named services (Session scope)
             // Preserve Singleton-scoped services automatically
             var toRemove = new List<string>();
-            lock (_gate)
+            lock (this.gate)
             {
-                foreach (var kvp in _namedServices)
+                foreach (var kvp in this.namedServices)
                 {
                     // Only remove Session-scoped services, preserve Singleton
                     if (kvp.Value.lifecycle == ServiceLifecycle.Session)
@@ -394,9 +427,9 @@ public partial class ServiceContainer : Node
 
             foreach (var key in toRemove)
             {
-                lock (_gate)
+                lock (this.gate)
                 {
-                    _namedServices.Remove(key);
+                    this.namedServices.Remove(key);
                 }
                 DebugLogger.Debug("debug_services", "SessionServiceRemoved", $"Removed session service '{key}'");
             }
@@ -404,26 +437,32 @@ public partial class ServiceContainer : Node
             // Cancel waiters (game-specific)
             int preservedCount;
             List<TaskCompletionSource<Node>> waitersToCancel = new();
-            lock (_gate)
+            lock (this.gate)
             {
                 // _valueServices removed - no longer supporting non-Node services
 
                 // Alle wartenden Tasks einsammeln und danach leeren
-                foreach (var kv in _waitingNamedServices)
+                foreach (var kv in this.waitingNamedServices)
                 {
                     waitersToCancel.AddRange(kv.Value);
                 }
-                _waitingNamedServices.Clear();
+                this.waitingNamedServices.Clear();
 
                 // Reset warning sets
-                _missingNamedWarnings.Clear();
+                this.missingNamedWarnings.Clear();
 
-                preservedCount = _namedServices.Count;
+                preservedCount = this.namedServices.Count;
             }
 
             foreach (var tcs in waitersToCancel)
             {
-                try { tcs?.TrySetCanceled(); } catch { }
+                try
+                {
+                    tcs?.TrySetCanceled();
+                }
+                catch
+                {
+                }
             }
 
             DebugLogger.Info("debug_services", "ServicesCleared", $"Game services cleared, {preservedCount} persistent services preserved");
@@ -435,14 +474,14 @@ public partial class ServiceContainer : Node
     }
 
     /// <summary>
-    /// Unregister a specific named service
+    /// Unregister a specific named service.
     /// </summary>
     public void UnregisterNamedService(string name)
     {
         bool removed;
-        lock (_gate)
+        lock (this.gate)
         {
-            removed = _namedServices.Remove(name);
+            removed = this.namedServices.Remove(name);
         }
         if (removed)
         {
@@ -450,25 +489,23 @@ public partial class ServiceContainer : Node
         }
     }
 
-
     public override void _ExitTree()
     {
-        if (ReferenceEquals(Interlocked.CompareExchange(ref _instance, null, this), this))
+        if (ReferenceEquals(Interlocked.CompareExchange(ref instance, null, this), this))
         {
-            ClearAllServices();
+            this.ClearAllServices();
             DebugLogger.Info("debug_services", "ServiceContainerShutdown", "Shutdown complete");
         }
     }
 
-
     private void AddNamedWaiter(string name, TaskCompletionSource<Node> tcs)
     {
-        lock (_gate)
+        lock (this.gate)
         {
-            if (!_waitingNamedServices.TryGetValue(name, out var list))
+            if (!this.waitingNamedServices.TryGetValue(name, out var list))
             {
                 list = new List<TaskCompletionSource<Node>>();
-                _waitingNamedServices[name] = list;
+                this.waitingNamedServices[name] = list;
             }
             list.Add(tcs);
         }
@@ -476,34 +513,35 @@ public partial class ServiceContainer : Node
 
     private void RemoveNamedWaiter(string name, TaskCompletionSource<Node> tcs)
     {
-        lock (_gate)
+        lock (this.gate)
         {
-            if (_waitingNamedServices.TryGetValue(name, out var list))
+            if (this.waitingNamedServices.TryGetValue(name, out var list))
             {
                 list.Remove(tcs);
                 if (list.Count == 0)
                 {
-                    _waitingNamedServices.Remove(name);
+                    this.waitingNamedServices.Remove(name);
                 }
             }
         }
     }
 
-
     private void FulfilNamedWaiters(string name, Node service)
     {
         if (string.IsNullOrWhiteSpace(name) || service == null)
+        {
             return;
+        }
 
         try
         {
             List<TaskCompletionSource<Node>>? listToSignal = null;
-            lock (_gate)
+            lock (this.gate)
             {
-                if (_waitingNamedServices.TryGetValue(name, out var list))
+                if (this.waitingNamedServices.TryGetValue(name, out var list))
                 {
                     listToSignal = new List<TaskCompletionSource<Node>>(list);
-                    _waitingNamedServices.Remove(name);
+                    this.waitingNamedServices.Remove(name);
                 }
             }
             if (listToSignal != null)
@@ -524,23 +562,30 @@ public partial class ServiceContainer : Node
     /// Hilfsmethode: Wartet auf verfuegbaren ServiceContainer (Autoload) ueber Frame-Yield.
     /// Node/Manager-Code kann damit Spin-Waits vermeiden.
     /// </summary>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     public static async Task<ServiceContainer> WhenAvailableAsync(SceneTree tree, CancellationToken ct = default, TimeSpan? timeout = null)
     {
         var inst = Instance;
         if (inst != null)
+        {
             return inst;
+        }
 
         var start = DateTime.UtcNow;
         while (true)
         {
             ct.ThrowIfCancellationRequested();
             if (timeout.HasValue && (DateTime.UtcNow - start) > timeout.Value)
+            {
                 throw new TimeoutException("ServiceContainer.WhenAvailableAsync: Timeout beim Warten auf Instance");
+            }
 
             await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
             inst = Instance;
             if (inst != null)
+            {
                 return inst;
+            }
         }
     }
 }

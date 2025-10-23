@@ -1,13 +1,15 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Godot;
 
 public interface IProducer
 {
     Dictionary<StringName, int> GetResourceNeeds();
+
     Dictionary<StringName, int> GetResourceProduction();
+
     void OnProductionTick(bool canProduce);
 }
 
@@ -17,16 +19,22 @@ public partial class ProductionManager : Node, ITickable, ILifecycleScope
     // DI via ServiceContainer (keine NodePaths)
 
     // Eigene Tickrate für Produktionslogik (Standard: 1 Tick/Sekunde)
-    [Export] public double ProduktionsTickRate { get; set; } = 1.0;
-    [Export] public bool DebugLogs { get; set; } = false;
+    [Export]
+    public double ProduktionsTickRate { get; set; } = 1.0;
+
+    [Export]
+    public bool DebugLogs { get; set; } = false;
+
     // Phase 3: Umschalter auf datengetriebene Produktion (ProductionSystem liefert Kapazitäten)
-    [Export] public bool UseNewProduction { get; set; } = false;
+    [Export]
+    public bool UseNewProduction { get; set; } = false;
 
     private ResourceManager resourceManager = default!;
     private ProductionSystem? productionSystem; // optional DI
-    private bool _registeredWithSimulation;
+    private bool registeredWithSimulation;
     private List<IProducer> producers = new();
-    private double _tickAccum = 0.0; // Akkumulator (Simulation-dt)
+    private double tickAccum = 0.0; // Akkumulator (Simulation-dt)
+
     public new string Name => "ProductionManager";
 
     public override void _Ready()
@@ -46,51 +54,53 @@ public partial class ProductionManager : Node, ITickable, ILifecycleScope
         }
     }
 
-
     /// <summary>
     /// Registriert einen Producer beim Produktionssystem.
     /// </summary>
     public void RegisterProducer(IProducer producer)
     {
-        if (!producers.Contains(producer))
+        if (!this.producers.Contains(producer))
         {
-            producers.Add(producer);
+            this.producers.Add(producer);
             DebugLogger.LogProduction(() => $"Producer registered: {producer.GetType().Name}");
         }
     }
-    
+
     /// <summary>
     /// Entfernt einen Producer aus dem Produktionssystem.
     /// </summary>
     public void UnregisterProducer(IProducer producer)
     {
-        producers.Remove(producer);
+        this.producers.Remove(producer);
     }
-    
+
     /// <summary>
     /// Fuehrt einen Produktions-Tick aus (Kapazitaeten setzen, Bedarf pruefen, konsumieren).
     /// </summary>
     public void ProcessProductionTick()
     {
-        DebugLogger.LogProduction(() => $"=== Production Tick Start - {producers.Count} producers ===");
+        DebugLogger.LogProduction(() => $"=== Production Tick Start - {this.producers.Count} producers ===");
 
         // Reset resources for this tick
-        resourceManager.ResetTick();
+        this.resourceManager.ResetTick();
 
-        if (UseNewProduction)
+        if (this.UseNewProduction)
         {
             // Phase 3: Kapazitäten aus ProductionSystem beziehen (datengetrieben)
             // Use injected field only - no ServiceContainer fallback (fixes mixed pattern)
-            if (productionSystem != null)
+            if (this.productionSystem != null)
             {
-                var totals = productionSystem.GetTotals();
+                var totals = this.productionSystem.GetTotals();
                 int power = (int)System.Math.Round(totals.GetValueOrDefault("power_production", 0.0));
                 int water = (int)System.Math.Round(totals.GetValueOrDefault("water_production", 0.0));
                 int workers = (int)System.Math.Round(totals.GetValueOrDefault("workers_production", 0.0));
-                resourceManager.SetProduction(ResourceIds.PowerName, power);
-                resourceManager.SetProduction(ResourceIds.WaterName, water);
-                resourceManager.SetProduction(ResourceIds.WorkersName, workers);
-                if (DebugLogs) DebugLogger.LogProduction(() => $"Kapazitäten gesetzt (neu): power={power} water={water} workers={workers}");
+                this.resourceManager.SetProduction(ResourceIds.PowerName, power);
+                this.resourceManager.SetProduction(ResourceIds.WaterName, water);
+                this.resourceManager.SetProduction(ResourceIds.WorkersName, workers);
+                if (this.DebugLogs)
+                {
+                    DebugLogger.LogProduction(() => $"Kapazitäten gesetzt (neu): power={power} water={water} workers={workers}");
+                }
             }
             else
             {
@@ -101,42 +111,45 @@ public partial class ProductionManager : Node, ITickable, ILifecycleScope
         {
             // Legacy: Kapazitäten aus Producer sammeln und setzen
             var totalProduction = new Dictionary<StringName, int>();
-            foreach (var producer in producers)
+            foreach (var producer in this.producers)
             {
                 var production = producer.GetResourceProduction();
                 foreach (var kvp in production)
                 {
                     if (!totalProduction.ContainsKey(kvp.Key))
+                    {
                         totalProduction[kvp.Key] = 0;
+                    }
+
                     totalProduction[kvp.Key] += kvp.Value;
                     DebugLogger.LogProduction(() => $"{producer.GetType().Name} adds {kvp.Value} {kvp.Key} (total: {totalProduction[kvp.Key]})");
                 }
             }
             foreach (var kvp in totalProduction)
             {
-                resourceManager.SetProduction(kvp.Key, kvp.Value);
+                this.resourceManager.SetProduction(kvp.Key, kvp.Value);
             }
         }
-        
+
         // Now process consumption
-        foreach (var producer in producers)
+        foreach (var producer in this.producers)
         {
             var needs = producer.GetResourceNeeds();
             bool canProduce = true;
             // UI: pro-Resource Abdeckung in diesem Tick ermitteln
             var abdeckung = new Godot.Collections.Dictionary();
-            
+
             // Check if all resources are available
             foreach (var kvp in needs)
             {
-                var avail = resourceManager.GetAvailable(kvp.Key);
+                var avail = this.resourceManager.GetAvailable(kvp.Key);
                 // fuer UI: wieviel der Bedarf ist effektiv verfuegbar (vor Verbrauch)
                 abdeckung[kvp.Key.ToString()] = System.Math.Min(avail, kvp.Value);
 
                 if (avail < kvp.Value)
                 {
                     canProduce = false;
-                    DebugLogger.LogProduction(() => $"{producer.GetType().Name} cannot produce: need {kvp.Value} {kvp.Key}, but only {resourceManager.GetAvailable(kvp.Key)} available");
+                    DebugLogger.LogProduction(() => $"{producer.GetType().Name} cannot produce: need {kvp.Value} {kvp.Key}, but only {this.resourceManager.GetAvailable(kvp.Key)} available");
                     break;
                 }
             }
@@ -149,77 +162,97 @@ public partial class ProductionManager : Node, ITickable, ILifecycleScope
                     node.Call("SetLastNeedsCoverageForUI", abdeckung);
                 }
             }
-            catch { }
-            
+            catch
+            {
+            }
+
             // If can produce, consume resources
             if (canProduce)
             {
                 foreach (var kvp in needs)
                 {
-                    resourceManager.ConsumeResource(kvp.Key, kvp.Value);
+                    this.resourceManager.ConsumeResource(kvp.Key, kvp.Value);
                     DebugLogger.LogProduction(() => $"{producer.GetType().Name} consumes {kvp.Value} {kvp.Key}");
                 }
             }
-            
+
             // Notify producer about production result
             producer.OnProductionTick(canProduce);
         }
-        
-        resourceManager.LogResourceStatus();
-        
+
+        this.resourceManager.LogResourceStatus();
+
         // M7: EventHub Signal für ResourceInfo-Änderungen
-        resourceManager.EmitResourceInfoChanged();
-        
+        this.resourceManager.EmitResourceInfoChanged();
+
         DebugLogger.LogProduction("=== Production Tick End ===");
     }
 
     // --- ITickable ---
+
     /// <summary>
     /// Simulationstakt-Callback: triggert Produktions-Ticks gemaess Tickrate.
     /// </summary>
     public void Tick(double dt)
     {
-        if (ProduktionsTickRate <= 0)
+        if (this.ProduktionsTickRate <= 0)
         {
             // Fallback: auf jedem Simulationstick produzieren
-            ProcessProductionTick();
+            this.ProcessProductionTick();
             return;
         }
 
         // Akkumuliere dt aus Simulation und triggere Produktions-Tick bei erreichtem Intervall
-        var intervall = 1.0 / ProduktionsTickRate;
-        _tickAccum += dt;
-        while (_tickAccum >= intervall)
+        var intervall = 1.0 / this.ProduktionsTickRate;
+        this.tickAccum += dt;
+        while (this.tickAccum >= intervall)
         {
-            if (DebugLogs) DebugLogger.LogProduction("ProductionManager: Tick via Simulation");
-            ProcessProductionTick();
-            _tickAccum -= intervall;
+            if (this.DebugLogs)
+            {
+                DebugLogger.LogProduction("ProductionManager: Tick via Simulation");
+            }
+
+            this.ProcessProductionTick();
+            this.tickAccum -= intervall;
         }
     }
 
     // --- Steuerungs-API ---
+
     /// <summary>
     /// Setzt die Tickrate der Produktion in Hertz (0 deaktiviert).
     /// </summary>
     public void SetProduktionsTickRate(double rate)
     {
-        ProduktionsTickRate = rate <= 0 ? 0.0 : rate;
-        if (DebugLogs) DebugLogger.LogProduction(() => $"ProductionManager: ProduktionsTickRate -> {ProduktionsTickRate:F2} Hz");
+        this.ProduktionsTickRate = rate <= 0 ? 0.0 : rate;
+        if (this.DebugLogs)
+        {
+            DebugLogger.LogProduction(() => $"ProductionManager: ProduktionsTickRate -> {this.ProduktionsTickRate:F2} Hz");
+        }
     }
 
     /// <summary>
-    /// Clears all production data - for lifecycle management
+    /// Clears all production data - for lifecycle management.
     /// </summary>
     public void ClearAllData()
     {
-        producers.Clear();
-        _tickAccum = 0.0;
-        if (DebugLogs) DebugLogger.LogProduction("ProductionManager: Cleared all data");
+        this.producers.Clear();
+        this.tickAccum = 0.0;
+        if (this.DebugLogs)
+        {
+            DebugLogger.LogProduction("ProductionManager: Cleared all data");
+        }
     }
 
     public override void _ExitTree()
     {
-        try { Simulation.Instance?.Unregister(this); } catch { }
+        try
+        {
+            Simulation.Instance?.Unregister(this);
+        }
+        catch
+        {
+        }
         base._ExitTree();
     }
 }

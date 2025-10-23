@@ -1,7 +1,7 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
 using System.Collections.Generic;
+using Godot;
 
 /// <summary>
 /// Repository fuer Rezepte inklusive Verknuepfung zu Gebaeuden.
@@ -13,9 +13,9 @@ public sealed class RecipeRepository : BaseRepository<RecipeDef>, IRecipeReposit
     public RecipeRepository(Func<IBuildingRepository?> buildingRepositoryProvider, Func<bool> legacyErlaubt)
     {
         this.buildingRepositoryProvider = buildingRepositoryProvider ?? (() => null);
-        ladeReihenfolge.Add(new DataIndexRecipeLoader());
-        ladeReihenfolge.Add(new FileSystemRecipeLoader());
-        ladeReihenfolge.Add(new LegacyRecipeLoader(legacyErlaubt));
+        this.ladeReihenfolge.Add(new DataIndexRecipeLoader());
+        this.ladeReihenfolge.Add(new FileSystemRecipeLoader());
+        this.ladeReihenfolge.Add(new LegacyRecipeLoader(legacyErlaubt));
     }
 
     protected override string GetId(RecipeDef item) => item.Id;
@@ -27,7 +27,7 @@ public sealed class RecipeRepository : BaseRepository<RecipeDef>, IRecipeReposit
             return Array.Empty<RecipeDef>();
         }
 
-        var buildingRepo = buildingRepositoryProvider();
+        var buildingRepo = this.buildingRepositoryProvider();
         if (buildingRepo == null)
         {
             return Array.Empty<RecipeDef>();
@@ -43,13 +43,13 @@ public sealed class RecipeRepository : BaseRepository<RecipeDef>, IRecipeReposit
         var result = new List<RecipeDef>();
         foreach (var recipeId in gebaeude.AvailableRecipes)
         {
-            if (eintraegeNachId.TryGetValue(recipeId, out var recipe))
+            if (this.eintraegeNachId.TryGetValue(recipeId, out var recipe))
             {
                 result.Add(recipe);
             }
         }
 
-        if (result.Count == 0 && !string.IsNullOrEmpty(gebaeude.DefaultRecipeId) && eintraegeNachId.TryGetValue(gebaeude.DefaultRecipeId, out var defaultRecipe))
+        if (result.Count == 0 && !string.IsNullOrEmpty(gebaeude.DefaultRecipeId) && this.eintraegeNachId.TryGetValue(gebaeude.DefaultRecipeId, out var defaultRecipe))
         {
             result.Add(defaultRecipe);
         }

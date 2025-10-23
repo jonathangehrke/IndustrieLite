@@ -1,28 +1,28 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System.Collections.Generic;
+using Godot;
 
 /// <summary>
 /// Zentrale Registrierung aller Ressourcen-IDs.
 /// - Fuehrt dynamische StringName-IDs ein
 /// - Arbeitet ausschliesslich mit StringName-IDs (Legacy-Enum entfernt)
-/// - Laedt bekannte Ressourcen aus der Database (falls vorhanden)
+/// - Laedt bekannte Ressourcen aus der Database (falls vorhanden).
 /// </summary>
 public partial class ResourceRegistry : Node
 {
     // Interner Speicher der bekannten Ressourcen-IDs
-    private readonly HashSet<StringName> _resourceIds = new();
+    private readonly HashSet<StringName> resourceIds = new();
 
     // Legacy-Mapping entfernt
 
     // Standard-IDs (Fallback, wenn keine Database vorhanden ist)
-    private static readonly StringName IdPower    = new("power");
-    private static readonly StringName IdWater    = new("water");
-    private static readonly StringName IdWorkers  = new("workers");
+    private static readonly StringName IdPower = new("power");
+    private static readonly StringName IdWater = new("water");
+    private static readonly StringName IdWorkers = new("workers");
     private static readonly StringName IdChickens = new("chickens");
-    private static readonly StringName IdEgg      = new("egg");
-    private static readonly StringName IdPig      = new("pig");
-    private static readonly StringName IdGrain    = new("grain");
+    private static readonly StringName IdEgg = new("egg");
+    private static readonly StringName IdPig = new("pig");
+    private static readonly StringName IdGrain = new("grain");
 
     public override void _Ready()
     {
@@ -30,25 +30,25 @@ public partial class ResourceRegistry : Node
         ServiceContainer.Instance?.RegisterNamedService("ResourceRegistry", this);
 
         // Standardressourcen sicherstellen
-        EnsureDefaultResources();
+        this.EnsureDefaultResources();
 
         // Optional: Ressourcen aus Database uebernehmen (dynamisch)
-        TrySeedFromDatabase();
+        this.TrySeedFromDatabase();
         // Sicherheit: Reihenfolge der _Ready()-Aufrufe kann variieren
-        CallDeferred(nameof(TrySeedFromDatabase));
+        this.CallDeferred(nameof(this.TrySeedFromDatabase));
 
-        DebugLogger.LogServices(() => $"ResourceRegistry: initialisiert mit {_resourceIds.Count} Ressourcen-IDs");
+        DebugLogger.LogServices(() => $"ResourceRegistry: initialisiert mit {this.resourceIds.Count} Ressourcen-IDs");
     }
 
     private void EnsureDefaultResources()
     {
-        RegisterResource(ResourceIds.PowerName);
-        RegisterResource(ResourceIds.WaterName);
-        RegisterResource(ResourceIds.WorkersName);
-        RegisterResource(ResourceIds.ChickensName);
-        RegisterResource(ResourceIds.EggName);
-        RegisterResource(ResourceIds.PigName);
-        RegisterResource(ResourceIds.GrainName);
+        this.RegisterResource(ResourceIds.PowerName);
+        this.RegisterResource(ResourceIds.WaterName);
+        this.RegisterResource(ResourceIds.WorkersName);
+        this.RegisterResource(ResourceIds.ChickensName);
+        this.RegisterResource(ResourceIds.EggName);
+        this.RegisterResource(ResourceIds.PigName);
+        this.RegisterResource(ResourceIds.GrainName);
 
         // Kein Enum-Mapping mehr
     }
@@ -64,7 +64,7 @@ public partial class ResourceRegistry : Node
 
         foreach (var id in db.ResourcesById.Keys)
         {
-            RegisterResource(new StringName(id));
+            this.RegisterResource(new StringName(id));
         }
     }
 
@@ -73,7 +73,7 @@ public partial class ResourceRegistry : Node
     /// </summary>
     public void RegisterResource(StringName id)
     {
-        if (_resourceIds.Add(id))
+        if (this.resourceIds.Add(id))
         {
             DebugLogger.LogServices(() => $"ResourceRegistry: Registriert Ressource '{id}'");
         }
@@ -82,21 +82,27 @@ public partial class ResourceRegistry : Node
     /// <summary>
     /// Prueft, ob eine Ressourcen-ID bekannt ist.
     /// </summary>
-    public bool HasResource(StringName id) => _resourceIds.Contains(id);
+    /// <returns></returns>
+    public bool HasResource(StringName id) => this.resourceIds.Contains(id);
 
     /// <summary>
     /// Liefert alle registrierten Ressourcen-IDs (readonly-Kopie).
     /// </summary>
-    public IReadOnlyCollection<StringName> GetAllResourceIds() => _resourceIds;
+    /// <returns></returns>
+    public IReadOnlyCollection<StringName> GetAllResourceIds() => this.resourceIds;
 
     /// <summary>
     /// GDScript-freundliche Liste aller IDs.
     /// </summary>
+    /// <returns></returns>
     public Godot.Collections.Array<StringName> GetAllResourceIdsForUI()
     {
         var arr = new Godot.Collections.Array<StringName>();
-        foreach (var id in _resourceIds)
+        foreach (var id in this.resourceIds)
+        {
             arr.Add(id);
+        }
+
         return arr;
     }
 

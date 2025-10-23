@@ -1,81 +1,81 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
 using System.Collections.Generic;
+using Godot;
 
 /// <summary>
 /// Adapter, der die alte Database-API gegen das neue GameDatabase-System spiegelt.
 /// </summary>
 public partial class DatabaseLegacyAdapter : Node
 {
-    private static readonly IReadOnlyDictionary<string, BuildingDef> LeereGebaeude = new Dictionary<string, BuildingDef>();
-    private static readonly IReadOnlyDictionary<string, GameResourceDef> LeereRessourcen = new Dictionary<string, GameResourceDef>();
-    private static readonly IReadOnlyDictionary<string, RecipeDef> LeereRezepte = new Dictionary<string, RecipeDef>();
+    private static readonly IReadOnlyDictionary<string, BuildingDef> LeereGebaeude = new Dictionary<string, BuildingDef>(StringComparer.Ordinal);
+    private static readonly IReadOnlyDictionary<string, GameResourceDef> LeereRessourcen = new Dictionary<string, GameResourceDef>(StringComparer.Ordinal);
+    private static readonly IReadOnlyDictionary<string, RecipeDef> LeereRezepte = new Dictionary<string, RecipeDef>(StringComparer.Ordinal);
 
     private IGameDatabase? aktuelleDatenbank;
     private bool gespeichertesLegacyFlag;
 
-    protected IGameDatabase? AktiveDatenbank => aktuelleDatenbank;
+    protected IGameDatabase? AktiveDatenbank => this.aktuelleDatenbank;
 
     protected bool LegacyFallbackErlaubt
     {
-        get => aktuelleDatenbank?.AllowLegacyFallbackInRelease ?? gespeichertesLegacyFlag;
+        get => this.aktuelleDatenbank?.AllowLegacyFallbackInRelease ?? this.gespeichertesLegacyFlag;
         set
         {
-            gespeichertesLegacyFlag = value;
-            if (aktuelleDatenbank != null)
+            this.gespeichertesLegacyFlag = value;
+            if (this.aktuelleDatenbank != null)
             {
-                aktuelleDatenbank.AllowLegacyFallbackInRelease = value;
+                this.aktuelleDatenbank.AllowLegacyFallbackInRelease = value;
             }
         }
     }
 
     protected void VerbindeMitGameDatabase(IGameDatabase database)
     {
-        aktuelleDatenbank = database ?? throw new ArgumentNullException(nameof(database));
-        aktuelleDatenbank.AllowLegacyFallbackInRelease = LegacyFallbackErlaubt;
+        this.aktuelleDatenbank = database ?? throw new ArgumentNullException(nameof(database));
+        this.aktuelleDatenbank.AllowLegacyFallbackInRelease = this.LegacyFallbackErlaubt;
     }
 
-    public IReadOnlyDictionary<string, BuildingDef> BuildingsById => aktuelleDatenbank != null
-        ? ErzeugeDictionary(aktuelleDatenbank.Buildings, def => def.Id)
+    public IReadOnlyDictionary<string, BuildingDef> BuildingsById => this.aktuelleDatenbank != null
+        ? ErzeugeDictionary(this.aktuelleDatenbank.Buildings, def => def.Id)
         : LeereGebaeude;
 
-    public Godot.Collections.Array<BuildingDef> BuildingsList => aktuelleDatenbank?.Buildings is IBuildingRepository buildingRepo
+    public Godot.Collections.Array<BuildingDef> BuildingsList => this.aktuelleDatenbank?.Buildings is IBuildingRepository buildingRepo
         ? buildingRepo.GetGodotArray()
         : new Godot.Collections.Array<BuildingDef>();
 
-    public IReadOnlyDictionary<string, GameResourceDef> ResourcesById => aktuelleDatenbank != null
-        ? ErzeugeDictionary(aktuelleDatenbank.Resources, res => res.Id)
+    public IReadOnlyDictionary<string, GameResourceDef> ResourcesById => this.aktuelleDatenbank != null
+        ? ErzeugeDictionary(this.aktuelleDatenbank.Resources, res => res.Id)
         : LeereRessourcen;
 
-    public IReadOnlyDictionary<string, RecipeDef> RecipesById => aktuelleDatenbank != null
-        ? ErzeugeDictionary(aktuelleDatenbank.Recipes, recipe => recipe.Id)
+    public IReadOnlyDictionary<string, RecipeDef> RecipesById => this.aktuelleDatenbank != null
+        ? ErzeugeDictionary(this.aktuelleDatenbank.Recipes, recipe => recipe.Id)
         : LeereRezepte;
 
     public BuildingDef? GetBuilding(string id)
     {
-        if (aktuelleDatenbank == null)
+        if (this.aktuelleDatenbank == null)
         {
             return null;
         }
-        var result = aktuelleDatenbank.Buildings.TryGet(id);
+        var result = this.aktuelleDatenbank.Buildings.TryGet(id);
         return result.Ok ? result.Value : null;
     }
 
     public Godot.Collections.Array<BuildingDef> GetBuildingsByCategory(string category)
     {
-        if (aktuelleDatenbank?.Buildings == null)
+        if (this.aktuelleDatenbank?.Buildings == null)
         {
             return new Godot.Collections.Array<BuildingDef>();
         }
 
         if (string.IsNullOrWhiteSpace(category))
         {
-            return ((IBuildingRepository)aktuelleDatenbank.Buildings).GetGodotArray();
+            return ((IBuildingRepository)this.aktuelleDatenbank.Buildings).GetGodotArray();
         }
 
         var ergebnis = new Godot.Collections.Array<BuildingDef>();
-        foreach (var def in aktuelleDatenbank.Buildings.GetByCategory(category))
+        foreach (var def in this.aktuelleDatenbank.Buildings.GetByCategory(category))
         {
             ergebnis.Add(def);
         }
@@ -84,7 +84,7 @@ public partial class DatabaseLegacyAdapter : Node
 
     public Godot.Collections.Array<BuildingDef> GetBuildableBuildings()
     {
-        if (aktuelleDatenbank?.Buildings is IBuildingRepository repo)
+        if (this.aktuelleDatenbank?.Buildings is IBuildingRepository repo)
         {
             var array = new Godot.Collections.Array<BuildingDef>();
             foreach (var def in repo.GetBuildable())
@@ -98,7 +98,7 @@ public partial class DatabaseLegacyAdapter : Node
 
     public Godot.Collections.Dictionary GetBuildableCatalog()
     {
-        if (aktuelleDatenbank?.Buildings is IBuildingRepository repo)
+        if (this.aktuelleDatenbank?.Buildings is IBuildingRepository repo)
         {
             return repo.GetBuildableCatalog();
         }
@@ -107,25 +107,25 @@ public partial class DatabaseLegacyAdapter : Node
 
     public RecipeDef? GetRecipe(string id)
     {
-        if (aktuelleDatenbank == null)
+        if (this.aktuelleDatenbank == null)
         {
             return null;
         }
-        return aktuelleDatenbank.Recipes.GetById(id);
+        return this.aktuelleDatenbank.Recipes.GetById(id);
     }
 
     public IReadOnlyCollection<RecipeDef> GetAllRecipes()
     {
-        if (aktuelleDatenbank == null)
+        if (this.aktuelleDatenbank == null)
         {
             return Array.Empty<RecipeDef>();
         }
-        return aktuelleDatenbank.Recipes.GetAll();
+        return this.aktuelleDatenbank.Recipes.GetAll();
     }
 
     public Godot.Collections.Array<Godot.Collections.Dictionary> GetBuildablesByCategory(string category = "buildable")
     {
-        if (aktuelleDatenbank?.Buildings is IBuildingRepository repo)
+        if (this.aktuelleDatenbank?.Buildings is IBuildingRepository repo)
         {
             return repo.GetBuildablesByCategory(category);
         }
@@ -134,31 +134,32 @@ public partial class DatabaseLegacyAdapter : Node
 
     public Result<BuildingDef> TryGetBuilding(string id)
     {
-        if (aktuelleDatenbank == null)
+        if (this.aktuelleDatenbank == null)
         {
             return Result<BuildingDef>.Fail("GameDatabase nicht initialisiert.");
         }
-        return aktuelleDatenbank.Buildings.TryGet(id);
+        return this.aktuelleDatenbank.Buildings.TryGet(id);
     }
 
     protected void LogMigrationStatus()
     {
-        if (aktuelleDatenbank == null)
+        if (this.aktuelleDatenbank == null)
         {
             DebugLogger.LogServices("DatabaseLegacyAdapter: GameDatabase nicht gesetzt");
             return;
         }
 
         DebugLogger.LogServices("=== Datenbank-Status ===");
-        DebugLogger.LogServices(() => $"Ressourcen: {aktuelleDatenbank.Resources.GetAll().Count}");
-        DebugLogger.LogServices(() => $"Gebaeude: {aktuelleDatenbank.Buildings.GetAll().Count}");
-        DebugLogger.LogServices(() => $"Rezepte: {aktuelleDatenbank.Recipes.GetAll().Count}");
+        DebugLogger.LogServices(() => $"Ressourcen: {this.aktuelleDatenbank.Resources.GetAll().Count}");
+        DebugLogger.LogServices(() => $"Gebaeude: {this.aktuelleDatenbank.Buildings.GetAll().Count}");
+        DebugLogger.LogServices(() => $"Rezepte: {this.aktuelleDatenbank.Recipes.GetAll().Count}");
         DebugLogger.LogServices("=== Status Ende ===");
     }
 
-    private static IReadOnlyDictionary<string, T> ErzeugeDictionary<T>(IDataRepository<T> repository, Func<T, string> keySelector) where T : Resource
+    private static IReadOnlyDictionary<string, T> ErzeugeDictionary<T>(IDataRepository<T> repository, Func<T, string> keySelector)
+        where T : Resource
     {
-        var dict = new Dictionary<string, T>();
+        var dict = new Dictionary<string, T>(StringComparer.Ordinal);
         foreach (var item in repository.GetAll())
         {
             var key = keySelector(item);

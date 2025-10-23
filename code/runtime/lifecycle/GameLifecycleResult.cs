@@ -1,12 +1,14 @@
-﻿// SPDX-License-Identifier: MIT
-using System;
-
+// SPDX-License-Identifier: MIT
 namespace IndustrieLite.Runtime.Lifecycle
 {
+    using System;
+
     public class GameLifecycleResult
     {
         public bool Success { get; set; }
+
         public string? ErrorMessage { get; set; }
+
         public Exception? Exception { get; set; }
 
         public static GameLifecycleResult CreateSuccess()
@@ -20,7 +22,7 @@ namespace IndustrieLite.Runtime.Lifecycle
             {
                 Success = false,
                 ErrorMessage = message,
-                Exception = exception
+                Exception = exception,
             };
         }
     }

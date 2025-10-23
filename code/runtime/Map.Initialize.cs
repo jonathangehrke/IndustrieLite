@@ -1,9 +1,9 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
 /// Map - Explicit DI Initialization
-/// Dependencies werden via Initialize() injiziert statt via ServiceContainer lookup
+/// Dependencies werden via Initialize() injiziert statt via ServiceContainer lookup.
 /// </summary>
 public partial class Map : Node2D
 {
@@ -17,15 +17,20 @@ public partial class Map : Node2D
         this.camera = cameraController;
 
         if (gameManager == null)
+        {
             DebugLogger.LogServices("Map: WARNING - GameManager not found");
+        }
+
         if (cameraController == null)
+        {
             DebugLogger.LogServices("Map: WARNING - CameraController not found");
+        }
 
         // Hook up camera if available
-        if (camera != null && !cameraHooked)
+        if (this.camera != null && !this.cameraHooked)
         {
-            _abos.VerbindeSignal(camera, CameraController.SignalName.CameraViewChanged, this, nameof(OnCameraViewChanged));
-            cameraHooked = true;
+            this.abos.VerbindeSignal(this.camera, CameraController.SignalName.CameraViewChanged, this, nameof(this.OnCameraViewChanged));
+            this.cameraHooked = true;
         }
     }
 }

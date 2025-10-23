@@ -1,36 +1,43 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System.Threading.Tasks;
+using Godot;
 
 /// <summary>
-/// UIService.SaveLoad: Save/Load und Game-Lifecycle (EventHub)
+/// UIService.SaveLoad: Save/Load und Game-Lifecycle (EventHub).
 /// </summary>
 public partial class UIService
 {
     /// <summary>
-    /// Check if game has been started (ersetzt root.call("has_game"))
+    /// Check if game has been started (ersetzt root.call("has_game")).
     /// </summary>
+    /// <returns></returns>
     public bool HasGame()
     {
-        return gameManager != null;
+        return this.gameManager != null;
     }
 
     // === Save/Load API ===
+
     /// <summary>
-    /// Save game to named slot
+    /// Save game to named slot.
     /// </summary>
+    /// <returns></returns>
     public string SaveGameToSlot(string slotName)
     {
         if (string.IsNullOrWhiteSpace(slotName))
         {
             DebugLogger.Log("debug_services", DebugLogger.LogLevel.Error, () => "UIService: Ungueltiger Slot-Name in SaveGameToSlot()");
-            ShowErrorToast(new ErrorInfo(ErrorIds.TransportInvalidArgumentName, "Ungueltiger Slot-Name"));
+            this.ShowErrorToast(new ErrorInfo(ErrorIds.TransportInvalidArgumentName, "Ungueltiger Slot-Name"));
             return "";
         }
-        if (gameManager == null) InitializeServices();
+        if (this.gameManager == null)
+        {
+            this.InitializeServices();
+        }
+
         var file = $"saves/{slotName}.json";
-        gameManager?.ManagerCoordinator?.SaveGame(file);
-        ShowSuccessToast($"Spiel gespeichert: {file}");
+        this.gameManager?.ManagerCoordinator?.SaveGame(file);
+        this.ShowSuccessToast($"Spiel gespeichert: {file}");
         return file;
     }
 
@@ -39,34 +46,42 @@ public partial class UIService
         if (string.IsNullOrWhiteSpace(slotName))
         {
             DebugLogger.Log("debug_services", DebugLogger.LogLevel.Error, () => "UIService: Ungueltiger Slot-Name in SaveGameToSlotAsync()");
-            ShowErrorToast(new ErrorInfo(ErrorIds.TransportInvalidArgumentName, "Ungueltiger Slot-Name"));
+            this.ShowErrorToast(new ErrorInfo(ErrorIds.TransportInvalidArgumentName, "Ungueltiger Slot-Name"));
             return string.Empty;
         }
-        if (gameManager == null) InitializeServices();
-        var file = $"saves/{slotName}.json";
-        if (gameManager?.ManagerCoordinator != null)
+        if (this.gameManager == null)
         {
-            await gameManager.ManagerCoordinator.SaveGameAsync(file);
+            this.InitializeServices();
         }
-        ShowSuccessToast($"Spiel gespeichert: {file}");
+
+        var file = $"saves/{slotName}.json";
+        if (this.gameManager?.ManagerCoordinator != null)
+        {
+            await this.gameManager.ManagerCoordinator.SaveGameAsync(file);
+        }
+        this.ShowSuccessToast($"Spiel gespeichert: {file}");
         return file;
     }
 
     /// <summary>
-    /// Load game from named slot
+    /// Load game from named slot.
     /// </summary>
     public void LoadGameFromSlot(string slotName)
     {
         if (string.IsNullOrWhiteSpace(slotName))
         {
             DebugLogger.Log("debug_services", DebugLogger.LogLevel.Error, () => "UIService: Ungueltiger Slot-Name in LoadGameFromSlot()");
-            ShowErrorToast(new ErrorInfo(ErrorIds.TransportInvalidArgumentName, "Ungueltiger Slot-Name"));
+            this.ShowErrorToast(new ErrorInfo(ErrorIds.TransportInvalidArgumentName, "Ungueltiger Slot-Name"));
             return;
         }
-        if (gameManager == null) InitializeServices();
+        if (this.gameManager == null)
+        {
+            this.InitializeServices();
+        }
+
         var file = $"saves/{slotName}.json";
-        gameManager?.ManagerCoordinator?.LoadGame(file);
-        ShowSuccessToast($"Spiel geladen: {file}");
+        this.gameManager?.ManagerCoordinator?.LoadGame(file);
+        this.ShowSuccessToast($"Spiel geladen: {file}");
     }
 
     public async Task LoadGameFromSlotAsync(string slotName)
@@ -74,28 +89,33 @@ public partial class UIService
         if (string.IsNullOrWhiteSpace(slotName))
         {
             DebugLogger.Log("debug_services", DebugLogger.LogLevel.Error, () => "UIService: Ungueltiger Slot-Name in LoadGameFromSlotAsync()");
-            ShowErrorToast(new ErrorInfo(ErrorIds.TransportInvalidArgumentName, "Ungueltiger Slot-Name"));
+            this.ShowErrorToast(new ErrorInfo(ErrorIds.TransportInvalidArgumentName, "Ungueltiger Slot-Name"));
             return;
         }
-        if (gameManager == null) InitializeServices();
-        var file = $"saves/{slotName}.json";
-        if (gameManager?.ManagerCoordinator != null)
+        if (this.gameManager == null)
         {
-            await gameManager.ManagerCoordinator.LoadGameAsync(file);
+            this.InitializeServices();
         }
-        ShowSuccessToast($"Spiel geladen: {file}");
+
+        var file = $"saves/{slotName}.json";
+        if (this.gameManager?.ManagerCoordinator != null)
+        {
+            await this.gameManager.ManagerCoordinator.LoadGameAsync(file);
+        }
+        this.ShowSuccessToast($"Spiel geladen: {file}");
     }
 
     /// <summary>
     /// Save game with custom name and return final sanitized name
-    /// (ersetzt root.call("save_game_with_name"))
+    /// (ersetzt root.call("save_game_with_name")).
     /// </summary>
+    /// <returns></returns>
     public string SaveGameWithName(string slotName)
     {
         if (string.IsNullOrWhiteSpace(slotName))
         {
             DebugLogger.Log("debug_services", DebugLogger.LogLevel.Error, () => "UIService: Invalid slot name in SaveGameWithName()");
-            ShowErrorToast(new ErrorInfo(ErrorIds.TransportInvalidArgumentName, "Ungueltiger Slot-Name"));
+            this.ShowErrorToast(new ErrorInfo(ErrorIds.TransportInvalidArgumentName, "Ungueltiger Slot-Name"));
             return "";
         }
 
@@ -117,11 +137,15 @@ public partial class UIService
             candidate = "slot1";
         }
 
-        if (gameManager == null) InitializeServices();
+        if (this.gameManager == null)
+        {
+            this.InitializeServices();
+        }
+
         var fileName = $"saves/{candidate}.json";
-        gameManager?.ManagerCoordinator?.SaveGame(fileName);
+        this.gameManager?.ManagerCoordinator?.SaveGame(fileName);
         DebugLogger.LogLifecycle(() => $"UIService: Game saved to {fileName}");
-        ShowSuccessToast($"Spiel gespeichert: {fileName}");
+        this.ShowSuccessToast($"Spiel gespeichert: {fileName}");
         return candidate;
     }
 
@@ -130,7 +154,7 @@ public partial class UIService
         if (string.IsNullOrWhiteSpace(slotName))
         {
             DebugLogger.Log("debug_services", DebugLogger.LogLevel.Error, () => "UIService: Invalid slot name in SaveGameWithNameAsync()");
-            ShowErrorToast(new ErrorInfo(ErrorIds.TransportInvalidArgumentName, "Ungueltiger Slot-Name"));
+            this.ShowErrorToast(new ErrorInfo(ErrorIds.TransportInvalidArgumentName, "Ungueltiger Slot-Name"));
             return string.Empty;
         }
 
@@ -151,28 +175,37 @@ public partial class UIService
             candidate = "slot1";
         }
 
-        if (gameManager == null) InitializeServices();
-        var fileName = $"saves/{candidate}.json";
-        if (gameManager?.ManagerCoordinator != null)
+        if (this.gameManager == null)
         {
-            await gameManager.ManagerCoordinator.SaveGameAsync(fileName);
+            this.InitializeServices();
+        }
+
+        var fileName = $"saves/{candidate}.json";
+        if (this.gameManager?.ManagerCoordinator != null)
+        {
+            await this.gameManager.ManagerCoordinator.SaveGameAsync(fileName);
         }
         DebugLogger.LogLifecycle(() => $"UIService: Game saved to {fileName}");
-        ShowSuccessToast($"Spiel gespeichert: {fileName}");
+        this.ShowSuccessToast($"Spiel gespeichert: {fileName}");
         return candidate;
     }
 
     // === Game Lifecycle API (Event-getrieben) ===
+
     /// <summary>
     /// Neues Spiel anfordern (UI -> EventHub). Root/Game reagiert auf das Signal.
     /// </summary>
     public void StartNewGame()
     {
-        if (eventHub == null) InitializeServices();
-        if (eventHub != null)
+        if (this.eventHub == null)
         {
-            DebugLogger.LogServices("UIService: Sende GameStartRequested", DebugLogs);
-            eventHub.EmitSignal(EventHub.SignalName.GameStartRequested);
+            this.InitializeServices();
+        }
+
+        if (this.eventHub != null)
+        {
+            DebugLogger.LogServices("UIService: Sende GameStartRequested", this.DebugLogs);
+            this.eventHub.EmitSignal(EventHub.SignalName.GameStartRequested);
         }
         else
         {
@@ -185,11 +218,15 @@ public partial class UIService
     /// </summary>
     public void ContinueGame()
     {
-        if (eventHub == null) InitializeServices();
-        if (eventHub != null)
+        if (this.eventHub == null)
         {
-            DebugLogger.LogServices("UIService: Sende GameContinueRequested", DebugLogs);
-            eventHub.EmitSignal(EventHub.SignalName.GameContinueRequested);
+            this.InitializeServices();
+        }
+
+        if (this.eventHub != null)
+        {
+            DebugLogger.LogServices("UIService: Sende GameContinueRequested", this.DebugLogs);
+            this.eventHub.EmitSignal(EventHub.SignalName.GameContinueRequested);
         }
         else
         {
@@ -207,11 +244,15 @@ public partial class UIService
             DebugLogger.Log("debug_services", DebugLogger.LogLevel.Error, () => "UIService: Ungueltiger Slot-Name in LoadGame()");
             return;
         }
-        if (eventHub == null) InitializeServices();
-        if (eventHub != null)
+        if (this.eventHub == null)
         {
-            DebugLogger.LogServices($"UIService: Sende GameLoadRequested fuer Slot '{slotName}'", DebugLogs);
-            eventHub.EmitSignal(EventHub.SignalName.GameLoadRequested, slotName);
+            this.InitializeServices();
+        }
+
+        if (this.eventHub != null)
+        {
+            DebugLogger.LogServices($"UIService: Sende GameLoadRequested fuer Slot '{slotName}'", this.DebugLogs);
+            this.eventHub.EmitSignal(EventHub.SignalName.GameLoadRequested, slotName);
         }
         else
         {

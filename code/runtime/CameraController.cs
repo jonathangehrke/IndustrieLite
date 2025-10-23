@@ -1,19 +1,23 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System.Collections.Generic;
+using Godot;
 
 public partial class CameraController : Camera2D
 {
     // Signal bei Kamera-Aktualisierung (Position/Zoom geaendert)
-    [Signal] public delegate void CameraViewChangedEventHandler(Vector2 position, Vector2 zoom);
+    [Signal]
+    public delegate void CameraViewChangedEventHandler(Vector2 position, Vector2 zoom);
 
-    [Export] public float PanSpeed = 600f; // Pixel pro Sekunde
-    [Export] public float ZoomStep = 0.1f; // relative Aenderung pro Schritt (10%)
-    [Export] public float MinZoom = 0.4f;  // minimaler Zoom (kleinster Wert)
-    [Export] public float MaxZoom = 3.0f;  // maximaler Zoom (groesster Wert)
+    [Export]
+    public float PanSpeed = 600f; // Pixel pro Sekunde
+    [Export]
+    public float ZoomStep = 0.1f; // relative Aenderung pro Schritt (10%)
+    [Export]
+    public float MinZoom = 0.4f;  // minimaler Zoom (kleinster Wert)
+    [Export]
+    public float MaxZoom = 3.0f;  // maximaler Zoom (groesster Wert)
 
     // Keine NodePath-DI mehr; Game-Daten über ServiceContainer
-
     private LandManager? landManager;
     private BuildingManager? buildingManager;
     private Vector2 lastEmittedPos = Vector2.Inf; // init for immediate first emit
@@ -24,9 +28,8 @@ public partial class CameraController : Camera2D
     private float simZoom;
     private float letzterSimZoom;
     private GameClockManager? gameClock;
-    private float _interpAccum = 1f;
-    private float _interpInterval = 1f;
-
+    private float interpAccum = 1f;
+    private float interpInterval = 1f;
 
     public override void _Ready()
     {
@@ -34,27 +37,27 @@ public partial class CameraController : Camera2D
         var sc = ServiceContainer.Instance;
         if (sc != null)
         {
-            sc.TryGetNamedService<LandManager>(nameof(LandManager), out landManager);
-            sc.TryGetNamedService<BuildingManager>(nameof(BuildingManager), out buildingManager);
+            sc.TryGetNamedService<LandManager>(nameof(LandManager), out this.landManager);
+            sc.TryGetNamedService<BuildingManager>(nameof(BuildingManager), out this.buildingManager);
         }
 
         // Kamera initial auf Kartenmitte setzen
-        if (landManager != null && buildingManager != null)
+        if (this.landManager != null && this.buildingManager != null)
         {
-            int worldW = landManager.GridW * buildingManager.TileSize;
-            int worldH = landManager.GridH * buildingManager.TileSize;
-            Position = new Vector2(worldW / 2f, worldH / 2f);
+            int worldW = this.landManager.GridW * this.buildingManager.TileSize;
+            int worldH = this.landManager.GridH * this.buildingManager.TileSize;
+            this.Position = new Vector2(worldW / 2f, worldH / 2f);
         }
 
-        simPosition = Position;
-        letzteSimPosition = Position;
-        simZoom = Zoom.X;
-        letzterSimZoom = Zoom.X;
+        this.simPosition = this.Position;
+        this.letzteSimPosition = this.Position;
+        this.simZoom = this.Zoom.X;
+        this.letzterSimZoom = this.Zoom.X;
 
-        _interpAccum = 1f;
-        _interpInterval = 1f;
+        this.interpAccum = 1f;
+        this.interpInterval = 1f;
 
-        SucheGameClock();
+        this.SucheGameClock();
 
         // Selbstregistrierung im ServiceContainer
         try
@@ -62,24 +65,29 @@ public partial class CameraController : Camera2D
             // Typed-Registration entfernt (nur Named)
             sc?.RegisterNamedService(nameof(CameraController), this);
         }
-        catch { }
+        catch
+        {
+        }
     }
 
     private void SucheGameClock()
     {
         var sc = ServiceContainer.Instance;
         if (sc != null)
-            sc.TryGetNamedService<GameClockManager>("GameClockManager", out gameClock);
-        if (gameClock == null)
         {
-            CallDeferred(nameof(SucheGameClock));
+            sc.TryGetNamedService<GameClockManager>("GameClockManager", out this.gameClock);
+        }
+
+        if (this.gameClock == null)
+        {
+            this.CallDeferred(nameof(this.SucheGameClock));
         }
     }
 
     public void VerarbeiteSimTick(double dt, Vector2 bewegungsRichtung, IReadOnlyList<int> zoomSchritte)
     {
-        letzteSimPosition = simPosition;
-        letzterSimZoom = simZoom;
+        this.letzteSimPosition = this.simPosition;
+        this.letzterSimZoom = this.simZoom;
 
         if (bewegungsRichtung != Vector2.Zero)
         {
@@ -88,18 +96,17 @@ public partial class CameraController : Camera2D
             {
                 norm = norm.Normalized();
             }
-            float distanz = PanSpeed * (float)dt;
-            simPosition += norm * distanz;
+            float distanz = this.PanSpeed * (float)dt;
+            this.simPosition += norm * distanz;
         }
 
-        if (landManager != null && buildingManager != null)
+        if (this.landManager != null && this.buildingManager != null)
         {
-            float worldW = landManager.GridW * buildingManager.TileSize;
-            float worldH = landManager.GridH * buildingManager.TileSize;
-            simPosition = new Vector2(
-                Mathf.Clamp(simPosition.X, 0f, worldW),
-                Mathf.Clamp(simPosition.Y, 0f, worldH)
-            );
+            float worldW = this.landManager.GridW * this.buildingManager.TileSize;
+            float worldH = this.landManager.GridH * this.buildingManager.TileSize;
+            this.simPosition = new Vector2(
+                Mathf.Clamp(this.simPosition.X, 0f, worldW),
+                Mathf.Clamp(this.simPosition.Y, 0f, worldH));
         }
 
         if (zoomSchritte != null)
@@ -111,70 +118,70 @@ public partial class CameraController : Camera2D
                 {
                     for (int j = 0; j < schritt; j++)
                     {
-                        simZoom *= 1.0f + ZoomStep;
+                        this.simZoom *= 1.0f + this.ZoomStep;
                     }
                 }
                 else if (schritt < 0)
                 {
                     for (int j = 0; j < -schritt; j++)
                     {
-                        simZoom *= 1.0f - ZoomStep;
+                        this.simZoom *= 1.0f - this.ZoomStep;
                     }
                 }
             }
         }
 
-        simZoom = Mathf.Clamp(simZoom, MinZoom, MaxZoom);
+        this.simZoom = Mathf.Clamp(this.simZoom, this.MinZoom, this.MaxZoom);
 
-        _interpAccum = 0f;
-        _interpInterval = (float)dt;
+        this.interpAccum = 0f;
+        this.interpInterval = (float)dt;
     }
 
     public override void _Process(double delta)
     {
-        _interpAccum += (float)delta;
-        float alpha = _interpInterval > 0f ? Mathf.Clamp(_interpAccum / _interpInterval, 0f, 1f) : 1f;
+        this.interpAccum += (float)delta;
+        float alpha = this.interpInterval > 0f ? Mathf.Clamp(this.interpAccum / this.interpInterval, 0f, 1f) : 1f;
 
-        var interpoliertePosition = letzteSimPosition.Lerp(simPosition, alpha);
-        Position = interpoliertePosition;
+        var interpoliertePosition = this.letzteSimPosition.Lerp(this.simPosition, alpha);
+        this.Position = interpoliertePosition;
 
-        float interpolierterZoom = Mathf.Lerp(letzterSimZoom, simZoom, alpha);
-        Zoom = new Vector2(interpolierterZoom, interpolierterZoom);
+        float interpolierterZoom = Mathf.Lerp(this.letzterSimZoom, this.simZoom, alpha);
+        this.Zoom = new Vector2(interpolierterZoom, interpolierterZoom);
 
         // Aenderungen an Position/Zoom erkennen und einmaliges Event senden
-        var pos = Position;
-        var zoom = Zoom;
-        bool moved = (pos - lastEmittedPos).LengthSquared() > 0.0001f;
-        bool zoomed = (zoom - lastEmittedZoom).LengthSquared() > 0.000001f;
+        var pos = this.Position;
+        var zoom = this.Zoom;
+        bool moved = (pos - this.lastEmittedPos).LengthSquared() > 0.0001f;
+        bool zoomed = (zoom - this.lastEmittedZoom).LengthSquared() > 0.000001f;
         if (moved || zoomed)
         {
-            EmitSignal(SignalName.CameraViewChanged, pos, zoom);
-            lastEmittedPos = pos;
-            lastEmittedZoom = zoom;
+            this.EmitSignal(SignalName.CameraViewChanged, pos, zoom);
+            this.lastEmittedPos = pos;
+            this.lastEmittedZoom = zoom;
         }
     }
 
     public void JumpToImmediate(Vector2 worldPos)
     {
-        simPosition = worldPos;
-        letzteSimPosition = worldPos;
-        Position = worldPos;
-        lastEmittedPos = worldPos;
-        _interpAccum = 1f;
-        _interpInterval = 1f;
-        EmitSignal(SignalName.CameraViewChanged, Position, Zoom);
+        this.simPosition = worldPos;
+        this.letzteSimPosition = worldPos;
+        this.Position = worldPos;
+        this.lastEmittedPos = worldPos;
+        this.interpAccum = 1f;
+        this.interpInterval = 1f;
+        this.EmitSignal(SignalName.CameraViewChanged, this.Position, this.Zoom);
     }
 
     public void SetZoomImmediate(float targetZoom)
     {
-        float clamped = Mathf.Clamp(targetZoom, MinZoom, MaxZoom);
-        simZoom = clamped;
-        letzterSimZoom = clamped;
-        Zoom = new Vector2(clamped, clamped);
-        lastEmittedZoom = Zoom;
-        _interpAccum = 1f;
-        _interpInterval = 1f;
-        EmitSignal(SignalName.CameraViewChanged, Position, Zoom);
+        float clamped = Mathf.Clamp(targetZoom, this.MinZoom, this.MaxZoom);
+        this.simZoom = clamped;
+        this.letzterSimZoom = clamped;
+        this.Zoom = new Vector2(clamped, clamped);
+        this.lastEmittedZoom = this.Zoom;
+        this.interpAccum = 1f;
+        this.interpInterval = 1f;
+        this.EmitSignal(SignalName.CameraViewChanged, this.Position, this.Zoom);
     }
 }
 

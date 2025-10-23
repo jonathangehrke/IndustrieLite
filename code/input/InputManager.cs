@@ -1,24 +1,32 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
+using Godot;
 
 public partial class InputManager : Node, ILifecycleScope
 {
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
-    public enum InputMode { None, Build, BuyLand, SellLand, Transport, Demolish }
+
+    public enum InputMode
+    {
+        None,
+        Build,
+        BuyLand,
+        SellLand,
+        Transport,
+        Demolish
+    }
 
     // Keine NodePath-DI mehr: Alle Abhängigkeiten werden über den ServiceContainer aufgelöst
-
     private bool signaleAktiv = true;
 
     [Export]
     public bool SignaleAktiv
     {
-        get => signaleAktiv;
+        get => this.signaleAktiv;
         set
         {
-            signaleAktiv = value;
-            AktualisiereSignalWeitergabe();
+            this.signaleAktiv = value;
+            this.AktualisiereSignalWeitergabe();
         }
     }
 
@@ -36,10 +44,11 @@ public partial class InputManager : Node, ILifecycleScope
     private ToolManager toolManager = default!;
     private InputEventRouter inputEventRouter = default!;
 
-    public InputMode CurrentMode => toolManager?.CurrentMode ?? InputMode.None;
-    public string CurrentBuildType => toolManager?.CurrentBuildType ?? string.Empty;
+    public InputMode CurrentMode => this.toolManager?.CurrentMode ?? InputMode.None;
 
-    private bool _initialized = false;
+    public string CurrentBuildType => this.toolManager?.CurrentBuildType ?? string.Empty;
+
+    private bool initialized = false;
 
     public override void _Ready()
     {
@@ -60,22 +69,22 @@ public partial class InputManager : Node, ILifecycleScope
 
     public void SetMode(InputMode mode, string buildType = "")
     {
-        toolManager?.SetMode(mode, buildType);
+        this.toolManager?.SetMode(mode, buildType);
     }
 
     public void SetBuildMode(string buildId)
     {
-        SetMode(InputMode.Build, buildId);
+        this.SetMode(InputMode.Build, buildId);
     }
 
     public void HandleClick(Vector2I zelle)
     {
-        inputEventRouter?.HandleClick(zelle);
+        this.inputEventRouter?.HandleClick(zelle);
     }
 
     public IInputTool? GetCurrentTool()
     {
-        return toolManager?.HoleAktuellesWerkzeug();
+        return this.toolManager?.HoleAktuellesWerkzeug();
     }
 
     public void Initialize(
@@ -90,7 +99,7 @@ public partial class InputManager : Node, ILifecycleScope
         CameraController? kameraController,
         Simulation? simulation)
     {
-        if (_initialized)
+        if (this.initialized)
         {
             DebugLogger.LogInput("InputManager.Initialize(): Bereits initialisiert, überspringe");
             return;
@@ -107,23 +116,26 @@ public partial class InputManager : Node, ILifecycleScope
         this.kameraController = kameraController;
 
         // WICHTIG: Warten bis _Ready() komplett ist und Child-Nodes verfügbar sind
-        CallDeferred(nameof(InitializeDeferred));
+        this.CallDeferred(nameof(this.InitializeDeferred));
     }
 
     private void InitializeDeferred()
     {
-        if (_initialized) return;
+        if (this.initialized)
+        {
+            return;
+        }
 
         try
         {
             // Kinder-Nodes holen
-            FindeKinder();
+            this.FindeKinder();
 
             // Komponenten verdrahten
-            VerbindeKomponenten();
-            AktualisiereSignalWeitergabe();
+            this.VerbindeKomponenten();
+            this.AktualisiereSignalWeitergabe();
 
-            _initialized = true;
+            this.initialized = true;
             DebugLogger.LogInput("InputManager: Initialisierung abgeschlossen (DI, deferred)");
         }
         catch (System.Exception ex)
@@ -134,22 +146,22 @@ public partial class InputManager : Node, ILifecycleScope
 
     private void FindeKinder()
     {
-        inputHandler = GetNode<InputHandler>("InputHandler");
-        toolManager = GetNode<ToolManager>("InputHandler/ToolManager");
-        inputEventRouter = GetNode<InputEventRouter>("InputHandler/InputEventRouter");
+        this.inputHandler = this.GetNode<InputHandler>("InputHandler");
+        this.toolManager = this.GetNode<ToolManager>("InputHandler/ToolManager");
+        this.inputEventRouter = this.GetNode<InputEventRouter>("InputHandler/InputEventRouter");
     }
 
     private void VerbindeKomponenten()
     {
-        toolManager.InjiziereDependencies(landManager, buildingManager, economyManager, transportManager, roadManager, map, eventHub);
-        inputEventRouter.InjiziereDependencies(map, gameManager, toolManager, buildingManager, kameraController, eventHub);
-        inputHandler.InjiziereDependencies(map, inputEventRouter, toolManager);
+        this.toolManager.InjiziereDependencies(this.landManager, this.buildingManager, this.economyManager, this.transportManager, this.roadManager, this.map, this.eventHub);
+        this.inputEventRouter.InjiziereDependencies(this.map, this.gameManager, this.toolManager, this.buildingManager, this.kameraController, this.eventHub);
+        this.inputHandler.InjiziereDependencies(this.map, this.inputEventRouter, this.toolManager);
     }
 
     private void AktualisiereSignalWeitergabe()
     {
-        toolManager?.SetzeSignaleAktiv(signaleAktiv);
-        inputEventRouter?.SetzeSignaleAktiv(signaleAktiv);
+        this.toolManager?.SetzeSignaleAktiv(this.signaleAktiv);
+        this.inputEventRouter?.SetzeSignaleAktiv(this.signaleAktiv);
     }
 }
 

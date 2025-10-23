@@ -1,6 +1,7 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using Godot;
 
 /// <summary>
 /// Verarbeitet die vom InputHandler erzeugten Befehle und integriert sie in die Simulation.
@@ -14,46 +15,50 @@ public partial class InputEventRouter : Node, ITickable
         ToggleDemolish,
         ZoomSchritt,
         MausKlick,
-        CameraBewegen
+        CameraBewegen,
     }
 
+    [StructLayout(LayoutKind.Auto)]
     public readonly struct EingabeBefehl
     {
         public EingabeBefehl(EingabeBefehlTyp typ)
         {
-            Typ = typ;
-            Wert = 0;
-            Zelle = default;
-            Richtung = Vector2.Zero;
+            this.Typ = typ;
+            this.Wert = 0;
+            this.Zelle = default;
+            this.Richtung = Vector2.Zero;
         }
 
         public EingabeBefehl(EingabeBefehlTyp typ, int wert)
         {
-            Typ = typ;
-            Wert = wert;
-            Zelle = default;
-            Richtung = Vector2.Zero;
+            this.Typ = typ;
+            this.Wert = wert;
+            this.Zelle = default;
+            this.Richtung = Vector2.Zero;
         }
 
         public EingabeBefehl(EingabeBefehlTyp typ, Vector2I zelle)
         {
-            Typ = typ;
-            Wert = 0;
-            Zelle = zelle;
-            Richtung = Vector2.Zero;
+            this.Typ = typ;
+            this.Wert = 0;
+            this.Zelle = zelle;
+            this.Richtung = Vector2.Zero;
         }
 
         public EingabeBefehl(EingabeBefehlTyp typ, Vector2 richtung)
         {
-            Typ = typ;
-            Wert = 0;
-            Zelle = default;
-            Richtung = richtung;
+            this.Typ = typ;
+            this.Wert = 0;
+            this.Zelle = default;
+            this.Richtung = richtung;
         }
 
         public EingabeBefehlTyp Typ { get; }
+
         public int Wert { get; }
+
         public Vector2I Zelle { get; }
+
         public Vector2 Richtung { get; }
     }
 
@@ -88,118 +93,118 @@ public partial class InputEventRouter : Node, ITickable
         this.kameraController = kameraController;
         this.eventHub = eventHub;
 
-        RegistrierungBeiSimulationSicherstellen();
+        this.RegistrierungBeiSimulationSicherstellen();
         DebugLogger.LogInput("InputEventRouter: Abhaengigkeiten injiziert");
     }
 
     public void SetzeSignaleAktiv(bool aktiv)
     {
-        signaleAktiv = aktiv;
+        this.signaleAktiv = aktiv;
     }
 
     public void FordereModusAbbrechenDurchEscAn()
     {
-        FuegeBefehlHinzu(new EingabeBefehl(EingabeBefehlTyp.ModusAbbrechenEsc));
+        this.FuegeBefehlHinzu(new EingabeBefehl(EingabeBefehlTyp.ModusAbbrechenEsc));
     }
 
     public void FordereModusAbbrechenDurchRechtsklickAn()
     {
-        FuegeBefehlHinzu(new EingabeBefehl(EingabeBefehlTyp.ModusAbbrechenRechtsklick));
+        this.FuegeBefehlHinzu(new EingabeBefehl(EingabeBefehlTyp.ModusAbbrechenRechtsklick));
     }
 
     public void FuegeZoomSchrittHinzu(int delta)
     {
-        FuegeBefehlHinzu(new EingabeBefehl(EingabeBefehlTyp.ZoomSchritt, delta));
+        this.FuegeBefehlHinzu(new EingabeBefehl(EingabeBefehlTyp.ZoomSchritt, delta));
     }
 
     public void FuegeMausKlickHinzu(Vector2I zelle)
     {
-        FuegeBefehlHinzu(new EingabeBefehl(EingabeBefehlTyp.MausKlick, zelle));
+        this.FuegeBefehlHinzu(new EingabeBefehl(EingabeBefehlTyp.MausKlick, zelle));
     }
 
     public void MeldeKameraBewegung(Vector2 richtung)
     {
-        FuegeBefehlHinzu(new EingabeBefehl(EingabeBefehlTyp.CameraBewegen, richtung));
+        this.FuegeBefehlHinzu(new EingabeBefehl(EingabeBefehlTyp.CameraBewegen, richtung));
     }
 
     public void VerarbeiteDemolishAktion(bool gedrueckt)
     {
         if (gedrueckt)
         {
-            if (!demolishTasteGedrueckt)
+            if (!this.demolishTasteGedrueckt)
             {
-                demolishTasteGedrueckt = true;
-                FuegeBefehlHinzu(new EingabeBefehl(EingabeBefehlTyp.ToggleDemolish));
+                this.demolishTasteGedrueckt = true;
+                this.FuegeBefehlHinzu(new EingabeBefehl(EingabeBefehlTyp.ToggleDemolish));
             }
         }
         else
         {
-            demolishTasteGedrueckt = false;
+            this.demolishTasteGedrueckt = false;
         }
     }
 
     public void HandleClick(Vector2I zelle)
     {
-        RouteMausKlick(zelle);
+        this.RouteMausKlick(zelle);
     }
 
     public void Tick(double dt)
     {
-        zoomBefehle.Clear();
+        this.zoomBefehle.Clear();
 
-        while (befehle.Count > 0)
+        while (this.befehle.Count > 0)
         {
-            var befehl = befehle.Dequeue();
+            var befehl = this.befehle.Dequeue();
             switch (befehl.Typ)
             {
                 case EingabeBefehlTyp.ModusAbbrechenEsc:
                 case EingabeBefehlTyp.ModusAbbrechenRechtsklick:
-                    FuehreAbbrechenAus(befehl.Typ);
+                    this.FuehreAbbrechenAus(befehl.Typ);
                     break;
                 case EingabeBefehlTyp.ToggleDemolish:
-                    ToggleDemolishModus();
+                    this.ToggleDemolishModus();
                     break;
                 case EingabeBefehlTyp.ZoomSchritt:
-                    zoomBefehle.Add(befehl.Wert);
+                    this.zoomBefehle.Add(befehl.Wert);
                     break;
                 case EingabeBefehlTyp.MausKlick:
-                    RouteMausKlick(befehl.Zelle);
+                    this.RouteMausKlick(befehl.Zelle);
                     break;
                 case EingabeBefehlTyp.CameraBewegen:
-                    aktuelleKameraRichtung = befehl.Richtung;
+                    this.aktuelleKameraRichtung = befehl.Richtung;
                     break;
             }
         }
 
-        if (kameraController != null)
+        if (this.kameraController != null)
         {
-            kameraController.VerarbeiteSimTick(dt, aktuelleKameraRichtung, zoomBefehle);
+            this.kameraController.VerarbeiteSimTick(dt, this.aktuelleKameraRichtung, this.zoomBefehle);
         }
 
-        zoomBefehle.Clear();
+        this.zoomBefehle.Clear();
     }
 
     private void FuegeBefehlHinzu(EingabeBefehl befehl)
     {
-        befehle.Enqueue(befehl);
+        this.befehle.Enqueue(befehl);
     }
 
     private void RouteMausKlick(Vector2I zelle)
     {
-        DebugLogger.LogInput(() => $"HandleClick Zelle: {zelle}, Modus: {toolManager?.CurrentMode}");
+        DebugLogger.LogInput(() => $"HandleClick Zelle: {zelle}, Modus: {this.toolManager?.CurrentMode}");
 
-        var koordinator = gameManager?.ManagerCoordinator;
-        bool warPotentiellerKauf = koordinator != null && map != null && koordinator.IsBuyLandModeActive() && !koordinator.IsOwned(zelle) && koordinator.CanBuyLand(zelle);
+        var koordinator = this.gameManager?.ManagerCoordinator;
+        bool warPotentiellerKauf = koordinator != null && this.map != null && koordinator.IsBuyLandModeActive() && !koordinator.IsOwned(zelle) && koordinator.CanBuyLand(zelle);
 
         // Keine Selektion starten, wenn wir im Build- oder Demolish-Modus sind
-        if (toolManager != null &&
-            toolManager.CurrentMode != InputManager.InputMode.Build &&
-            toolManager.CurrentMode != InputManager.InputMode.Demolish)
+        if (this.toolManager != null &&
+            this.toolManager.CurrentMode != InputManager.InputMode.Build &&
+            this.toolManager.CurrentMode != InputManager.InputMode.Demolish)
         {
-            HandleBuildingSelection(zelle);
+            this.HandleBuildingSelection(zelle);
         }
 
-        var werkzeug = toolManager?.HoleAktuellesWerkzeug();
+        var werkzeug = this.toolManager?.HoleAktuellesWerkzeug();
         if (werkzeug != null)
         {
             werkzeug.OnClick(zelle);
@@ -211,43 +216,43 @@ public partial class InputEventRouter : Node, ITickable
 
         if (koordinator != null && warPotentiellerKauf && koordinator.IsOwned(zelle))
         {
-            map?.TriggerPurchaseFeedback(zelle);
+            this.map?.TriggerPurchaseFeedback(zelle);
         }
     }
 
     private void HandleBuildingSelection(Vector2I cell)
     {
-        if (buildingManager == null)
+        if (this.buildingManager == null)
         {
             DebugLogger.LogInput("InputEventRouter: BuildingManager fehlt fuer Selektion");
             return;
         }
 
-        var building = buildingManager.GetBuildingAt(cell);
+        var building = this.buildingManager.GetBuildingAt(cell);
         if (building != null)
         {
             DebugLogger.LogInput(() => $"Gebaeude ausgewaehlt: {building.Name} ({building.GetType().Name})");
-            if (signaleAktiv && eventHub != null)
+            if (this.signaleAktiv && this.eventHub != null)
             {
-                eventHub.EmitSignal(EventHub.SignalName.SelectedBuildingChanged, building);
+                this.eventHub.EmitSignal(EventHub.SignalName.SelectedBuildingChanged, building);
                 DebugLogger.LogInput("SelectedBuildingChanged Signal gesendet");
             }
         }
         else
         {
             DebugLogger.LogInput("Kein Gebaeude an Position");
-            if (signaleAktiv && eventHub != null)
+            if (this.signaleAktiv && this.eventHub != null)
             {
-                eventHub.EmitSignal(EventHub.SignalName.SelectedBuildingChanged, (Node)null!);
+                this.eventHub.EmitSignal(EventHub.SignalName.SelectedBuildingChanged, (Node)null!);
             }
         }
     }
 
     private void FuehreAbbrechenAus(EingabeBefehlTyp typ)
     {
-        if (toolManager != null && toolManager.CurrentMode != InputManager.InputMode.None)
+        if (this.toolManager != null && this.toolManager.CurrentMode != InputManager.InputMode.None)
         {
-            toolManager.SetMode(InputManager.InputMode.None);
+            this.toolManager.SetMode(InputManager.InputMode.None);
             if (typ == EingabeBefehlTyp.ModusAbbrechenEsc)
             {
                 DebugLogger.LogInput("ESC: Modus auf None zurueckgesetzt");
@@ -260,12 +265,12 @@ public partial class InputEventRouter : Node, ITickable
         else if (typ == EingabeBefehlTyp.ModusAbbrechenEsc)
         {
             // Wenn ein HUD-Panel offen ist (z.B. Markt, Land, Produktion), zuerst dieses schließen
-            if (SchliesseOffeneHudPanels())
+            if (this.SchliesseOffeneHudPanels())
             {
                 return;
             }
 
-            var root = GetTree().Root.GetNodeOrNull<Node>("Root");
+            var root = this.GetTree().Root.GetNodeOrNull<Node>("Root");
             if (root != null)
             {
                 if (root.HasMethod("toggle_menu"))
@@ -278,12 +283,11 @@ public partial class InputEventRouter : Node, ITickable
                 }
             }
         }
-
     }
 
     private bool SchliesseOffeneHudPanels()
     {
-        var hud = GetTree().Root.FindChild("HUD", true, false) as Control;
+        var hud = this.GetTree().Root.FindChild("HUD", true, false) as Control;
         if (hud == null)
         {
             return false;
@@ -303,7 +307,7 @@ public partial class InputEventRouter : Node, ITickable
             geschlossen = true;
 
             // Landkauf/-verkauf-Modi sauber deaktivieren
-            var sc = GetTree().Root.GetNodeOrNull<Node>("/root/ServiceContainer");
+            var sc = this.GetTree().Root.GetNodeOrNull<Node>("/root/ServiceContainer");
             Node? uiService = null;
             if (sc != null)
             {
@@ -340,7 +344,7 @@ public partial class InputEventRouter : Node, ITickable
                 }
             }
             // Verlasse Build-Modus (InputManager auf None)
-            var sc = GetTree().Root.GetNodeOrNull<Node>("/root/ServiceContainer");
+            var sc = this.GetTree().Root.GetNodeOrNull<Node>("/root/ServiceContainer");
             Node? im = null;
             if (sc != null)
             {
@@ -359,28 +363,28 @@ public partial class InputEventRouter : Node, ITickable
 
     private void ToggleDemolishModus()
     {
-        toolManager?.ToggleDemolishModus();
+        this.toolManager?.ToggleDemolishModus();
     }
 
     private void RegistrierungBeiSimulationSicherstellen()
     {
-        if (simulation == null)
+        if (this.simulation == null)
         {
-            simulation = Simulation.Instance;
+            this.simulation = Simulation.Instance;
         }
-        if (simulation != null && !simulation.IsRegistered(this))
+        if (this.simulation != null && !this.simulation.IsRegistered(this))
         {
-            simulation.Register(this);
+            this.simulation.Register(this);
             DebugLogger.LogInput("InputEventRouter bei Simulation registriert");
         }
     }
 
     public override void _ExitTree()
     {
-        if (simulation != null)
+        if (this.simulation != null)
         {
-            simulation.Unregister(this);
-            simulation = null;
+            this.simulation.Unregister(this);
+            this.simulation = null;
         }
         base._ExitTree();
     }

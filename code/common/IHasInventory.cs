@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using System.Collections.Generic;
 using Godot;
 
@@ -13,6 +13,7 @@ public interface IHasInventory
     /// Liefert eine schreibgeschützte Sicht auf das Inventar.
     /// Schlüssel: Ressourcen-ID (StringName), Wert: Menge (float).
     /// </summary>
+    /// <returns></returns>
     IReadOnlyDictionary<StringName, float> GetInventory();
 
     /// <summary>

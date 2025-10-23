@@ -1,12 +1,12 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
+using Godot;
 
 /// <summary>
 /// Verantwortlich fuer Sammeln und Speichern des Spielzustands.
@@ -17,14 +17,14 @@ public class SaveManager
 
     public SaveManager(ServiceContainer? container)
     {
-        serviceContainer = container;
+        this.serviceContainer = container;
     }
 
     public void SaveGame(string fileName, LandManager land, BuildingManager buildings, EconomyManager economy, TransportManager? transport = null)
     {
         string? filePath = null;
         string? backupPath = null;
-        var clock = GetGameClock();
+        var clock = this.GetGameClock();
         GameClockManager.GameClockState? stateBeforePause = null;
         GameClockManager.GameClockState? capturedForSave = null;
         var clockWasRunning = false;
@@ -42,8 +42,8 @@ public class SaveManager
                 capturedForSave = clock.CaptureState();
             }
 
-            var timeManager = GetGameTimeManager();
-            var saveData = CollectGameState(land, buildings, economy, transport, timeManager, capturedForSave, stateBeforePause);
+            var timeManager = this.GetGameTimeManager();
+            var saveData = this.CollectGameState(land, buildings, economy, transport, timeManager, capturedForSave, stateBeforePause);
 
             filePath = SaveLoadPaths.GetSaveFilePath(fileName);
             var directory = Path.GetDirectoryName(filePath);
@@ -55,25 +55,27 @@ public class SaveManager
                 }
                 catch (Exception ex)
                 {
-                    throw new SaveException(SaveLoadErrorCodes.Sl001SaveDirectoryCreateFailed,
+                    throw new SaveException(
+                        SaveLoadErrorCodes.Sl001SaveDirectoryCreateFailed,
                         $"Failed to create save directory: {directory}", filePath, ex);
                 }
             }
 
             if (!SaveDataSchema.IsVersionSupported(saveData.Version))
             {
-                throw new SaveException(SaveLoadErrorCodes.Sl001SaveDirectoryCreateFailed,
+                throw new SaveException(
+                    SaveLoadErrorCodes.Sl001SaveDirectoryCreateFailed,
                     $"Schema version {saveData.Version} is not supported", filePath, saveData.Version);
             }
 
             if (File.Exists(filePath))
             {
                 backupPath = SaveLoadPaths.GetBackupPath(filePath);
-                TryCreateBackup(filePath, backupPath);
+                this.TryCreateBackup(filePath, backupPath);
             }
 
-            WriteToFile(filePath, saveData);
-            RemoveBackup(backupPath);
+            this.WriteToFile(filePath, saveData);
+            this.RemoveBackup(backupPath);
 
             DebugLogger.LogLifecycle(() => $"SaveGame: successfully saved to {filePath} (schema {saveData.Schema} v{saveData.Version})");
         }
@@ -83,7 +85,8 @@ public class SaveManager
         }
         catch (Exception ex)
         {
-            throw new SaveException(SaveLoadErrorCodes.Sl003SaveSerializationFailed,
+            throw new SaveException(
+                SaveLoadErrorCodes.Sl003SaveSerializationFailed,
                 "Unexpected error during save operation", filePath, ex);
         }
         finally
@@ -99,7 +102,7 @@ public class SaveManager
     {
         string? filePath = null;
         string? backupPath = null;
-        var clock = GetGameClock();
+        var clock = this.GetGameClock();
         GameClockManager.GameClockState? stateBeforePause = null;
         GameClockManager.GameClockState? capturedForSave = null;
         var clockWasRunning = false;
@@ -117,8 +120,8 @@ public class SaveManager
                 capturedForSave = clock.CaptureState();
             }
 
-            var timeManager = GetGameTimeManager();
-            var saveData = CollectGameState(land, buildings, economy, transport, timeManager, capturedForSave, stateBeforePause);
+            var timeManager = this.GetGameTimeManager();
+            var saveData = this.CollectGameState(land, buildings, economy, transport, timeManager, capturedForSave, stateBeforePause);
 
             filePath = SaveLoadPaths.GetSaveFilePath(fileName);
             var directory = Path.GetDirectoryName(filePath);
@@ -130,25 +133,27 @@ public class SaveManager
                 }
                 catch (Exception ex)
                 {
-                    throw new SaveException(SaveLoadErrorCodes.Sl001SaveDirectoryCreateFailed,
+                    throw new SaveException(
+                        SaveLoadErrorCodes.Sl001SaveDirectoryCreateFailed,
                         $"Failed to create save directory: {directory}", filePath, ex);
                 }
             }
 
             if (!SaveDataSchema.IsVersionSupported(saveData.Version))
             {
-                throw new SaveException(SaveLoadErrorCodes.Sl001SaveDirectoryCreateFailed,
+                throw new SaveException(
+                    SaveLoadErrorCodes.Sl001SaveDirectoryCreateFailed,
                     $"Schema version {saveData.Version} is not supported", filePath, saveData.Version);
             }
 
             if (File.Exists(filePath))
             {
                 backupPath = SaveLoadPaths.GetBackupPath(filePath);
-            await TryCreateBackupAsync(filePath, backupPath).ConfigureAwait(false);
+                await this.TryCreateBackupAsync(filePath, backupPath).ConfigureAwait(false);
             }
 
-            await WriteToFileAsync(filePath, saveData).ConfigureAwait(false);
-            RemoveBackup(backupPath);
+            await this.WriteToFileAsync(filePath, saveData).ConfigureAwait(false);
+            this.RemoveBackup(backupPath);
 
             DebugLogger.LogLifecycle(() => $"SaveGameAsync: successfully saved to {filePath} (schema {saveData.Schema} v{saveData.Version})");
         }
@@ -158,7 +163,8 @@ public class SaveManager
         }
         catch (Exception ex)
         {
-            throw new SaveException(SaveLoadErrorCodes.Sl003SaveSerializationFailed,
+            throw new SaveException(
+                SaveLoadErrorCodes.Sl003SaveSerializationFailed,
                 "Unexpected error during save operation", filePath, ex);
         }
         finally
@@ -169,11 +175,12 @@ public class SaveManager
             }
         }
     }
+
     public async Task SaveGameAsync(string fileName, LandManager land, BuildingManager buildings, EconomyManager economy, TransportManager? transport, CancellationToken cancellationToken)
     {
         string? filePath = null;
         string? backupPath = null;
-        var clock = GetGameClock();
+        var clock = this.GetGameClock();
         GameClockManager.GameClockState? stateBeforePause = null;
         GameClockManager.GameClockState? capturedForSave = null;
         var clockWasRunning = false;
@@ -193,8 +200,8 @@ public class SaveManager
                 capturedForSave = clock.CaptureState();
             }
 
-            var timeManager = GetGameTimeManager();
-            var saveData = CollectGameState(land, buildings, economy, transport, timeManager, capturedForSave, stateBeforePause);
+            var timeManager = this.GetGameTimeManager();
+            var saveData = this.CollectGameState(land, buildings, economy, transport, timeManager, capturedForSave, stateBeforePause);
 
             filePath = SaveLoadPaths.GetSaveFilePath(fileName);
             var directory = Path.GetDirectoryName(filePath);
@@ -206,25 +213,27 @@ public class SaveManager
                 }
                 catch (Exception ex)
                 {
-                    throw new SaveException(SaveLoadErrorCodes.Sl001SaveDirectoryCreateFailed,
+                    throw new SaveException(
+                        SaveLoadErrorCodes.Sl001SaveDirectoryCreateFailed,
                         $"Failed to create save directory: {directory}", filePath, ex);
                 }
             }
 
             if (!SaveDataSchema.IsVersionSupported(saveData.Version))
             {
-                throw new SaveException(SaveLoadErrorCodes.Sl001SaveDirectoryCreateFailed,
+                throw new SaveException(
+                    SaveLoadErrorCodes.Sl001SaveDirectoryCreateFailed,
                     $"Schema version {saveData.Version} is not supported", filePath, saveData.Version);
             }
 
             if (File.Exists(filePath))
             {
                 backupPath = SaveLoadPaths.GetBackupPath(filePath);
-                await TryCreateBackupAsync(filePath, backupPath, cancellationToken).ConfigureAwait(false);
+                await this.TryCreateBackupAsync(filePath, backupPath, cancellationToken).ConfigureAwait(false);
             }
 
-            await WriteToFileAsync(filePath, saveData, cancellationToken).ConfigureAwait(false);
-            RemoveBackup(backupPath);
+            await this.WriteToFileAsync(filePath, saveData, cancellationToken).ConfigureAwait(false);
+            this.RemoveBackup(backupPath);
 
             DebugLogger.LogLifecycle(() => $"SaveGame: successfully saved to {filePath} (schema {saveData.Schema} v{saveData.Version})");
         }
@@ -238,7 +247,8 @@ public class SaveManager
         }
         catch (Exception ex)
         {
-            throw new SaveException(SaveLoadErrorCodes.Sl003SaveSerializationFailed,
+            throw new SaveException(
+                SaveLoadErrorCodes.Sl003SaveSerializationFailed,
                 "Unexpected error during save operation", filePath, ex);
         }
         finally
@@ -250,11 +260,12 @@ public class SaveManager
         }
     }
 
+    [Obsolete]
     public SaveData CollectGameState(LandManager land, BuildingManager buildings, EconomyManager economy, TransportManager? transport,
         GameTimeManager? timeManager, GameClockManager.GameClockState? clockStateForSave, GameClockManager.GameClockState? clockStateBeforePause)
     {
         // Get LevelManager for level data
-        var levelManager = serviceContainer?.GetNamedService<LevelManager>("LevelManager");
+        var levelManager = this.serviceContainer?.GetNamedService<LevelManager>("LevelManager");
 
         var data = new SaveData
         {
@@ -266,7 +277,7 @@ public class SaveManager
             GridH = land.GridH,
             Version = SaveDataSchema.CurrentSchemaVersion,
             CurrentLevel = levelManager?.CurrentLevel ?? 1,
-            TotalMarketRevenue = levelManager?.TotalMarketRevenue ?? 0.0
+            TotalMarketRevenue = levelManager?.TotalMarketRevenue ?? 0.0,
         };
 
         if (clockStateForSave.HasValue)
@@ -291,7 +302,7 @@ public class SaveManager
         }
 
         // Version 7+: Save road network
-        var roadManager = serviceContainer?.GetNamedService<RoadManager>(nameof(RoadManager));
+        var roadManager = this.serviceContainer?.GetNamedService<RoadManager>(nameof(RoadManager));
         if (roadManager != null)
         {
             for (int x = 0; x < land.GridW; x++)
@@ -308,12 +319,20 @@ public class SaveManager
             DebugLogger.LogLifecycle(() => $"SaveManager: {data.Roads.Count} roads saved");
         }
 
-        var idMap = new Dictionary<string, string>();
+        var idMap = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var building in buildings.Buildings)
         {
             var id = building.GetBuildingDef()?.Id;
-            if (string.IsNullOrEmpty(id)) id = building.DefinitionId;
-            if (string.IsNullOrEmpty(id)) id = IdMigration.ToCanonical(building.GetType().Name);
+            if (string.IsNullOrEmpty(id))
+            {
+                id = building.DefinitionId;
+            }
+
+            if (string.IsNullOrEmpty(id))
+            {
+                id = IdMigration.ToCanonical(building.GetType().Name);
+            }
+
             var canonical = IdMigration.ToCanonical(id);
             if (!string.Equals(canonical, id, StringComparison.Ordinal))
             {
@@ -329,12 +348,12 @@ public class SaveManager
                 Type = id ?? string.Empty,
                 X = building.GridPos.X,
                 Y = building.GridPos.Y,
-                BuildingId = building.BuildingId ?? string.Empty
+                BuildingId = building.BuildingId ?? string.Empty,
             };
 
             if (building is IHasInventory inventar)
             {
-                var gespeichertesInventar = new Dictionary<string, int>();
+                var gespeichertesInventar = new Dictionary<string, int>(StringComparer.Ordinal);
                 foreach (var kv in inventar.GetInventory())
                 {
                     var key = kv.Key.ToString();
@@ -400,7 +419,7 @@ public class SaveManager
         }
 
         // Version 8+: Save City Market Orders
-        var cityOrders = new Dictionary<string, List<MarketOrderSaveData>>();
+        var cityOrders = new Dictionary<string, List<MarketOrderSaveData>>(StringComparer.Ordinal);
         foreach (var building in buildings.Buildings)
         {
             if (building is City city && !string.IsNullOrEmpty(city.BuildingId) && city.Orders.Count > 0)
@@ -418,7 +437,7 @@ public class SaveManager
                         Accepted = order.Accepted,
                         Delivered = order.Delivered,
                         CreatedOn = order.CreatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture),
-                        ExpiresOn = order.ExpiresOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture)
+                        ExpiresOn = order.ExpiresOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture),
                     });
                 }
                 cityOrders[city.BuildingId] = orderList;
@@ -431,7 +450,7 @@ public class SaveManager
         }
 
         // Version 9+: Save Supplier Routes (fixed logistics routes)
-        var supplierService = serviceContainer?.GetNamedService<SupplierService>(ServiceNames.SupplierService);
+        var supplierService = this.serviceContainer?.GetNamedService<SupplierService>(ServiceNames.SupplierService);
         if (supplierService != null)
         {
             var exportedRoutes = supplierService.ExportFixedRoutes();
@@ -444,7 +463,7 @@ public class SaveManager
                     {
                         ConsumerBuildingId = route.ConsumerBuildingId,
                         ResourceId = route.ResourceId,
-                        SupplierBuildingId = route.SupplierBuildingId
+                        SupplierBuildingId = route.SupplierBuildingId,
                     });
                 }
                 data.SupplierRoutes = supplierRoutes;
@@ -471,7 +490,9 @@ public class SaveManager
     private void TryCreateBackup(string filePath, string backupPath)
     {
         if (string.IsNullOrWhiteSpace(filePath) || string.IsNullOrWhiteSpace(backupPath))
+        {
             return;
+        }
 
         try
         {
@@ -490,7 +511,9 @@ public class SaveManager
     private async Task TryCreateBackupAsync(string filePath, string backupPath)
     {
         if (string.IsNullOrWhiteSpace(filePath) || string.IsNullOrWhiteSpace(backupPath))
+        {
             return;
+        }
 
         try
         {
@@ -506,6 +529,7 @@ public class SaveManager
             DebugLogger.Log("debug_lifecycle", DebugLogger.LogLevel.Warn, () => $"[{SaveLoadErrorCodes.Sl005SaveBackupFailed}] Could not create backup: {ex.Message}");
         }
     }
+
     private async Task TryCreateBackupAsync(string filePath, string backupPath, CancellationToken cancellationToken)
     {
         try
@@ -544,9 +568,14 @@ public class SaveManager
     private void WriteToFile(string filePath, SaveData data)
     {
         if (string.IsNullOrWhiteSpace(filePath))
+        {
             throw new ArgumentException("File path cannot be null or empty", nameof(filePath));
+        }
+
         if (data == null)
+        {
             throw new ArgumentNullException(nameof(data));
+        }
 
         var tempPath = SaveLoadPaths.GetTempPath(filePath);
         var options = SaveLoadJsonConverters.CreateOptions();
@@ -584,7 +613,8 @@ public class SaveManager
             {
             }
 
-            throw new SaveException(SaveLoadErrorCodes.Sl002SaveFileWriteFailed,
+            throw new SaveException(
+                SaveLoadErrorCodes.Sl002SaveFileWriteFailed,
                 "Failed to write save file", filePath, ex);
         }
     }
@@ -592,9 +622,14 @@ public class SaveManager
     private async Task WriteToFileAsync(string filePath, SaveData data)
     {
         if (string.IsNullOrWhiteSpace(filePath))
+        {
             throw new ArgumentException("File path cannot be null or empty", nameof(filePath));
+        }
+
         if (data == null)
+        {
             throw new ArgumentNullException(nameof(data));
+        }
 
         var tempPath = SaveLoadPaths.GetTempPath(filePath);
         var options = SaveLoadJsonConverters.CreateOptions();
@@ -623,18 +658,27 @@ public class SaveManager
                     File.Delete(tempPath);
                 }
             }
-            catch { }
+            catch
+            {
+            }
 
-            throw new SaveException(SaveLoadErrorCodes.Sl002SaveFileWriteFailed,
+            throw new SaveException(
+                SaveLoadErrorCodes.Sl002SaveFileWriteFailed,
                 "Failed to write save file", filePath, ex);
         }
     }
+
     private async Task WriteToFileAsync(string filePath, SaveData data, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(filePath))
+        {
             throw new ArgumentException("File path cannot be null or empty", nameof(filePath));
+        }
+
         if (data == null)
+        {
             throw new ArgumentNullException(nameof(data));
+        }
 
         var tempPath = SaveLoadPaths.GetTempPath(filePath);
         var options = SaveLoadJsonConverters.CreateOptions();
@@ -655,26 +699,45 @@ public class SaveManager
         }
         catch (OperationCanceledException)
         {
-            try { if (File.Exists(tempPath)) File.Delete(tempPath); } catch { }
+            try
+            {
+                if (File.Exists(tempPath))
+                {
+                    File.Delete(tempPath);
+                }
+            }
+            catch
+            {
+            }
             throw;
         }
         catch (Exception ex)
         {
-            try { if (File.Exists(tempPath)) File.Delete(tempPath); } catch { }
-            throw new SaveException(SaveLoadErrorCodes.Sl002SaveFileWriteFailed,
+            try
+            {
+                if (File.Exists(tempPath))
+                {
+                    File.Delete(tempPath);
+                }
+            }
+            catch
+            {
+            }
+            throw new SaveException(
+                SaveLoadErrorCodes.Sl002SaveFileWriteFailed,
                 "Failed to write save file", filePath, ex);
         }
     }
 
     private GameClockManager? GetGameClock()
     {
-        return serviceContainer?.GetNamedService<GameClockManager>(nameof(GameClockManager))
+        return this.serviceContainer?.GetNamedService<GameClockManager>(nameof(GameClockManager))
             ?? ServiceContainer.Instance?.GetNamedService<GameClockManager>(nameof(GameClockManager));
     }
 
     private GameTimeManager? GetGameTimeManager()
     {
-        return serviceContainer?.GetNamedService<GameTimeManager>(nameof(GameTimeManager))
+        return this.serviceContainer?.GetNamedService<GameTimeManager>(nameof(GameTimeManager))
             ?? ServiceContainer.Instance?.GetNamedService<GameTimeManager>(nameof(GameTimeManager));
     }
 }

@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
@@ -28,13 +28,17 @@ public class DemolishTool : IInputTool
     public void OnClick(Vector2I zelle)
     {
         // Erst Strassen
-        if (roadManager != null && roadManager.IsRoad(zelle))
+        if (this.roadManager != null && this.roadManager.IsRoad(zelle))
         {
-            var res = roadManager.TryRemoveRoad(zelle);
+            var res = this.roadManager.TryRemoveRoad(zelle);
             if (!res.Ok)
             {
                 var ui = ServiceContainer.Instance?.GetNamedService<UIService>(ServiceNames.UIService);
-                if (res.ErrorInfo != null) ui?.ShowErrorToast(res.ErrorInfo);
+                if (res.ErrorInfo != null)
+                {
+                    ui?.ShowErrorToast(res.ErrorInfo);
+                }
+
                 return;
             }
             DebugLogger.LogInput(() => $"Strasse entfernt bei {zelle}");
@@ -45,14 +49,18 @@ public class DemolishTool : IInputTool
             return;
         }
         // Dann Gebaeude
-        var gebaeude = buildingManager.GetBuildingAt(zelle);
+        var gebaeude = this.buildingManager.GetBuildingAt(zelle);
         if (gebaeude != null)
         {
-            var res = buildingManager.TryRemoveBuilding(gebaeude);
+            var res = this.buildingManager.TryRemoveBuilding(gebaeude);
             if (!res.Ok)
             {
                 var ui = ServiceContainer.Instance?.GetNamedService<UIService>(ServiceNames.UIService);
-                if (res.ErrorInfo != null) ui?.ShowErrorToast(res.ErrorInfo);
+                if (res.ErrorInfo != null)
+                {
+                    ui?.ShowErrorToast(res.ErrorInfo);
+                }
+
                 return;
             }
             DebugLogger.LogInput(() => $"Gebaeude entfernt bei {zelle}");

@@ -1,7 +1,7 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
 using System.Collections.Generic;
+using Godot;
 
 /// <summary>
 /// Repository fuer Ressourcen-Definitionen.
@@ -10,9 +10,9 @@ public sealed class ResourceRepository : BaseRepository<GameResourceDef>, IResou
 {
     public ResourceRepository(Func<bool> legacyErlaubt)
     {
-        ladeReihenfolge.Add(new DataIndexResourceLoader());
-        ladeReihenfolge.Add(new FileSystemResourceLoader());
-        ladeReihenfolge.Add(new LegacyResourceLoader(legacyErlaubt));
+        this.ladeReihenfolge.Add(new DataIndexResourceLoader());
+        this.ladeReihenfolge.Add(new FileSystemResourceLoader());
+        this.ladeReihenfolge.Add(new LegacyResourceLoader(legacyErlaubt));
     }
 
     protected override string GetId(GameResourceDef item) => item.Id;
@@ -21,7 +21,7 @@ public sealed class ResourceRepository : BaseRepository<GameResourceDef>, IResou
 
     public IReadOnlyCollection<GameResourceDef> GetByType(string type)
     {
-        return GetByCategory(type);
+        return this.GetByCategory(type);
     }
 }
 

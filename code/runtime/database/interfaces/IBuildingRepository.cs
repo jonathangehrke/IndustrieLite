@@ -1,6 +1,6 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System.Collections.Generic;
+using Godot;
 
 /// <summary>
 /// Spezialisierte Abfragen fuer Gebaeudedefinitionen.
@@ -8,8 +8,11 @@ using System.Collections.Generic;
 public interface IBuildingRepository : IDataRepository<BuildingDef>
 {
     IReadOnlyCollection<BuildingDef> GetBuildable();
+
     Godot.Collections.Dictionary GetBuildableCatalog();
+
     Godot.Collections.Array<Godot.Collections.Dictionary> GetBuildablesByCategory(string category);
+
     Godot.Collections.Array<BuildingDef> GetGodotArray();
 }
 

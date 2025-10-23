@@ -1,7 +1,7 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
 using System.Collections.Generic;
+using Godot;
 
 /// <summary>
 /// Strukturierte Fehlerinfo: Fehler-Code als Godot StringName, deutsche Nachricht,
@@ -10,20 +10,23 @@ using System.Collections.Generic;
 public class ErrorInfo
 {
     public StringName Code { get; }
+
     public string Message { get; }
+
     public Dictionary<string, object?> Details { get; }
+
     public Exception? Cause { get; }
 
     public ErrorInfo(StringName code, string message, Dictionary<string, object?>? details = null, Exception? cause = null)
     {
-        Code = code;
-        Message = message ?? string.Empty;
-        Details = details ?? new Dictionary<string, object?>();
-        Cause = cause;
+        this.Code = code;
+        this.Message = message ?? string.Empty;
+        this.Details = details ?? new Dictionary<string, object?>(StringComparer.Ordinal);
+        this.Cause = cause;
     }
 
     public override string ToString()
     {
-        return $"{Code}: {Message}";
+        return $"{this.Code}: {this.Message}";
     }
 }

@@ -1,9 +1,9 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Godot;
 
 /// <summary>
 /// Legacy-Fallback fuer Gebaeudedefinitionen, damit der Build auch ohne Datenpakete lauffaehig bleibt.
@@ -18,21 +18,22 @@ public sealed class LegacyBuildingLoader : IDataLoader<BuildingDef>
     }
 
     public string LoaderName => nameof(LegacyBuildingLoader);
+
     public int Priority => 100;
 
     public Task<IReadOnlyCollection<BuildingDef>> LoadAsync(SceneTree sceneTree)
     {
-        if (!IsFallbackAktiv())
+        if (!this.IsFallbackAktiv())
         {
             return Task.FromResult<IReadOnlyCollection<BuildingDef>>(System.Array.Empty<BuildingDef>());
         }
 
-        var legacyBuildings = ErzeugeLegacyGebaeude();
+        var legacyBuildings = this.ErzeugeLegacyGebaeude();
         DebugLogger.LogServices(() => $"LegacyBuildingLoader: {legacyBuildings.Count} Legacy-Gebaeude erstellt");
         return Task.FromResult<IReadOnlyCollection<BuildingDef>>(legacyBuildings);
     }
 
-    private bool IsFallbackAktiv() => OS.IsDebugBuild() || legacyErlaubt();
+    private bool IsFallbackAktiv() => OS.IsDebugBuild() || this.legacyErlaubt();
 
     private List<BuildingDef> ErzeugeLegacyGebaeude()
     {
@@ -45,7 +46,7 @@ public sealed class LegacyBuildingLoader : IDataLoader<BuildingDef>
             new BuildingDef("pig_farm", "Schweinestall", 3, 3, 5000.0) { Category = "production" },
             new BuildingDef("grain_farm", "Bauernhof", 3, 3, 1000.0) { Category = "production" },
             new BuildingDef(BuildingIds.City, "Stadt", 4, 4, 0.0) { Category = "commercial" },
-            new BuildingDef("road", "Strasse", 1, 1, 50.0) { Category = "infrastructure" }
+            new BuildingDef("road", "Strasse", 1, 1, 50.0) { Category = "infrastructure" },
         };
 
         foreach (var def in gebaeude)
@@ -109,7 +110,7 @@ public sealed class LegacyBuildingLoader : IDataLoader<BuildingDef>
             }
         }
 
-        SetzeFallbackIcons(gebaeude);
+        this.SetzeFallbackIcons(gebaeude);
         return gebaeude;
     }
 
@@ -120,22 +121,22 @@ public sealed class LegacyBuildingLoader : IDataLoader<BuildingDef>
             switch (def.Id)
             {
                 case "house":
-                    def.Icon = LadeIcon("res://assets/buildings/haus.png");
+                    def.Icon = this.LadeIcon("res://assets/buildings/haus.png");
                     break;
                 case "chicken_farm":
-                    def.Icon = LadeIcon("res://assets/buildings/Huehnerstall.png");
+                    def.Icon = this.LadeIcon("res://assets/buildings/Huehnerstall.png");
                     break;
                 case "pig_farm":
-                    def.Icon = LadeIcon("res://assets/buildings/Schweinestall.png");
+                    def.Icon = this.LadeIcon("res://assets/buildings/Schweinestall.png");
                     break;
                 case "grain_farm":
-                    def.Icon = LadeIcon("res://assets/buildings/Bauernhof.png");
+                    def.Icon = this.LadeIcon("res://assets/buildings/Bauernhof.png");
                     break;
                 case "city":
-                    def.Icon = LadeIcon("res://assets/buildings/stadt.png");
+                    def.Icon = this.LadeIcon("res://assets/buildings/stadt.png");
                     break;
                 case "road":
-                    def.Icon = LadeIcon("res://assets/tiles/strasse.png");
+                    def.Icon = this.LadeIcon("res://assets/tiles/strasse.png");
                     break;
             }
         }

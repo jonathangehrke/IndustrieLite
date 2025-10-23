@@ -1,8 +1,8 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Godot;
 
 /// <summary>
 /// Legacy-Fallback fuer Ressourcen.
@@ -17,11 +17,12 @@ public sealed class LegacyResourceLoader : IDataLoader<GameResourceDef>
     }
 
     public string LoaderName => nameof(LegacyResourceLoader);
+
     public int Priority => 100;
 
     public Task<IReadOnlyCollection<GameResourceDef>> LoadAsync(SceneTree sceneTree)
     {
-        if (!IsFallbackAktiv())
+        if (!this.IsFallbackAktiv())
         {
             return Task.FromResult<IReadOnlyCollection<GameResourceDef>>(System.Array.Empty<GameResourceDef>());
         }
@@ -33,14 +34,14 @@ public sealed class LegacyResourceLoader : IDataLoader<GameResourceDef>
             new GameResourceDef(ResourceIds.Chickens, "Huehner", "produktion"),
             new GameResourceDef(ResourceIds.Grain, "Getreide", "produktion"),
             new GameResourceDef(ResourceIds.Pig, "Schwein", "produktion"),
-            new GameResourceDef(ResourceIds.Egg, "Eier", "produktion")
+            new GameResourceDef(ResourceIds.Egg, "Eier", "produktion"),
         };
 
         DebugLogger.LogServices(() => $"LegacyResourceLoader: {ressourcen.Count} Legacy-Ressourcen erstellt");
         return Task.FromResult<IReadOnlyCollection<GameResourceDef>>(ressourcen);
     }
 
-    private bool IsFallbackAktiv() => OS.IsDebugBuild() || legacyErlaubt();
+    private bool IsFallbackAktiv() => OS.IsDebugBuild() || this.legacyErlaubt();
 }
 
 

@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
@@ -26,6 +26,6 @@ public class TransportTool : IInputTool
     public void OnClick(Vector2I zelle)
     {
         DebugLogger.LogInput(() => $"TransportTool: Klick bei {zelle}");
-        transportManager.HandleTransportClick(zelle);
+        this.transportManager.HandleTransportClick(zelle);
     }
 }

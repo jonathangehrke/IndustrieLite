@@ -1,8 +1,8 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Godot;
 
 /// <summary>
 /// Scannt Ressourcen-Definitionen aus dem Dateisystem.
@@ -17,11 +17,12 @@ public sealed class FileSystemResourceLoader : IDataLoader<GameResourceDef>
     }
 
     public string LoaderName => nameof(FileSystemResourceLoader);
+
     public int Priority => 10;
 
     public Task<IReadOnlyCollection<GameResourceDef>> LoadAsync(SceneTree sceneTree)
     {
-        var daten = LadeAusOrdner(basisPfad);
+        var daten = this.LadeAusOrdner(this.basisPfad);
         if (daten.Count > 0)
         {
             DebugLogger.LogServices(() => $"FileSystemResourceLoader: {daten.Count} Ressourcen gefunden");

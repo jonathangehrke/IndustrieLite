@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
@@ -25,6 +25,7 @@ public partial class ToolManager : Node
     private bool initialisiert;
 
     public InputManager.InputMode CurrentMode { get; private set; } = InputManager.InputMode.None;
+
     public string CurrentBuildType { get; private set; } = string.Empty;
 
     /// <summary>
@@ -47,8 +48,8 @@ public partial class ToolManager : Node
         this.map = map;
         this.eventHub = eventHub;
 
-        ErzeugeWerkzeuge();
-        initialisiert = true;
+        this.ErzeugeWerkzeuge();
+        this.initialisiert = true;
         DebugLogger.LogInput("ToolManager: Abhaengigkeiten injiziert");
     }
 
@@ -57,118 +58,119 @@ public partial class ToolManager : Node
     /// </summary>
     public void SetzeSignaleAktiv(bool aktiv)
     {
-        signaleAktiv = aktiv;
+        this.signaleAktiv = aktiv;
     }
 
     /// <summary>
     /// Liefert das aktuell aktive Werkzeug (falls vorhanden).
     /// </summary>
+    /// <returns></returns>
     public IInputTool? HoleAktuellesWerkzeug()
     {
-        return aktuellesWerkzeug;
+        return this.aktuellesWerkzeug;
     }
 
     public void SetMode(InputManager.InputMode mode, string buildType = "")
     {
-        if (!initialisiert)
+        if (!this.initialisiert)
         {
             DebugLogger.LogInput("ToolManager: SetMode aufgerufen bevor Abhaengigkeiten gesetzt wurden");
             return;
         }
 
-        aktuellesWerkzeug?.Exit();
+        this.aktuellesWerkzeug?.Exit();
 
-        CurrentMode = mode;
-        CurrentBuildType = mode == InputManager.InputMode.Build ? buildType ?? string.Empty : string.Empty;
+        this.CurrentMode = mode;
+        this.CurrentBuildType = mode == InputManager.InputMode.Build ? buildType ?? string.Empty : string.Empty;
 
         switch (mode)
         {
             case InputManager.InputMode.Build:
-                if (buildTool != null)
+                if (this.buildTool != null)
                 {
-                    buildTool.AktuellerBautyp = CurrentBuildType;
-                    aktuellesWerkzeug = buildTool;
+                    this.buildTool.AktuellerBautyp = this.CurrentBuildType;
+                    this.aktuellesWerkzeug = this.buildTool;
                 }
                 else
                 {
                     DebugLogger.LogInput("ToolManager: BuildTool nicht verfuegbar");
-                    CurrentMode = InputManager.InputMode.None;
-                    CurrentBuildType = string.Empty;
-                    aktuellesWerkzeug = null;
+                    this.CurrentMode = InputManager.InputMode.None;
+                    this.CurrentBuildType = string.Empty;
+                    this.aktuellesWerkzeug = null;
                 }
                 break;
             case InputManager.InputMode.BuyLand:
-                aktuellesWerkzeug = buyLandTool;
+                this.aktuellesWerkzeug = this.buyLandTool;
                 break;
             case InputManager.InputMode.SellLand:
-                aktuellesWerkzeug = sellLandTool;
+                this.aktuellesWerkzeug = this.sellLandTool;
                 break;
             case InputManager.InputMode.Transport:
-                aktuellesWerkzeug = transportTool;
+                this.aktuellesWerkzeug = this.transportTool;
                 break;
             case InputManager.InputMode.Demolish:
-                aktuellesWerkzeug = demolishTool;
+                this.aktuellesWerkzeug = this.demolishTool;
                 break;
             default:
-                aktuellesWerkzeug = null;
+                this.aktuellesWerkzeug = null;
                 break;
         }
 
-        aktuellesWerkzeug?.Enter();
-        SendeModeSignal();
-        map?.RequestRedraw();
-        DebugLogger.LogInput(() => $"Input mode gewechselt zu: {CurrentMode} {(string.IsNullOrEmpty(CurrentBuildType) ? string.Empty : "(" + CurrentBuildType + ")")}");
+        this.aktuellesWerkzeug?.Enter();
+        this.SendeModeSignal();
+        this.map?.RequestRedraw();
+        DebugLogger.LogInput(() => $"Input mode gewechselt zu: {this.CurrentMode} {(string.IsNullOrEmpty(this.CurrentBuildType) ? string.Empty : "(" + this.CurrentBuildType + ")")}");
     }
 
     public void SetBuildMode(string buildId)
     {
-        SetMode(InputManager.InputMode.Build, buildId);
+        this.SetMode(InputManager.InputMode.Build, buildId);
     }
 
     public void ToggleDemolishModus()
     {
-        if (CurrentMode == InputManager.InputMode.Demolish)
+        if (this.CurrentMode == InputManager.InputMode.Demolish)
         {
-            SetMode(InputManager.InputMode.None);
+            this.SetMode(InputManager.InputMode.None);
             DebugLogger.LogInput("Demolish mode OFF");
         }
         else
         {
-            SetMode(InputManager.InputMode.Demolish);
+            this.SetMode(InputManager.InputMode.Demolish);
             DebugLogger.LogInput("Demolish mode ON");
         }
     }
 
     private void ErzeugeWerkzeuge()
     {
-        if (roadManager == null)
+        if (this.roadManager == null)
         {
             DebugLogger.LogInput("ToolManager: RoadManager fehlt - Strassenfunktionen eingeschraenkt");
         }
 
-        if (roadManager != null)
+        if (this.roadManager != null)
         {
-            buildTool = new BuildTool(landManager, buildingManager, economyManager, roadManager);
-            demolishTool = new DemolishTool(roadManager, buildingManager);
+            this.buildTool = new BuildTool(this.landManager, this.buildingManager, this.economyManager, this.roadManager);
+            this.demolishTool = new DemolishTool(this.roadManager, this.buildingManager);
         }
 
-        buyLandTool = new BuyLandTool(landManager, economyManager, map);
-        transportTool = new TransportTool(transportManager);
-        sellLandTool = new SellLandTool(landManager, economyManager, map, buildingManager, roadManager);
+        this.buyLandTool = new BuyLandTool(this.landManager, this.economyManager, this.map);
+        this.transportTool = new TransportTool(this.transportManager);
+        this.sellLandTool = new SellLandTool(this.landManager, this.economyManager, this.map, this.buildingManager, this.roadManager);
 
-        aktuellesWerkzeug = null;
+        this.aktuellesWerkzeug = null;
     }
 
     private void SendeModeSignal()
     {
-        if (!signaleAktiv || eventHub == null)
+        if (!this.signaleAktiv || this.eventHub == null)
         {
             return;
         }
 
         try
         {
-            eventHub.EmitSignal(EventHub.SignalName.InputModeChanged, CurrentMode.ToString(), CurrentBuildType);
+            this.eventHub.EmitSignal(EventHub.SignalName.InputModeChanged, this.CurrentMode.ToString(), this.CurrentBuildType);
         }
         catch
         {

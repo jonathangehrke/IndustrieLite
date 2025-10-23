@@ -1,8 +1,8 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Godot;
 
 /// <summary>
 /// Laedt Ressourcen ueber den DataIndex.
@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 public sealed class DataIndexResourceLoader : IDataLoader<GameResourceDef>
 {
     public string LoaderName => nameof(DataIndexResourceLoader);
+
     public int Priority => 0;
 
     public Task<IReadOnlyCollection<GameResourceDef>> LoadAsync(SceneTree sceneTree)

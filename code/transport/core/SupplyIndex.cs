@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using System;
 using System.Collections.Generic;
 using Godot;
@@ -12,34 +12,44 @@ public class SupplyIndex
     public class Supplier
     {
         public string LieferantId { get; init; } = string.Empty;
+
 #pragma warning disable CS8625
         public StringName ResourceId { get; init; } = default;
+
 #pragma warning restore CS8625
         public double Available { get; set; }
+
         public double Reserved { get; set; }
+
         public Vector2 Position { get; init; } = Vector2.Zero;
+
         public object? Kontext { get; init; }
-        public double Free => System.Math.Max(0.0, Available - Reserved);
+
+        public double Free => System.Math.Max(0.0, this.Available - this.Reserved);
     }
 
     public class SupplierData
     {
         public string LieferantId { get; init; } = string.Empty;
+
 #pragma warning disable CS8625
         public StringName ResourceId { get; init; } = default;
+
 #pragma warning restore CS8625
         public double Bestand { get; init; }
+
         public Vector2 Position { get; init; } = Vector2.Zero;
+
         public object? Kontext { get; init; }
     }
 
     private readonly Dictionary<StringName, List<Supplier>> nachRessource = new();
 
-    public IReadOnlyDictionary<StringName, List<Supplier>> SuppliersByResource => nachRessource;
+    public IReadOnlyDictionary<StringName, List<Supplier>> SuppliersByResource => this.nachRessource;
 
     public void RebuildFromSupplierData(IEnumerable<SupplierData> daten)
     {
-        nachRessource.Clear();
+        this.nachRessource.Clear();
         foreach (var datensatz in daten)
         {
             var supplier = new Supplier
@@ -49,13 +59,13 @@ public class SupplyIndex
                 Available = datensatz.Bestand,
                 Reserved = 0.0,
                 Position = datensatz.Position,
-                Kontext = datensatz.Kontext
+                Kontext = datensatz.Kontext,
             };
 
-            if (!nachRessource.TryGetValue(datensatz.ResourceId, out var liste))
+            if (!this.nachRessource.TryGetValue(datensatz.ResourceId, out var liste))
             {
                 liste = new List<Supplier>();
-                nachRessource[datensatz.ResourceId] = liste;
+                this.nachRessource[datensatz.ResourceId] = liste;
             }
 
             liste.Add(supplier);
@@ -70,7 +80,9 @@ public class SupplyIndex
             if (building is IHasInventory inventar)
             {
                 if (string.IsNullOrEmpty(building.BuildingId))
+                {
                     building.BuildingId = Guid.NewGuid().ToString();
+                }
 
                 var buildingId = building.BuildingId ?? string.Empty;
                 foreach (var eintrag in inventar.GetInventory())
@@ -82,21 +94,21 @@ public class SupplyIndex
                         ResourceId = eintrag.Key,
                         Bestand = eintrag.Value,
                         Position = ((Node2D)building).GlobalPosition,
-                        Kontext = building
+                        Kontext = building,
                     });
                 }
             }
         }
 
-        RebuildFromSupplierData(daten);
+        this.RebuildFromSupplierData(daten);
     }
 
     public void SetReservation(StringName resourceId, string lieferantId, double menge)
     {
-        var liste = GetSuppliers(resourceId);
+        var liste = this.GetSuppliers(resourceId);
         foreach (var supplier in liste)
         {
-            if (supplier.LieferantId == lieferantId)
+            if (string.Equals(supplier.LieferantId, lieferantId, StringComparison.Ordinal))
             {
                 supplier.Reserved = menge;
                 return;
@@ -106,21 +118,25 @@ public class SupplyIndex
 
     public List<Supplier> GetSuppliers(StringName resourceId)
     {
-        return nachRessource.TryGetValue(resourceId, out var liste) ? liste : new List<Supplier>();
+        return this.nachRessource.TryGetValue(resourceId, out var liste) ? liste : new List<Supplier>();
     }
 
     public double Reserve(StringName resourceId, Supplier supplier, double menge)
     {
-        if (supplier == null) return 0.0;
-        return Reserve(resourceId, supplier.LieferantId, menge);
+        if (supplier == null)
+        {
+            return 0.0;
+        }
+
+        return this.Reserve(resourceId, supplier.LieferantId, menge);
     }
 
     public double Reserve(StringName resourceId, string lieferantId, double menge)
     {
-        var liste = GetSuppliers(resourceId);
+        var liste = this.GetSuppliers(resourceId);
         foreach (var supplier in liste)
         {
-            if (supplier.LieferantId == lieferantId)
+            if (string.Equals(supplier.LieferantId, lieferantId, StringComparison.Ordinal))
             {
                 var take = System.Math.Min(supplier.Free, menge);
                 supplier.Reserved += take;
@@ -132,16 +148,23 @@ public class SupplyIndex
 
     public double Reserve(StringName resourceId, Node2D? supplierNode, double menge)
     {
-        if (supplierNode == null) return 0.0;
+        if (supplierNode == null)
+        {
+            return 0.0;
+        }
+
         if (supplierNode is Building building)
         {
             if (string.IsNullOrEmpty(building.BuildingId))
+            {
                 building.BuildingId = Guid.NewGuid().ToString();
+            }
+
             var supplierId = $"{building.BuildingId}::{resourceId.ToString()}";
-            return Reserve(resourceId, supplierId, menge);
+            return this.Reserve(resourceId, supplierId, menge);
         }
 
         var fallbackId = supplierNode.GetInstanceId().ToString();
-        return Reserve(resourceId, fallbackId, menge);
+        return this.Reserve(resourceId, fallbackId, menge);
     }
 }

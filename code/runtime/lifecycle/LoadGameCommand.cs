@@ -1,9 +1,9 @@
-﻿// SPDX-License-Identifier: MIT
-using System;
-using System.Threading.Tasks;
-
+// SPDX-License-Identifier: MIT
 namespace IndustrieLite.Runtime.Lifecycle
 {
+    using System;
+    using System.Threading.Tasks;
+
     public class LoadGameCommand : IGameLifecycleCommand
     {
         public string Name => "LoadGame";
@@ -11,21 +11,29 @@ namespace IndustrieLite.Runtime.Lifecycle
         public bool CanExecute(GameLifecycleContext context)
         {
             if (context == null)
+            {
                 return false;
+            }
 
             if (string.IsNullOrWhiteSpace(context.FileName))
+            {
                 return false;
+            }
 
             if (context.SaveLoadService == null)
+            {
                 return false;
+            }
 
             return context.HasRequiredManagersForLoad();
         }
 
         public async Task<GameLifecycleResult> ExecuteAsync(GameLifecycleContext context)
         {
-            if (!CanExecute(context))
+            if (!this.CanExecute(context))
+            {
                 return GameLifecycleResult.CreateError("Cannot execute LoadGame: missing required dependencies or filename");
+            }
 
             try
             {
@@ -39,8 +47,7 @@ namespace IndustrieLite.Runtime.Lifecycle
                     context.EconomyManager!,
                     context.ProductionManager,
                     context.Map,
-                    context.TransportManager
-                );
+                    context.TransportManager);
 
                 DebugLogger.Log("debug_lifecycle", DebugLogger.LogLevel.Info,
                     () => $"LoadGameCommand: Successfully loaded from {context.FileName}");

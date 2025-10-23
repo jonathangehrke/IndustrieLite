@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using System.Threading.Tasks;
 
 /// <summary>
@@ -8,10 +8,15 @@ using System.Threading.Tasks;
 public interface IGameDatabase
 {
     IBuildingRepository Buildings { get; }
+
     IResourceRepository Resources { get; }
+
     IRecipeRepository Recipes { get; }
+
     bool IsInitialized { get; }
+
     bool AllowLegacyFallbackInRelease { get; set; }
+
     Task InitializeAsync();
 }
 

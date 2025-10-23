@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using System;
 using System.Collections.Generic;
 using Godot;
@@ -6,20 +6,23 @@ using Godot;
 /// <summary>
 /// AboVerwalter: verwaltet Signal- und Event-Abonnements und sorgt fuer sauberes Aufraeumen.
 /// - Vermeidet Speicherlecks durch vergessene Disconnects/Unsubscribes
-/// - Einheitliche Nutzung in Nodes: im _ExitTree immer DisposeAll() aufrufen
+/// - Einheitliche Nutzung in Nodes: im _ExitTree immer DisposeAll() aufrufen.
 /// </summary>
 public sealed class AboVerwalter : IDisposable
 {
-    private readonly List<IDisposable> _abos = new();
-    private bool _disposed;
+    private readonly List<IDisposable> abos = new();
+    private bool disposed;
 
     /// <summary>
     /// Verbindet ein Godot-Signal und gibt ein IDisposable zurueck, das beim Dispose disconnectet.
     /// </summary>
+    /// <returns></returns>
     public IDisposable VerbindeSignal(Node emitter, StringName signalName, GodotObject empfaenger, string methodenName)
     {
         if (emitter == null || empfaenger == null || signalName.IsEmpty || string.IsNullOrWhiteSpace(methodenName))
+        {
             throw new ArgumentException("Ungueltige Signal-Parameter fuer VerbindeSignal()");
+        }
 
         var callable = new Callable(empfaenger, methodenName);
         try
@@ -29,24 +32,29 @@ public sealed class AboVerwalter : IDisposable
                 emitter.Connect(signalName, callable);
             }
         }
-        catch { /* doppelte Verbindungen stillschweigend ignorieren */ }
+        catch
+        { /* doppelte Verbindungen stillschweigend ignorieren */
+        }
 
         var abo = new SignalAbo(emitter, signalName, callable);
-        _abos.Add(abo);
+        this.abos.Add(abo);
         return abo;
     }
 
     /// <summary>
     /// Abonniert ein C#-Event per subscribe/unsubscribe-Aktionen und tracked ein IDisposable zum spaeteren Abmelden.
     /// </summary>
+    /// <returns></returns>
     public IDisposable Abonniere(Action subscribe, Action unsubscribe)
     {
         if (subscribe == null || unsubscribe == null)
+        {
             throw new ArgumentNullException("subscribe/unsubscribe");
+        }
 
         subscribe();
         var abo = new ActionAbo(unsubscribe);
-        _abos.Add(abo);
+        this.abos.Add(abo);
         return abo;
     }
 
@@ -55,67 +63,93 @@ public sealed class AboVerwalter : IDisposable
     /// </summary>
     public void DisposeAll()
     {
-        if (_disposed) return;
-        _disposed = true;
-        for (int i = _abos.Count - 1; i >= 0; i--)
+        if (this.disposed)
         {
-            try { _abos[i]?.Dispose(); } catch { }
+            return;
         }
-        _abos.Clear();
+
+        this.disposed = true;
+        for (int i = this.abos.Count - 1; i >= 0; i--)
+        {
+            try
+            {
+                this.abos[i]?.Dispose();
+            }
+            catch
+            {
+            }
+        }
+        this.abos.Clear();
     }
 
     public void Dispose()
     {
-        DisposeAll();
+        this.DisposeAll();
     }
 
     private sealed class SignalAbo : IDisposable
     {
-        private readonly WeakReference<Node> _emitterRef;
-        private readonly StringName _signalName;
-        private readonly Callable _callable;
-        private bool _disposed;
+        private readonly WeakReference<Node> emitterRef;
+        private readonly StringName signalName;
+        private readonly Callable callable;
+        private bool disposed;
 
         public SignalAbo(Node emitter, StringName signalName, Callable callable)
         {
-            _emitterRef = new WeakReference<Node>(emitter);
-            _signalName = signalName;
-            _callable = callable;
+            this.emitterRef = new WeakReference<Node>(emitter);
+            this.signalName = signalName;
+            this.callable = callable;
         }
 
         public void Dispose()
         {
-            if (_disposed) return;
-            _disposed = true;
+            if (this.disposed)
+            {
+                return;
+            }
+
+            this.disposed = true;
             try
             {
-                if (_emitterRef.TryGetTarget(out var emitter) && emitter != null && GodotObject.IsInstanceValid(emitter))
+                if (this.emitterRef.TryGetTarget(out var emitter) && emitter != null && GodotObject.IsInstanceValid(emitter))
                 {
-                    if (emitter.IsConnected(_signalName, _callable))
+                    if (emitter.IsConnected(this.signalName, this.callable))
                     {
-                        emitter.Disconnect(_signalName, _callable);
+                        emitter.Disconnect(this.signalName, this.callable);
                     }
                 }
             }
-            catch { }
+            catch
+            {
+            }
         }
     }
 
     private sealed class ActionAbo : IDisposable
     {
-        private readonly Action _unsubscribe;
-        private bool _disposed;
+        private readonly Action unsubscribe;
+        private bool disposed;
 
         public ActionAbo(Action unsubscribe)
         {
-            _unsubscribe = unsubscribe ?? throw new ArgumentNullException(nameof(unsubscribe));
+            this.unsubscribe = unsubscribe ?? throw new ArgumentNullException(nameof(unsubscribe));
         }
 
         public void Dispose()
         {
-            if (_disposed) return;
-            _disposed = true;
-            try { _unsubscribe(); } catch { }
+            if (this.disposed)
+            {
+                return;
+            }
+
+            this.disposed = true;
+            try
+            {
+                this.unsubscribe();
+            }
+            catch
+            {
+            }
         }
     }
 }

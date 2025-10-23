@@ -1,11 +1,11 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using Godot;
 
 /// <summary>
 /// Validierungs- und Test-Hilfen fuer Save/Load.
@@ -14,7 +14,7 @@ public class SaveDataValidator
 {
     public bool ValidateSchema(SaveData data, out string errorMessage)
     {
-        if (data.Schema != "IndustrieLite.Save")
+        if (!string.Equals(data.Schema, "IndustrieLite.Save", StringComparison.Ordinal))
         {
             errorMessage = $"Unerwartetes Schema: {data.Schema}";
             return false;
@@ -32,7 +32,8 @@ public class SaveDataValidator
     {
         if (!File.Exists(filePath))
         {
-            throw new LoadException(SaveLoadErrorCodes.Sl301LoadFileNotFound,
+            throw new LoadException(
+                SaveLoadErrorCodes.Sl301LoadFileNotFound,
                 "Save file not found", filePath);
         }
 
@@ -43,13 +44,15 @@ public class SaveDataValidator
             var data = JsonSerializer.Deserialize<SaveData>(json, options);
             if (data == null)
             {
-                throw new LoadException(SaveLoadErrorCodes.Sl303LoadDeserializationFailed,
+                throw new LoadException(
+                    SaveLoadErrorCodes.Sl303LoadDeserializationFailed,
                     "Save file deserialized to null", filePath);
             }
 
-            if (!ValidateSchema(data, out var error))
+            if (!this.ValidateSchema(data, out var error))
             {
-                throw new LoadException(SaveLoadErrorCodes.Sl304LoadInvalidVersion,
+                throw new LoadException(
+                    SaveLoadErrorCodes.Sl304LoadInvalidVersion,
                     error, filePath, data.Version);
             }
         }
@@ -59,7 +62,8 @@ public class SaveDataValidator
         }
         catch (Exception ex)
         {
-            throw new LoadException(SaveLoadErrorCodes.Sl303LoadDeserializationFailed,
+            throw new LoadException(
+                SaveLoadErrorCodes.Sl303LoadDeserializationFailed,
                 "Failed to validate save file", filePath, ex);
         }
     }
@@ -69,7 +73,7 @@ public class SaveDataValidator
         diffInfo = string.Empty;
         try
         {
-            var data1 = BuildSnapshot(land, buildings, economy);
+            var data1 = this.BuildSnapshot(land, buildings, economy);
             var options = SaveLoadJsonConverters.CreateOptions();
             var json = JsonSerializer.Serialize(data1, options);
             var data2 = JsonSerializer.Deserialize<SaveData>(json, options);
@@ -84,7 +88,7 @@ public class SaveDataValidator
                 bd.Type = IdMigration.ToCanonical(bd.Type);
             }
 
-            return CompareGameStates(data1, data2, out diffInfo);
+            return this.CompareGameStates(data1, data2, out diffInfo);
         }
         catch (Exception ex)
         {
@@ -93,6 +97,7 @@ public class SaveDataValidator
         }
     }
 
+    [Obsolete]
     private SaveData BuildSnapshot(LandManager land, BuildingManager buildings, EconomyManager economy)
     {
         var snapshot = new SaveData
@@ -100,7 +105,7 @@ public class SaveDataValidator
             Money = economy.GetMoney(),
             GridW = land.GridW,
             GridH = land.GridH,
-            Version = SaveDataSchema.CurrentSchemaVersion
+            Version = SaveDataSchema.CurrentSchemaVersion,
         };
 
         for (int x = 0; x < land.GridW; x++)
@@ -123,12 +128,12 @@ public class SaveDataValidator
                 Type = id,
                 X = building.GridPos.X,
                 Y = building.GridPos.Y,
-                BuildingId = building.BuildingId ?? string.Empty
+                BuildingId = building.BuildingId ?? string.Empty,
             };
 
             if (building is IHasInventory inventar)
             {
-                var saveInventar = new Dictionary<string, int>();
+                var saveInventar = new Dictionary<string, int>(StringComparer.Ordinal);
                 foreach (var kv in inventar.GetInventory())
                 {
                     var key = kv.Key.ToString();
@@ -172,8 +177,8 @@ public class SaveDataValidator
             return false;
         }
 
-        var setA = new HashSet<string>(data1.OwnedCells.Select(c => $"{c[0]},{c[1]}"));
-        var setB = new HashSet<string>(data2.OwnedCells.Select(c => $"{c[0]},{c[1]}"));
+        var setA = new HashSet<string>(data1.OwnedCells.Select(c => $"{c[0]},{c[1]}"), StringComparer.Ordinal);
+        var setB = new HashSet<string>(data2.OwnedCells.Select(c => $"{c[0]},{c[1]}"), StringComparer.Ordinal);
         if (!setA.SetEquals(setB))
         {
             differences = "OwnedCells differ";
@@ -213,15 +218,15 @@ public class SaveDataValidator
             if (bd.Inventory != null && bd.Inventory.Count > 0)
             {
                 inventoryPart = string.Join(",", bd.Inventory
-                    .OrderBy(pair => pair.Key)
+                    .OrderBy(pair => pair.Key, StringComparer.Ordinal)
                     .Select(pair => $"{pair.Key}={pair.Value}"));
             }
             var idPart = string.IsNullOrEmpty(bd.BuildingId) ? "-" : bd.BuildingId;
             return $"{bd.Type}@{bd.X},{bd.Y}:{idPart}:{stockPart}:{inventoryPart}";
         }
 
-        var ga = new HashSet<string>(data1.Buildings.Select(Key));
-        var gb = new HashSet<string>(data2.Buildings.Select(Key));
+        var ga = new HashSet<string>(data1.Buildings.Select(Key), StringComparer.Ordinal);
+        var gb = new HashSet<string>(data2.Buildings.Select(Key), StringComparer.Ordinal);
         if (!ga.SetEquals(gb))
         {
             differences = "Buildings differ";

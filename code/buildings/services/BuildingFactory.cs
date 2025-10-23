@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
@@ -30,9 +30,9 @@ public class BuildingFactory
         Building? b = null;
         BuildingDef? def = null;
         // 1) Lookup in Database (akzeptiert Legacy-IDs ueber LegacyIds)
-        if (database != null)
+        if (this.database != null)
         {
-            def = database.GetBuilding(type);
+            def = this.database.GetBuilding(type);
             DebugLogger.LogServices($"BuildingFactory: Lookup '{type}' => {(def != null ? def.Id : "not found")}");
             if (def == null)
             {
@@ -40,7 +40,7 @@ public class BuildingFactory
                 var canon = IdMigration.ToCanonical(type);
                 if (!string.Equals(canon, type, System.StringComparison.Ordinal))
                 {
-                    def = database.GetBuilding(canon);
+                    def = this.database.GetBuilding(canon);
                     DebugLogger.LogServices($"BuildingFactory: Fallback lookup via canonical '{canon}' => {(def != null ? def.Id : "not found")}");
                 }
             }
@@ -69,7 +69,9 @@ public class BuildingFactory
                 case BuildingIds.City: b = new City(); break;
             }
             if (b != null)
+            {
                 DebugLogger.LogServices($"BuildingFactory: Created from ID mapping: {b.GetType().Name} for '{id}'");
+            }
         }
 
         // 4) Generischer Fallback: unbekannte IDs als Basis-Gebaeude behandeln
@@ -81,13 +83,27 @@ public class BuildingFactory
 
         // Standard-Properties
         b.GridPos = cell;
-        if (def != null) b.Size = new Vector2I(def.Width, def.Height);
-        else b.Size = b.DefaultSize;
+        if (def != null)
+        {
+            b.Size = new Vector2I(def.Width, def.Height);
+        }
+        else
+        {
+            b.Size = b.DefaultSize;
+        }
+
         b.TileSize = tileSize;
         b.Position = new Vector2(cell.X * tileSize, cell.Y * tileSize);
 
         // DefinitionId setzen (kanonische ID falls verfuegbar, sonst Migration der Eingabe)
-        if (def != null) b.DefinitionId = def.Id; else b.DefinitionId = IdMigration.ToCanonical(type);
+        if (def != null)
+        {
+            b.DefinitionId = def.Id;
+        }
+        else
+        {
+            b.DefinitionId = IdMigration.ToCanonical(type);
+        }
 
         // Rezept-Verknüpfung: Standardrezept aus BuildingDef in Gebäude übernehmen (falls unterstützt)
         if (def != null && !string.IsNullOrEmpty(def.DefaultRecipeId))
@@ -95,23 +111,53 @@ public class BuildingFactory
             switch (b)
             {
                 case ChickenFarm cf:
-                    if (string.IsNullOrEmpty(cf.RezeptIdOverride)) cf.RezeptIdOverride = def.DefaultRecipeId;
+                    if (string.IsNullOrEmpty(cf.RezeptIdOverride))
+                    {
+                        cf.RezeptIdOverride = def.DefaultRecipeId;
+                    }
+
                     break;
                 case SolarPlant sp:
-                    if (string.IsNullOrEmpty(sp.RezeptIdOverride)) sp.RezeptIdOverride = def.DefaultRecipeId;
+                    if (string.IsNullOrEmpty(sp.RezeptIdOverride))
+                    {
+                        sp.RezeptIdOverride = def.DefaultRecipeId;
+                    }
+
                     break;
                 case WaterPump wp:
-                    if (string.IsNullOrEmpty(wp.RezeptIdOverride)) wp.RezeptIdOverride = def.DefaultRecipeId;
+                    if (string.IsNullOrEmpty(wp.RezeptIdOverride))
+                    {
+                        wp.RezeptIdOverride = def.DefaultRecipeId;
+                    }
+
                     break;
             }
         }
 
         // Database + weitere Dependencies injizieren
-        try { b.Initialize(database); } catch { }
-        try { b.InitializeDependencies(productionManager, economyManager, eventHub); } catch { }
+        try
+        {
+            b.Initialize(this.database);
+        }
+        catch
+        {
+        }
+        try
+        {
+            b.InitializeDependencies(this.productionManager, this.economyManager, this.eventHub);
+        }
+        catch
+        {
+        }
         if (b is City city)
         {
-            try { city.Initialize(eventHub, gameTimeManager, simulation); } catch { }
+            try
+            {
+                city.Initialize(this.eventHub, this.gameTimeManager, this.simulation);
+            }
+            catch
+            {
+            }
         }
 
         return b;

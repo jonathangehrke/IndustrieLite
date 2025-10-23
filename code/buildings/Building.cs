@@ -1,86 +1,101 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using System;
 using Godot;
 
 /// <summary>
 /// Base class for all buildings in the game
-/// Handles common functionality like grid-based positioning, rendering, and inspector data
+/// Handles common functionality like grid-based positioning, rendering, and inspector data.
 /// </summary>
 public partial class Building : Node2D
 {
-    /// <summary>Grid position of the building in tile coordinates</summary>
+    /// <summary>Grid position of the building in tile coordinates.</summary>
     public Vector2I GridPos;
 
-    /// <summary>Size of the building in grid tiles</summary>
+    /// <summary>Size of the building in grid tiles.</summary>
     public Vector2I Size;
 
-    /// <summary>Size of each tile in pixels</summary>
+    /// <summary>Size of each tile in pixels.</summary>
     public int TileSize = 32;
 
-    /// <summary>Default size for buildings (2x2 tiles)</summary>
+    /// <summary>Default size for buildings (2x2 tiles).</summary>
     public Vector2I DefaultSize = new Vector2I(2, 2);
 
-    /// <summary>Visual color for building rendering</summary>
+    /// <summary>Visual color for building rendering.</summary>
     public Color Color = new Color(0.6f, 0.6f, 0.6f, 1f);
 
     // Kanonische ID der Gebaeudedefinition (aus Database)
     public string DefinitionId { get; set; } = "";
-    protected Database? _database;
 
-    [Export] public string BuildingId { get; set; } = "";
+    protected Database? database;
+
+    [Export]
+    public string BuildingId { get; set; } = "";
 
     // Logistik-Upgrade-Einstellungen pro Gebaeude
     // Kapazitaet pro Truck (fuer von diesem Gebaeude erzeugte Lieferungen)
-    [Export] public int LogisticsTruckCapacity { get; set; } = 5;
+    [Export]
+    public int LogisticsTruckCapacity { get; set; } = 5;
+
     // Geschwindigkeit der Trucks (Pixel/Sek) fuer Lieferungen dieses Gebaeudes
-    [Export] public float LogisticsTruckSpeed { get; set; } = 32.0f;
+    [Export]
+    public float LogisticsTruckSpeed { get; set; } = 32.0f;
 
     // Interne Grafiksteuerung: Wird das Gebaeude per Icon gerendert?
-    private bool _hatIconGrafik = false;
+    private bool hatIconGrafik = false;
 
     /// <summary>
-    /// Initialize building with proper Z-index for rendering
+    /// Initialize building with proper Z-index for rendering.
     /// </summary>
     public override void _Ready()
     {
-        if (string.IsNullOrEmpty(BuildingId))
-            BuildingId = Guid.NewGuid().ToString();
+        if (string.IsNullOrEmpty(this.BuildingId))
+        {
+            this.BuildingId = Guid.NewGuid().ToString();
+        }
 
-        ZIndex = 1; // Buildings render above ground
+        this.ZIndex = 1; // Buildings render above ground
         // Versuche, eine Sprite-Grafik aus der BuildingDef.Icon zu erzeugen
-        ErzeugeGrafikAusIconWennVorhanden();
+        this.ErzeugeGrafikAusIconWennVorhanden();
     }
 
     /// <summary>
-    /// Render the building as a colored rectangle
+    /// Render the building as a colored rectangle.
     /// </summary>
     public override void _Draw()
     {
         // Wenn keine Icon-Grafik gesetzt ist, fallback auf farbiges Rechteck
-        if (!_hatIconGrafik)
+        if (!this.hatIconGrafik)
         {
-            var rect = new Rect2(Vector2.Zero, new Vector2(Size.X * TileSize, Size.Y * TileSize));
-            DrawRect(rect, Color);
+            var rect = new Rect2(Vector2.Zero, new Vector2(this.Size.X * this.TileSize, this.Size.Y * this.TileSize));
+            this.DrawRect(rect, this.Color);
         }
     }
 
     /// <summary>
-    /// Trigger redraw when building enters scene tree
+    /// Trigger redraw when building enters scene tree.
     /// </summary>
     public override void _EnterTree()
     {
-        QueueRedraw();
+        this.QueueRedraw();
     }
 
     /// <summary>
-    /// Liefert die BuildingDef aus der zentralen Database anhand der gespeicherten DefinitionId
+    /// Liefert die BuildingDef aus der zentralen Database anhand der gespeicherten DefinitionId.
     /// </summary>
+    /// <returns></returns>
     public BuildingDef? GetBuildingDef()
     {
-        if (_database == null)
+        if (this.database == null)
+        {
             return null;
-        if (string.IsNullOrEmpty(DefinitionId)) return null;
-        return _database.GetBuilding(DefinitionId);
+        }
+
+        if (string.IsNullOrEmpty(this.DefinitionId))
+        {
+            return null;
+        }
+
+        return this.database.GetBuilding(this.DefinitionId);
     }
 
     /// <summary>
@@ -88,10 +103,10 @@ public partial class Building : Node2D
     /// </summary>
     private void ErzeugeGrafikAusIconWennVorhanden()
     {
-        var def = GetBuildingDef();
+        var def = this.GetBuildingDef();
         if (def == null || def.Icon == null)
         {
-            _hatIconGrafik = false;
+            this.hatIconGrafik = false;
             return;
         }
 
@@ -99,23 +114,23 @@ public partial class Building : Node2D
         var size = tex.GetSize();
         if (size.X <= 0 || size.Y <= 0)
         {
-            _hatIconGrafik = false;
+            this.hatIconGrafik = false;
             return;
         }
 
-        var zielBreite = Size.X * TileSize;
-        var zielHoehe = Size.Y * TileSize;
+        var zielBreite = this.Size.X * this.TileSize;
+        var zielHoehe = this.Size.Y * this.TileSize;
         var scaleX = (float)zielBreite / (float)size.X;
         var scaleY = (float)zielHoehe / (float)size.Y;
 
         var sprite = new Sprite2D();
         sprite.Texture = tex;
         sprite.Centered = false; // Oben-Links als Ursprung
-        sprite.ZIndex = ZIndex;  // Gleiche Ebene wie Gebaeude
+        sprite.ZIndex = this.ZIndex;  // Gleiche Ebene wie Gebaeude
         sprite.Scale = new Vector2(scaleX, scaleY);
-        AddChild(sprite);
+        this.AddChild(sprite);
 
-        _hatIconGrafik = true;
+        this.hatIconGrafik = true;
     }
 
     // Leichtgewichtiger Presenter fuer den Inspector (Godot-kompatible Collections)
@@ -123,19 +138,19 @@ public partial class Building : Node2D
     {
         var pairs = new Godot.Collections.Array<Godot.Collections.Array>
         {
-            new() { "Typ", GetType().Name },
-            new() { "Position", GridPos.ToString() }
+            new() { "Typ", this.GetType().Name },
+            new() { "Position", this.GridPos.ToString() },
         };
         return new Godot.Collections.Dictionary
         {
-            { "title", Name },
-            { "pairs", pairs }
+            { "title", this.Name },
+            { "pairs", pairs },
         };
     }
 
     public virtual void SetDatabase(Database? database)
     {
-        _database = database;
+        this.database = database;
     }
 
     /// <summary>
@@ -143,7 +158,7 @@ public partial class Building : Node2D
     /// </summary>
     public virtual void Initialize(Database? database)
     {
-        _database = database;
+        this.database = database;
     }
 
     /// <summary>
@@ -163,7 +178,6 @@ public partial class Building : Node2D
     {
         // no-op in base
     }
-
 }
 
 

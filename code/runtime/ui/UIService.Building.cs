@@ -1,20 +1,24 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
-/// UIService.Building: Gebaeude-Abfragen (Farms, Besitz, Summen)
+/// UIService.Building: Gebaeude-Abfragen (Farms, Besitz, Summen).
 /// </summary>
 public partial class UIService
 {
     /// <summary>
     /// Liefert die Gesamtzahl der Hhner ber alle Farms.
     /// </summary>
+    /// <returns></returns>
     public int GetTotalChickens()
     {
-        if (buildingManager == null) return 0;
+        if (this.buildingManager == null)
+        {
+            return 0;
+        }
 
         int total = 0;
-        foreach (var farm in buildingManager.GetChickenFarms())
+        foreach (var farm in this.buildingManager.GetChickenFarms())
         {
             total += farm.Stock;
         }
@@ -24,25 +28,28 @@ public partial class UIService
     /// <summary>
     /// Liefert alle Hhnerfarmen fr die UI-Anzeige.
     /// </summary>
+    /// <returns></returns>
     public Godot.Collections.Array<ChickenFarm> GetChickenFarmsForUI()
     {
-        return buildingManager?.GetChickenFarmsForUI() ?? new Godot.Collections.Array<ChickenFarm>();
+        return this.buildingManager?.GetChickenFarmsForUI() ?? new Godot.Collections.Array<ChickenFarm>();
     }
 
     /// <summary>
     /// Prft, ob Land an einer Position gekauft werden kann.
     /// </summary>
+    /// <returns></returns>
     public bool CanBuyLand(Vector2I position)
     {
-        return gameManager?.ManagerCoordinator?.CanBuyLand(position) ?? false;
+        return this.gameManager?.ManagerCoordinator?.CanBuyLand(position) ?? false;
     }
 
     /// <summary>
     /// Prft, ob Land an einer Position im Besitz ist.
     /// </summary>
+    /// <returns></returns>
     public bool IsLandOwned(Vector2I position)
     {
-        return gameManager?.ManagerCoordinator?.IsOwned(position) ?? false;
+        return this.gameManager?.ManagerCoordinator?.IsOwned(position) ?? false;
     }
 }
 

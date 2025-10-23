@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using System;
 using System.Collections.Generic;
 using Godot;
@@ -14,13 +14,15 @@ public class RoadQuadtree
         public Rect2I Bounds;
         public List<Vector2I> Punkte = new List<Vector2I>();
         public Node[]? Kinder = null; // Reihenfolge: NW, NE, SW, SE
-        public bool IstBlatt => Kinder == null;
+
+        public bool IstBlatt => this.Kinder == null;
+
         public int Tiefe;
 
         public Node(Rect2I bounds, int tiefe)
         {
-            Bounds = bounds;
-            Tiefe = tiefe;
+            this.Bounds = bounds;
+            this.Tiefe = tiefe;
         }
     }
 
@@ -32,51 +34,66 @@ public class RoadQuadtree
     {
         this.kapazitaet = Math.Max(1, kapazitaet);
         this.maxTiefe = Math.Max(1, maxTiefe);
-        wurzel = new Node(bounds, 0);
+        this.wurzel = new Node(bounds, 0);
     }
 
     public void Clear()
     {
-        wurzel = new Node(wurzel.Bounds, 0);
+        this.wurzel = new Node(this.wurzel.Bounds, 0);
     }
 
     public bool Insert(Vector2I p)
     {
-        if (!wurzel.Bounds.HasPoint(p)) return false;
-        return Insert(wurzel, p);
+        if (!this.wurzel.Bounds.HasPoint(p))
+        {
+            return false;
+        }
+
+        return this.Insert(this.wurzel, p);
     }
 
     public bool Remove(Vector2I p)
     {
-        if (!wurzel.Bounds.HasPoint(p)) return false;
-        return Remove(wurzel, p);
+        if (!this.wurzel.Bounds.HasPoint(p))
+        {
+            return false;
+        }
+
+        return this.Remove(this.wurzel, p);
     }
 
     public Vector2I? Nearest(Vector2I von, int maxRadius)
     {
         int best = maxRadius >= 0 ? maxRadius : int.MaxValue;
         Vector2I? bestPunkt = null;
-        Nearest(wurzel, von, ref best, ref bestPunkt);
+        this.Nearest(this.wurzel, von, ref best, ref bestPunkt);
         return bestPunkt;
     }
 
     private bool Insert(Node n, Vector2I p)
     {
-        if (!n.Bounds.HasPoint(p)) return false;
+        if (!n.Bounds.HasPoint(p))
+        {
+            return false;
+        }
+
         if (n.IstBlatt)
         {
-            if (n.Punkte.Count < kapazitaet || n.Tiefe >= maxTiefe)
+            if (n.Punkte.Count < this.kapazitaet || n.Tiefe >= this.maxTiefe)
             {
                 n.Punkte.Add(p);
                 return true;
             }
-            Subdivide(n);
+            this.Subdivide(n);
         }
         if (n.Kinder != null)
         {
             foreach (var k in n.Kinder)
             {
-                if (Insert(k, p)) return true;
+                if (this.Insert(k, p))
+                {
+                    return true;
+                }
             }
         }
         // Fallback: in diesem Knoten behalten
@@ -86,7 +103,11 @@ public class RoadQuadtree
 
     private bool Remove(Node n, Vector2I p)
     {
-        if (!n.Bounds.HasPoint(p)) return false;
+        if (!n.Bounds.HasPoint(p))
+        {
+            return false;
+        }
+
         if (n.IstBlatt)
         {
             for (int i = 0; i < n.Punkte.Count; i++)
@@ -103,7 +124,10 @@ public class RoadQuadtree
         {
             foreach (var k in n.Kinder)
             {
-                if (Remove(k, p)) return true;
+                if (this.Remove(k, p))
+                {
+                    return true;
+                }
             }
         }
         // Falls nicht in Kindern, ggf. im Rest-Lager
@@ -122,7 +146,10 @@ public class RoadQuadtree
     {
         // Pruning: Wenn die minimale Distanz des Knoten-Rechtecks groesser als bisheriges best ist, ueberspringen
         int minRectDist = MinManhattanDistanceRect(n.Bounds, von);
-        if (minRectDist > best) return;
+        if (minRectDist > best)
+        {
+            return;
+        }
 
         if (n.IstBlatt)
         {
@@ -133,7 +160,10 @@ public class RoadQuadtree
                 {
                     best = d;
                     bestPunkt = n.Punkte[i];
-                    if (best == 0) return;
+                    if (best == 0)
+                    {
+                        return;
+                    }
                 }
             }
             return;
@@ -144,14 +174,18 @@ public class RoadQuadtree
         {
             foreach (var k in n.Kinder)
             {
-                Nearest(k, von, ref best, ref bestPunkt);
+                this.Nearest(k, von, ref best, ref bestPunkt);
             }
         }
     }
 
     private void Subdivide(Node n)
     {
-        if (!n.IstBlatt) return;
+        if (!n.IstBlatt)
+        {
+            return;
+        }
+
         var pos = n.Bounds.Position;
         var size = n.Bounds.Size;
         int hw = size.X / 2;
@@ -203,9 +237,25 @@ public class RoadQuadtree
         int yMax = r.Position.Y + r.Size.Y - 1;
 
         int dx = 0;
-        if (p.X < xMin) dx = xMin - p.X; else if (p.X > xMax) dx = p.X - xMax;
+        if (p.X < xMin)
+        {
+            dx = xMin - p.X;
+        }
+        else if (p.X > xMax)
+        {
+            dx = p.X - xMax;
+        }
+
         int dy = 0;
-        if (p.Y < yMin) dy = yMin - p.Y; else if (p.Y > yMax) dy = p.Y - yMax;
+        if (p.Y < yMin)
+        {
+            dy = yMin - p.Y;
+        }
+        else if (p.Y > yMax)
+        {
+            dy = p.Y - yMax;
+        }
+
         return dx + dy;
     }
 }

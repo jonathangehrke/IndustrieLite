@@ -1,16 +1,17 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
 using System.Linq;
-using IndustrieLite.Transport.Interfaces;
+using Godot;
 using IndustrieLite.Transport.Core;
 using IndustrieLite.Transport.Core.Models;
-
+using IndustrieLite.Transport.Interfaces;
 
 public partial class TransportEconomyService : Node, ITransportEconomyService
 {
     public double CostPerUnitPerTile { get; private set; }
+
     public double TruckFixedCost { get; private set; }
+
     public double DefaultPricePerUnit { get; private set; }
 
     private EconomyManager economyManager = default!;
@@ -19,6 +20,7 @@ public partial class TransportEconomyService : Node, ITransportEconomyService
 
     // Delegate für SignaleAktiv und jobsNeuZuPlanen (wird vom Coordinator gesetzt)
     public System.Func<bool>? GetSignaleAktivDelegate { get; set; }
+
     public System.Action? SetJobsNeuZuPlanenDelegate { get; set; }
 
     // Delegate für TransportCore-Zugriff
@@ -41,16 +43,21 @@ public partial class TransportEconomyService : Node, ITransportEconomyService
     /// <summary>
     /// Liefert den aktuellen Marktpreis für ein Produkt in einer Stadt (Fallback: DefaultPricePerUnit).
     /// </summary>
+    /// <returns></returns>
     public double GetCurrentMarketPrice(string product, City city)
     {
         try
         {
             var open = city.Orders.Where(o => !o.Accepted && !o.Delivered && string.Equals(o.Product, product, StringComparison.OrdinalIgnoreCase));
             if (open.Any())
+            {
                 return open.Average(o => o.PricePerUnit);
+            }
         }
-        catch { }
-        return DefaultPricePerUnit;
+        catch
+        {
+        }
+        return this.DefaultPricePerUnit;
     }
 
     /// <summary>
@@ -61,18 +68,20 @@ public partial class TransportEconomyService : Node, ITransportEconomyService
         var revenue = t.Amount * t.PricePerUnit;
         var cost = t.TransportCost;
         var net = revenue - cost;
-        economyManager.AddMoney(net);
+        this.economyManager.AddMoney(net);
 
-        var transportCore = GetTransportCoreDelegate?.Invoke();
+        var transportCore = this.GetTransportCoreDelegate?.Invoke();
         if (transportCore != null && t.JobId != Guid.Empty)
+        {
             transportCore.MeldeJobAbgeschlossen(t.JobId, t.Amount);
+        }
 
         try
         {
             int oid = t.OrderId;
             if (oid != 0)
             {
-                foreach (var city in buildingManager.Cities)
+                foreach (var city in this.buildingManager.Cities)
                 {
                     var ord = city.Orders.FirstOrDefault(o => o.Id == oid && !o.Delivered);
                     if (ord != null)
@@ -95,57 +104,63 @@ public partial class TransportEconomyService : Node, ITransportEconomyService
                                 DebugLogger.LogTransport("TransportEconomyService: WARNING - MarketService NOT FOUND in ServiceContainer!");
                             }
 
-                            var signaleAktiv = GetSignaleAktivDelegate?.Invoke() ?? true;
-                            if (signaleAktiv && eventHub != null)
-                                eventHub.EmitSignal(EventHub.SignalName.MarketOrdersChanged);
+                            var signaleAktiv = this.GetSignaleAktivDelegate?.Invoke() ?? true;
+                            if (signaleAktiv && this.eventHub != null)
+                            {
+                                this.eventHub.EmitSignal(EventHub.SignalName.MarketOrdersChanged);
+                            }
                         }
                         break;
                     }
                 }
             }
         }
-        catch { }
-
-        var signaleAktivForCost = GetSignaleAktivDelegate?.Invoke() ?? true;
-        if (signaleAktivForCost && eventHub != null && cost > 0)
+        catch
         {
-            eventHub.EmitSignal(EventHub.SignalName.ProductionCostIncurred, (t.SourceNode as Node) ?? (Node)this, "transport", cost, "maintenance");
+        }
+
+        var signaleAktivForCost = this.GetSignaleAktivDelegate?.Invoke() ?? true;
+        if (signaleAktivForCost && this.eventHub != null && cost > 0)
+        {
+            this.eventHub.EmitSignal(EventHub.SignalName.ProductionCostIncurred, (t.SourceNode as Node) ?? (Node)this, "transport", cost, "maintenance");
         }
 
         // Signal that jobs need to be replanned
-        SetJobsNeuZuPlanenDelegate?.Invoke();
+        this.SetJobsNeuZuPlanenDelegate?.Invoke();
     }
 
     /// <summary>
     /// Berechnet Transportkosten anhand Luftliniendistanz.
     /// </summary>
+    /// <returns></returns>
     public double CalculateTransportCost(Vector2 start, Vector2 target, int amount)
     {
         try
         {
-            double cost = DistanceCalculator.GetTransportCost(start, target, CostPerUnitPerTile * amount, buildingManager.TileSize) + TruckFixedCost;
+            double cost = DistanceCalculator.GetTransportCost(start, target, this.CostPerUnitPerTile * amount, this.buildingManager.TileSize) + this.TruckFixedCost;
             return cost;
         }
         catch
         {
-            return TruckFixedCost;
+            return this.TruckFixedCost;
         }
     }
 
     /// <summary>
     /// Berechnet Transportkosten anhand eines Pfades.
     /// </summary>
+    /// <returns></returns>
     public double CalculateTransportCostWithPath(System.Collections.Generic.List<Vector2> path, int amount)
     {
         try
         {
             var worldLen = DistanceCalculator.GetPathWorldLength(path);
-            var tiles = worldLen / buildingManager.TileSize;
-            return tiles * CostPerUnitPerTile * amount + TruckFixedCost;
+            var tiles = worldLen / this.buildingManager.TileSize;
+            return (tiles * this.CostPerUnitPerTile * amount) + this.TruckFixedCost;
         }
         catch
         {
-            return TruckFixedCost;
+            return this.TruckFixedCost;
         }
     }
 }

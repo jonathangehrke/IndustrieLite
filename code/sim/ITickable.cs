@@ -1,17 +1,17 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System.Collections.Generic;
+using Godot;
 
 /// <summary>
-/// Interface für alle Systeme, die in der Simulation getickelt werden können
+/// Interface für alle Systeme, die in der Simulation getickelt werden können.
 /// </summary>
 public interface ITickable
 {
     /// <summary>
-    /// Name des Systems für Debugging
+    /// Gets name des Systems für Debugging.
     /// </summary>
     string Name { get; }
-    
+
     /// <summary>
     /// Führt einen Simulationstick aus.
     /// Der Parameter dt ist die Dauer des aktuellen Simulationsticks (Sekunden).
@@ -20,18 +20,19 @@ public interface ITickable
 }
 
 /// <summary>
-/// Interface für Produktionssysteme mit Totals-Berechnung
+/// Interface für Produktionssysteme mit Totals-Berechnung.
 /// </summary>
 public interface IProductionSystem : ITickable
 {
     /// <summary>
     /// Berechnet die aktuellen Gesamt-Ressourcen
-    /// Verwendet für Shadow-Mode Vergleiche
+    /// Verwendet für Shadow-Mode Vergleiche.
     /// </summary>
+    /// <returns></returns>
     Dictionary<string, double> GetTotals();
-    
+
     /// <summary>
-    /// Setzt das System zurück (für neue Ticks)
+    /// Setzt das System zurück (für neue Ticks).
     /// </summary>
     void Reset();
 }

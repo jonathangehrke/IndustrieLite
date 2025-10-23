@@ -1,9 +1,9 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
 /// ProductionCalculationService - Explicit DI Initialization (Phase 6)
-/// Dependencies werden via Initialize() injiziert statt via ServiceContainer lookup
+/// Dependencies werden via Initialize() injiziert statt via ServiceContainer lookup.
 /// </summary>
 public partial class ProductionCalculationService : Node
 {
@@ -16,6 +16,8 @@ public partial class ProductionCalculationService : Node
         this.gameDatabase = gameDatabase;
 
         if (gameDatabase == null)
+        {
             DebugLogger.LogServices("ProductionCalculationService: WARNING - GameDatabase not found");
+        }
     }
 }

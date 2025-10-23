@@ -1,9 +1,9 @@
-﻿// SPDX-License-Identifier: MIT
-using System;
-using Godot;
-
+// SPDX-License-Identifier: MIT
 namespace IndustrieLite.Transport.Core.Models
 {
+    using System;
+    using Godot;
+
     /// <summary>
     /// Status eines Transport-Jobs innerhalb der Simulation.
     /// </summary>
@@ -13,7 +13,7 @@ namespace IndustrieLite.Transport.Core.Models
         Zugewiesen,
         Unterwegs,
         Abgeschlossen,
-        Fehlgeschlagen
+        Fehlgeschlagen,
     }
 
     /// <summary>
@@ -22,18 +22,29 @@ namespace IndustrieLite.Transport.Core.Models
     public class TransportJob
     {
         public Guid JobId { get; init; } = Guid.NewGuid();
+
         public int OrderId { get; init; }
+
 #pragma warning disable CS8625
         public StringName ResourceId { get; init; } = default;
+
 #pragma warning restore CS8625
         public int Menge { get; init; }
+
         public double Transportkosten { get; init; }
+
         public double PreisProEinheit { get; init; }
+
         public Vector2 StartPosition { get; init; } = Vector2.Zero;
+
         public Vector2 ZielPosition { get; init; } = Vector2.Zero;
+
         public object? LieferantKontext { get; init; }
+
         public object? ZielKontext { get; init; }
+
         public TransportJobStatus Status { get; set; } = TransportJobStatus.Geplant;
+
         public object? TruckKontext { get; set; }
     }
 }

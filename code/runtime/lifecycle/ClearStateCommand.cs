@@ -1,9 +1,9 @@
-﻿// SPDX-License-Identifier: MIT
-using System;
-using System.Threading.Tasks;
-
+// SPDX-License-Identifier: MIT
 namespace IndustrieLite.Runtime.Lifecycle
 {
+    using System;
+    using System.Threading.Tasks;
+
     public class ClearStateCommand : IGameLifecycleCommand
     {
         public string Name => "ClearState";
@@ -11,7 +11,9 @@ namespace IndustrieLite.Runtime.Lifecycle
         public bool CanExecute(GameLifecycleContext context)
         {
             if (context == null)
+            {
                 return false;
+            }
 
             // At minimum we need the core managers to clear their state
             return context.LandManager != null &&
@@ -19,10 +21,12 @@ namespace IndustrieLite.Runtime.Lifecycle
                    context.EconomyManager != null;
         }
 
-        public async Task<GameLifecycleResult> ExecuteAsync(GameLifecycleContext context)
+        public Task<GameLifecycleResult> ExecuteAsync(GameLifecycleContext context)
         {
-            if (!CanExecute(context))
-                return GameLifecycleResult.CreateError("Cannot execute ClearState: missing required dependencies");
+            if (!this.CanExecute(context))
+            {
+                return Task.FromResult(GameLifecycleResult.CreateError("Cannot execute ClearState: missing required dependencies"));
+            }
 
             try
             {
@@ -45,7 +49,7 @@ namespace IndustrieLite.Runtime.Lifecycle
                     () => "ClearStateCommand: Successfully cleared all state");
 
                 context.OnSuccess?.Invoke();
-                return GameLifecycleResult.CreateSuccess();
+                return Task.FromResult(GameLifecycleResult.CreateSuccess());
             }
             catch (Exception ex)
             {
@@ -53,7 +57,7 @@ namespace IndustrieLite.Runtime.Lifecycle
                 DebugLogger.Log("debug_lifecycle", DebugLogger.LogLevel.Error, () => errorMessage);
 
                 context.OnError?.Invoke(ex);
-                return GameLifecycleResult.CreateError(errorMessage, ex);
+                return Task.FromResult(GameLifecycleResult.CreateError(errorMessage, ex));
             }
         }
     }

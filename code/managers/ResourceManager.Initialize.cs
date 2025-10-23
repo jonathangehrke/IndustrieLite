@@ -1,7 +1,7 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
 using System.Threading.Tasks;
+using Godot;
 
 public partial class ResourceManager
 {
@@ -16,25 +16,27 @@ public partial class ResourceManager
         this.buildingManager = buildingManager;
 
         // Fallback: Standard-IDs sicherstellen
-        EnsureResourceExists(ResourceIds.PowerName);
-        EnsureResourceExists(ResourceIds.WaterName);
-        EnsureResourceExists(ResourceIds.WorkersName);
-        EnsureResourceExists(ResourceIds.ChickensName);
-        EnsureResourceExists(ResourceIds.EggName);
-        EnsureResourceExists(ResourceIds.PigName);
-        EnsureResourceExists(ResourceIds.GrainName);
+        this.EnsureResourceExists(ResourceIds.PowerName);
+        this.EnsureResourceExists(ResourceIds.WaterName);
+        this.EnsureResourceExists(ResourceIds.WorkersName);
+        this.EnsureResourceExists(ResourceIds.ChickensName);
+        this.EnsureResourceExists(ResourceIds.EggName);
+        this.EnsureResourceExists(ResourceIds.PigName);
+        this.EnsureResourceExists(ResourceIds.GrainName);
 
         // Dynamische IDs aus Registry uebernehmen
         if (this.resourceRegistry != null)
         {
             foreach (var id in this.resourceRegistry.GetAllResourceIds())
-                EnsureResourceExists(id);
+            {
+                this.EnsureResourceExists(id);
+            }
         }
 
         try
         {
             simulation.Register(this);
-            _registeredWithSimulation = true;
+            this.registeredWithSimulation = true;
             DebugLogger.LogServices("ResourceManager.Initialize(): Bei Simulation registriert");
         }
         catch (Exception ex)

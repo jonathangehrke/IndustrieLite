@@ -1,9 +1,9 @@
-﻿// SPDX-License-Identifier: MIT
-using System;
-using IndustrieLite.Transport.Core.Models;
-
+// SPDX-License-Identifier: MIT
 namespace IndustrieLite.Transport.Core.Interfaces
 {
+    using System;
+    using IndustrieLite.Transport.Core.Models;
+
     /// <summary>
     /// Plant neue Transport-Jobs und berechnet Kosten.
     /// </summary>

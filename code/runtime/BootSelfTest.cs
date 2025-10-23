@@ -1,6 +1,6 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
+using Godot;
 
 /// <summary>
 /// BootSelfTest: Fruehe Start-Pruefungen fuer Autoload-Reihenfolge, DI-Verfuegbarkeit und Godot/.NET-Versionen.
@@ -8,38 +8,46 @@ using System;
 /// </summary>
 public partial class BootSelfTest : Node
 {
-    [Export] public bool StopOnErrorInDev { get; set; } = true; // In Debug-Builds bei fatalen Fehlern stoppen
-    [Export] public bool LogDetails { get; set; } = true;
+    [Export]
+    public bool StopOnErrorInDev { get; set; } = true; // In Debug-Builds bei fatalen Fehlern stoppen
+
+    [Export]
+    public bool LogDetails { get; set; } = true;
+
     // In Release-Builds standardmäßig deaktiviert, damit der Self-Test dort harmlos ist.
-    [Export] public bool RunInRelease { get; set; } = false;
+    [Export]
+    public bool RunInRelease { get; set; } = false;
 
     public override void _Ready()
     {
         // In Release-Builds ggf. keinen Check ausführen
-        if (OS.HasFeature("release") && !RunInRelease)
+        if (OS.HasFeature("release") && !this.RunInRelease)
         {
-            if (LogDetails)
-            DebugLogger.Info("debug_services", "BootSelfTestDisabled", "BootSelfTest disabled in release build");
+            if (this.LogDetails)
+            {
+                DebugLogger.Info("debug_services", "BootSelfTestDisabled", "BootSelfTest disabled in release build");
+            }
+
             return;
         }
         // Einen Frame warten, damit alle Autoloads _Ready() ausgeführt haben
-        CallDeferred(nameof(RunChecks));
+        this.CallDeferred(nameof(this.RunChecks));
     }
 
     private void RunChecks()
     {
         bool ok = true;
-        ok &= CheckGodotVersion();
-        ok &= CheckServices();
-        ok &= ValidateNoDIViolations(); // Phase 7: DI pattern validation
-        CallDeferred(nameof(RunLateChecks));
+        ok &= this.CheckGodotVersion();
+        ok &= this.CheckServices();
+        ok &= this.ValidateNoDIViolations(); // Phase 7: DI pattern validation
+        this.CallDeferred(nameof(this.RunLateChecks));
 
-        if (!ok && StopOnErrorInDev && OS.IsDebugBuild())
+        if (!ok && this.StopOnErrorInDev && OS.IsDebugBuild())
         {
             DebugLogger.Error("debug_services", "BootSelfTestFatal", "Fatal startup checks failed. Quitting (Dev mode)");
-            GetTree().Quit(120); // nicht-Null Exit-Code für CI/Logs
+            this.GetTree().Quit(120); // nicht-Null Exit-Code für CI/Logs
         }
-        else if (ok && LogDetails)
+        else if (ok && this.LogDetails)
         {
             DebugLogger.Info("debug_services", "BootSelfTestPassed", "Startup checks passed");
         }
@@ -57,8 +65,11 @@ public partial class BootSelfTest : Node
                 DebugLogger.Log("debug_services", DebugLogger.LogLevel.Error, () => $"[BT010] Godot-Version erwartet 4.4.x, gefunden {major}.{minor}");
                 return false;
             }
-            if (LogDetails)
+            if (this.LogDetails)
+            {
                 DebugLogger.LogServices(() => $"BootSelfTest: Godot {major}.{minor} erkannt.");
+            }
+
             return true;
         }
         catch (Exception ex)
@@ -71,7 +82,7 @@ public partial class BootSelfTest : Node
     private bool CheckServices()
     {
         bool ok = true;
-        var root = GetTree().Root;
+        var root = this.GetTree().Root;
 
         // Autoload-Anwesenheit prüfen
         Node? scNode = root.GetNodeOrNull<Node>("/root/ServiceContainer");
@@ -160,16 +171,19 @@ public partial class BootSelfTest : Node
             ok = false;
         }
 
-        if (ok && LogDetails)
+        if (ok && this.LogDetails)
+        {
             DebugLogger.LogServices("BootSelfTest: Autoload/DI-Checks OK.");
+        }
+
         return ok;
     }
 
     private async void RunLateChecks()
     {
         // Ein paar Frames warten, damit Szene und GameManager geladen werden können
-        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        await this.ToSignal(this.GetTree(), SceneTree.SignalName.ProcessFrame);
+        await this.ToSignal(this.GetTree(), SceneTree.SignalName.ProcessFrame);
 
         try
         {
@@ -180,7 +194,7 @@ public partial class BootSelfTest : Node
             }
 
             // GameManager finden; wenn keiner existiert (z. B. Hauptmenü), keine Session-Checks erzwingen
-            var gm = sc.GetNamedService<GameManager>("GameManager") ?? GetTree().Root.FindChild("GameManager", true, false) as GameManager;
+            var gm = sc.GetNamedService<GameManager>("GameManager") ?? this.GetTree().Root.FindChild("GameManager", true, false) as GameManager;
             if (gm == null)
             {
                 DebugLogger.LogServices("[BootSelfTest] Kein GameManager im Baum – Session-Checks werden uebersprungen.");
@@ -190,7 +204,7 @@ public partial class BootSelfTest : Node
             // Noch ein paar Frames Zeit geben, damit DIContainer registrieren kann
             for (int i = 0; i < 3 && !gm.IsCompositionComplete; i++)
             {
-                await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+                await this.ToSignal(this.GetTree(), SceneTree.SignalName.ProcessFrame);
             }
 
             // Falls die Komposition noch nicht abgeschlossen ist, Checks überspringen
@@ -207,21 +221,21 @@ public partial class BootSelfTest : Node
 
             // Erwartete Session-Services (typisiert) pruefen
             bool allOk = true;
-            allOk &= CheckTypedService<LandManager>("LandManager");
-            allOk &= CheckTypedService<BuildingManager>("BuildingManager");
-            allOk &= CheckTypedService<TransportManager>("TransportManager");
-            allOk &= CheckTypedService<RoadManager>("RoadManager");
-            allOk &= CheckTypedService<EconomyManager>("EconomyManager");
-            allOk &= CheckTypedService<InputManager>("InputManager");
-            allOk &= CheckTypedService<ResourceManager>("ResourceManager");
-            allOk &= CheckTypedService<ProductionManager>("ProductionManager");
-            allOk &= CheckTypedService<GameClockManager>("GameClockManager");
-            allOk &= CheckTypedService<Simulation>("Simulation");
+            allOk &= this.CheckTypedService<LandManager>("LandManager");
+            allOk &= this.CheckTypedService<BuildingManager>("BuildingManager");
+            allOk &= this.CheckTypedService<TransportManager>("TransportManager");
+            allOk &= this.CheckTypedService<RoadManager>("RoadManager");
+            allOk &= this.CheckTypedService<EconomyManager>("EconomyManager");
+            allOk &= this.CheckTypedService<InputManager>("InputManager");
+            allOk &= this.CheckTypedService<ResourceManager>("ResourceManager");
+            allOk &= this.CheckTypedService<ProductionManager>("ProductionManager");
+            allOk &= this.CheckTypedService<GameClockManager>("GameClockManager");
+            allOk &= this.CheckTypedService<Simulation>("Simulation");
 
-            if (!allOk && StopOnErrorInDev && OS.IsDebugBuild())
+            if (!allOk && this.StopOnErrorInDev && OS.IsDebugBuild())
             {
-            DebugLogger.Error("debug_services", "BootSelfTestTypedServiceMissing", "Typed service registration incomplete. Quitting (Dev mode)");
-                GetTree().Quit(302);
+                DebugLogger.Error("debug_services", "BootSelfTestTypedServiceMissing", "Typed service registration incomplete. Quitting (Dev mode)");
+                this.GetTree().Quit(302);
                 return;
             }
 
@@ -238,7 +252,8 @@ public partial class BootSelfTest : Node
         }
     }
 
-    private bool CheckTypedService<T>(string name) where T : Node
+    private bool CheckTypedService<T>(string name)
+        where T : Node
     {
         var svc = ServiceContainer.Instance?.GetNamedService<T>(typeof(T).Name);
         if (svc == null)
@@ -254,7 +269,7 @@ public partial class BootSelfTest : Node
     /// Checks:
     /// - All managers have Initialize() method
     /// - All session-scoped managers implement ILifecycleScope
-    /// - DIContainer exists and is properly configured
+    /// - DIContainer exists and is properly configured.
     /// </summary>
     private bool ValidateNoDIViolations()
     {
@@ -263,14 +278,17 @@ public partial class BootSelfTest : Node
         try
         {
             // Find GameManager (if not in scene yet, skip this check)
-            var root = GetTree().Root;
+            var root = this.GetTree().Root;
             var gmNode = root.FindChild("GameManager", true, false) as GameManager;
 
             if (gmNode == null)
             {
                 // No GameManager in scene yet - skip manager validation
-                if (LogDetails)
+                if (this.LogDetails)
+                {
                     DebugLogger.LogServices("[BootSelfTest] DI validation skipped - GameManager not in scene yet");
+                }
+
                 return true;
             }
 
@@ -283,7 +301,8 @@ public partial class BootSelfTest : Node
             }
 
             // List of managers that should have Initialize() and ILifecycleScope
-            var managerTypes = new[] {
+            var managerTypes = new[]
+            {
                 typeof(EconomyManager),
                 typeof(LandManager),
                 typeof(BuildingManager),
@@ -294,44 +313,46 @@ public partial class BootSelfTest : Node
                 typeof(ProductionManager),
                 typeof(GameClockManager),
                 typeof(CityGrowthManager),
-                typeof(GameTimeManager)
+                typeof(GameTimeManager),
             };
 
             // Helper service types
-            var helperServiceTypes = new[] {
+            var helperServiceTypes = new[]
+            {
                 typeof(LogisticsService),
                 typeof(MarketService),
                 typeof(SupplierService),
-                typeof(ProductionCalculationService)
+                typeof(ProductionCalculationService),
             };
 
             // Check each manager type
             foreach (var managerType in managerTypes)
             {
-                ok &= ValidateManagerHasInitialize(managerType);
-                ok &= ValidateManagerHasLifecycleScope(managerType, ServiceLifecycle.Session);
+                ok &= this.ValidateManagerHasInitialize(managerType);
+                ok &= this.ValidateManagerHasLifecycleScope(managerType, ServiceLifecycle.Session);
             }
 
             // Check each helper service type
             foreach (var serviceType in helperServiceTypes)
             {
-                ok &= ValidateManagerHasInitialize(serviceType);
-                ok &= ValidateManagerHasLifecycleScope(serviceType, ServiceLifecycle.Session);
+                ok &= this.ValidateManagerHasInitialize(serviceType);
+                ok &= this.ValidateManagerHasLifecycleScope(serviceType, ServiceLifecycle.Session);
             }
 
             // Check autoload services implement ILifecycleScope with Singleton
-            var singletonTypes = new[] {
+            var singletonTypes = new[]
+            {
                 typeof(EventHub),
                 typeof(Database),
-                typeof(UIService)
+                typeof(UIService),
             };
 
             foreach (var singletonType in singletonTypes)
             {
-                ok &= ValidateManagerHasLifecycleScope(singletonType, ServiceLifecycle.Singleton);
+                ok &= this.ValidateManagerHasLifecycleScope(singletonType, ServiceLifecycle.Singleton);
             }
 
-            if (ok && LogDetails)
+            if (ok && this.LogDetails)
             {
                 DebugLogger.LogServices("[BootSelfTest] DI pattern validation passed - all managers follow explicit DI");
             }
@@ -352,7 +373,8 @@ public partial class BootSelfTest : Node
     {
         try
         {
-            var initMethod = managerType.GetMethod("Initialize",
+            var initMethod = managerType.GetMethod(
+                "Initialize",
                 System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
 
             if (initMethod == null)
@@ -388,14 +410,17 @@ public partial class BootSelfTest : Node
             }
 
             // For validation, we need an instance - try to find it in the tree
-            var root = GetTree().Root;
+            var root = this.GetTree().Root;
             var instance = root.FindChild(managerType.Name, true, false);
 
             if (instance == null)
             {
                 // Instance not in tree yet - skip lifecycle value check
-                if (LogDetails)
+                if (this.LogDetails)
+                {
                     DebugLogger.LogServices($"[BootSelfTest] {managerType.Name} nicht im Baum - Lifecycle-Wert-Check übersprungen");
+                }
+
                 return true;
             }
 

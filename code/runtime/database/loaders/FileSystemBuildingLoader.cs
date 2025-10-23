@@ -1,8 +1,8 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Godot;
 
 /// <summary>
 /// Scannt das Dateisystem nach BuildingDef .tres-Dateien.
@@ -17,11 +17,12 @@ public sealed class FileSystemBuildingLoader : IDataLoader<BuildingDef>
     }
 
     public string LoaderName => nameof(FileSystemBuildingLoader);
+
     public int Priority => 10;
 
     public Task<IReadOnlyCollection<BuildingDef>> LoadAsync(SceneTree sceneTree)
     {
-        var daten = LadeAusOrdner(basisPfad);
+        var daten = this.LadeAusOrdner(this.basisPfad);
         if (daten.Count > 0)
         {
             DebugLogger.LogServices(() => $"FileSystemBuildingLoader: {daten.Count} Gebaeude gefunden");

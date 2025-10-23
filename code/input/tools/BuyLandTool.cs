@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
@@ -30,9 +30,9 @@ public class BuyLandTool : IInputTool
     public void OnClick(Vector2I zelle)
     {
         DebugLogger.LogInput(() => $"BuyLandTool: versuche Land bei {zelle} zu kaufen");
-        if (landManager.BuyLand(zelle, economyManager))
+        if (this.landManager.BuyLand(zelle, this.economyManager))
         {
-            karte?.TriggerPurchaseFeedback(zelle);
+            this.karte?.TriggerPurchaseFeedback(zelle);
         }
     }
 }

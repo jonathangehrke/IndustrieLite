@@ -1,45 +1,57 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
-/// UIService.InputModes: Modi BuyLand/Build/Transport/Demolish
+/// UIService.InputModes: Modi BuyLand/Build/Transport/Demolish.
 /// </summary>
 public partial class UIService
 {
     /// <summary>
-    /// Toggle buy land mode
+    /// Toggle buy land mode.
     /// </summary>
     public void ToggleBuyLandMode(bool enabled)
     {
-        if (inputManager == null) InitializeServices();
-        if (inputManager != null)
+        if (this.inputManager == null)
         {
-            inputManager.SetMode(enabled ? InputManager.InputMode.BuyLand : InputManager.InputMode.None);
+            this.InitializeServices();
+        }
+
+        if (this.inputManager != null)
+        {
+            this.inputManager.SetMode(enabled ? InputManager.InputMode.BuyLand : InputManager.InputMode.None);
         }
     }
 
     /// <summary>
-    /// Landverkaufs-Modus umschalten
+    /// Landverkaufs-Modus umschalten.
     /// </summary>
     public void ToggleSellLandMode(bool enabled)
     {
-        if (inputManager == null) InitializeServices();
-        if (inputManager != null)
+        if (this.inputManager == null)
         {
-            inputManager.SetMode(enabled ? InputManager.InputMode.SellLand : InputManager.InputMode.None);
+            this.InitializeServices();
+        }
+
+        if (this.inputManager != null)
+        {
+            this.inputManager.SetMode(enabled ? InputManager.InputMode.SellLand : InputManager.InputMode.None);
         }
     }
 
     /// <summary>
-    /// Set build mode using building ID (data-driven)
+    /// Set build mode using building ID (data-driven).
     /// </summary>
     public void SetBuildMode(string buildingId)
     {
-        if (inputManager == null) InitializeServices();
-        if (inputManager != null && IsBuildingBuildable(buildingId))
+        if (this.inputManager == null)
         {
-            inputManager.SetMode(InputManager.InputMode.Build, buildingId);
-            DebugLogger.LogServices($"UIService: Build mode set to {buildingId}", DebugLogs);
+            this.InitializeServices();
+        }
+
+        if (this.inputManager != null && this.IsBuildingBuildable(buildingId))
+        {
+            this.inputManager.SetMode(InputManager.InputMode.Build, buildingId);
+            DebugLogger.LogServices($"UIService: Build mode set to {buildingId}", this.DebugLogs);
         }
         else
         {
@@ -48,26 +60,34 @@ public partial class UIService
     }
 
     /// <summary>
-    /// Toggle transport mode
+    /// Toggle transport mode.
     /// </summary>
     public void ToggleTransportMode(bool enabled)
     {
-        if (inputManager == null) InitializeServices();
-        if (inputManager != null)
+        if (this.inputManager == null)
         {
-            inputManager.SetMode(enabled ? InputManager.InputMode.Transport : InputManager.InputMode.None);
+            this.InitializeServices();
+        }
+
+        if (this.inputManager != null)
+        {
+            this.inputManager.SetMode(enabled ? InputManager.InputMode.Transport : InputManager.InputMode.None);
         }
     }
 
     /// <summary>
-    /// Toggle demolish mode
+    /// Toggle demolish mode.
     /// </summary>
     public void ToggleDemolishMode(bool enabled)
     {
-        if (inputManager == null) InitializeServices();
-        if (inputManager != null)
+        if (this.inputManager == null)
         {
-            inputManager.SetMode(enabled ? InputManager.InputMode.Demolish : InputManager.InputMode.None);
+            this.InitializeServices();
+        }
+
+        if (this.inputManager != null)
+        {
+            this.inputManager.SetMode(enabled ? InputManager.InputMode.Demolish : InputManager.InputMode.None);
             try
             {
                 if (enabled)
@@ -97,30 +117,33 @@ public partial class UIService
                     Input.SetCustomMouseCursor(null);
                 }
             }
-            catch { }
+            catch
+            {
+            }
         }
     }
 
     /// <summary>
-    /// Check current input modes
+    /// Check current input modes.
     /// </summary>
+    /// <returns></returns>
     public bool IsBuyLandModeActive()
     {
-        return inputManager?.CurrentMode == InputManager.InputMode.BuyLand;
+        return this.inputManager?.CurrentMode == InputManager.InputMode.BuyLand;
     }
 
     public bool IsSellLandModeActive()
     {
-        return inputManager?.CurrentMode == InputManager.InputMode.SellLand;
+        return this.inputManager?.CurrentMode == InputManager.InputMode.SellLand;
     }
 
     public bool IsTransportModeActive()
     {
-        return inputManager?.CurrentMode == InputManager.InputMode.Transport;
+        return this.inputManager?.CurrentMode == InputManager.InputMode.Transport;
     }
 
     public bool IsBuildModeActive()
     {
-        return inputManager?.CurrentMode == InputManager.InputMode.Build;
+        return this.inputManager?.CurrentMode == InputManager.InputMode.Build;
     }
 }

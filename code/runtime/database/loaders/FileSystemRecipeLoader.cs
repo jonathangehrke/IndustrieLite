@@ -1,8 +1,8 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Godot;
 
 /// <summary>
 /// Scannt Rezept-Definitionen als Fallback aus dem Dateisystem.
@@ -17,11 +17,12 @@ public sealed class FileSystemRecipeLoader : IDataLoader<RecipeDef>
     }
 
     public string LoaderName => nameof(FileSystemRecipeLoader);
+
     public int Priority => 10;
 
     public Task<IReadOnlyCollection<RecipeDef>> LoadAsync(SceneTree sceneTree)
     {
-        var daten = LadeAusOrdner(basisPfad);
+        var daten = this.LadeAusOrdner(this.basisPfad);
         if (daten.Count > 0)
         {
             DebugLogger.LogServices(() => $"FileSystemRecipeLoader: {daten.Count} Rezepte gefunden");

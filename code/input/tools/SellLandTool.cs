@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
@@ -34,15 +34,19 @@ public class SellLandTool : IInputTool
     public void OnClick(Vector2I zelle)
     {
         DebugLogger.LogInput(() => $"SellLandTool: versuche Land bei {zelle} zu verkaufen");
-        var res = landManager.TrySellLand(zelle, economyManager, buildingManager, roadManager);
+        var res = this.landManager.TrySellLand(zelle, this.economyManager, this.buildingManager, this.roadManager);
         if (!res.Ok)
         {
             var ui = ServiceContainer.Instance?.GetNamedService<UIService>(ServiceNames.UIService);
-            if (res.ErrorInfo != null) ui?.ShowErrorToast(res.ErrorInfo);
+            if (res.ErrorInfo != null)
+            {
+                ui?.ShowErrorToast(res.ErrorInfo);
+            }
+
             return;
         }
         // Optionales Feedback: gleiches visuelles Feedback wie beim Kauf nutzen
-        karte?.TriggerPurchaseFeedback(zelle);
+        this.karte?.TriggerPurchaseFeedback(zelle);
         {
             var ui = ServiceContainer.Instance?.GetNamedService<UIService>(ServiceNames.UIService);
             ui?.ShowSuccessToast($"Land verkauft bei {zelle}");

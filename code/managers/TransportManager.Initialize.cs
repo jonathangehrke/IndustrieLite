@@ -1,17 +1,17 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
-/// TransportManager: Explizite Dependency Injection (neue DI-Architektur)
+/// TransportManager: Explizite Dependency Injection (neue DI-Architektur).
 /// </summary>
 public partial class TransportManager
 {
-    private bool _initialized;
+    private bool initialized;
 
     // Store dependencies for later initialization
-    private RoadManager? _pendingRoadManager;
-    private EconomyManager? _pendingEconomyManager;
-    private EventHub? _pendingEventHub;
+    private RoadManager? pendingRoadManager;
+    private EconomyManager? pendingEconomyManager;
+    private EventHub? pendingEventHub;
 
     /// <summary>
     /// Explizite Dependency Injection (neue Architektur).
@@ -19,7 +19,7 @@ public partial class TransportManager
     /// </summary>
     public void Initialize(BuildingManager buildingManager, RoadManager? roadManager, EconomyManager economyManager, EventHub? eventHub)
     {
-        if (_initialized)
+        if (this.initialized)
         {
             DebugLogger.LogTransport("TransportManager.Initialize(): Bereits initialisiert, überspringe");
             return;
@@ -29,14 +29,14 @@ public partial class TransportManager
         this.buildingManager = buildingManager;
 
         // Store dependencies for later initialization (when coordinator exists)
-        _pendingRoadManager = roadManager;
-        _pendingEconomyManager = economyManager;
-        _pendingEventHub = eventHub;
+        this.pendingRoadManager = roadManager;
+        this.pendingEconomyManager = economyManager;
+        this.pendingEventHub = eventHub;
 
         // If coordinator already exists (e.g., _Ready was called first), initialize it now
-        if (coordinator != null)
+        if (this.coordinator != null)
         {
-            coordinator.Initialize(buildingManager, roadManager, economyManager, eventHub);
+            this.coordinator.Initialize(buildingManager, roadManager, economyManager, eventHub);
             DebugLogger.LogTransport("TransportManager.Initialize(): Coordinator initialized immediately");
         }
         else
@@ -44,7 +44,7 @@ public partial class TransportManager
             DebugLogger.LogTransport("TransportManager.Initialize(): Dependencies stored, will initialize coordinator in _Ready()");
         }
 
-        _initialized = true;
+        this.initialized = true;
         DebugLogger.LogTransport($"TransportManager.Initialize(): Initialisiert OK (Building={buildingManager != null}, Road={roadManager != null}, Economy={economyManager != null})");
     }
 
@@ -53,9 +53,9 @@ public partial class TransportManager
     /// </summary>
     private void InitializeCoordinatorIfPending()
     {
-        if (_initialized && coordinator != null && buildingManager != null)
+        if (this.initialized && this.coordinator != null && this.buildingManager != null)
         {
-            coordinator.Initialize(buildingManager, _pendingRoadManager, _pendingEconomyManager!, _pendingEventHub);
+            this.coordinator.Initialize(this.buildingManager, this.pendingRoadManager, this.pendingEconomyManager!, this.pendingEventHub);
             DebugLogger.LogTransport("TransportManager: Applied pending dependencies to coordinator");
         }
     }

@@ -1,13 +1,13 @@
-﻿// SPDX-License-Identifier: MIT
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Godot;
-using IndustrieLite.Transport.Core.Interfaces;
-using IndustrieLite.Transport.Core.Models;
-
+// SPDX-License-Identifier: MIT
 namespace IndustrieLite.Transport.Core.Services
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using Godot;
+    using IndustrieLite.Transport.Core.Interfaces;
+    using IndustrieLite.Transport.Core.Models;
+
     /// <summary>
     /// Verwaltet Queue und Lebenszyklus der Transport-Jobs.
     /// </summary>
@@ -16,10 +16,12 @@ namespace IndustrieLite.Transport.Core.Services
         private readonly Queue<TransportJob> jobQueue = new Queue<TransportJob>();
         private readonly Dictionary<Guid, TransportJob> jobsById = new Dictionary<Guid, TransportJob>();
 
-        public IReadOnlyDictionary<Guid, TransportJob> Jobs => jobsById;
+        public IReadOnlyDictionary<Guid, TransportJob> Jobs => this.jobsById;
 
         public event Action<TransportJob>? JobGestartet;
+
         public event Action<TransportJob>? JobAbgeschlossen;
+
         public event Action<TransportJob>? JobFehlgeschlagen;
 
         /// <summary>
@@ -28,28 +30,31 @@ namespace IndustrieLite.Transport.Core.Services
         public void AddJob(TransportJob job)
         {
             if (job == null)
+            {
                 throw new ArgumentNullException(nameof(job));
+            }
 
-            jobsById[job.JobId] = job;
-            jobQueue.Enqueue(job);
+            this.jobsById[job.JobId] = job;
+            this.jobQueue.Enqueue(job);
         }
 
         /// <summary>
         /// Entnimmt den naechsten zugewiesenen Job aus der Queue (oder null).
         /// </summary>
+        /// <returns></returns>
         public TransportJob? HoleNaechstenJob()
         {
-            int sicherheit = jobQueue.Count;
-            while (sicherheit-- > 0 && jobQueue.Count > 0)
+            int sicherheit = this.jobQueue.Count;
+            while (sicherheit-- > 0 && this.jobQueue.Count > 0)
             {
-                var job = jobQueue.Dequeue();
-                if (jobsById.ContainsKey(job.JobId))
+                var job = this.jobQueue.Dequeue();
+                if (this.jobsById.ContainsKey(job.JobId))
                 {
                     job.Status = TransportJobStatus.Zugewiesen;
                     return job;
                 }
 
-                jobQueue.Enqueue(job);
+                this.jobQueue.Enqueue(job);
             }
 
             return null;
@@ -60,11 +65,11 @@ namespace IndustrieLite.Transport.Core.Services
         /// </summary>
         public void RequeueJob(Guid jobId)
         {
-            if (jobsById.TryGetValue(jobId, out var job))
+            if (this.jobsById.TryGetValue(jobId, out var job))
             {
                 job.Status = TransportJobStatus.Geplant;
                 job.TruckKontext = null;
-                jobQueue.Enqueue(job);
+                this.jobQueue.Enqueue(job);
             }
         }
 
@@ -74,16 +79,16 @@ namespace IndustrieLite.Transport.Core.Services
         /// </summary>
         public void ResetAllJobsToPlanned()
         {
-            jobQueue.Clear();
+            this.jobQueue.Clear();
 
-            foreach (var job in jobsById.Values)
+            foreach (var job in this.jobsById.Values)
             {
                 if (job.Status != TransportJobStatus.Abgeschlossen &&
                     job.Status != TransportJobStatus.Fehlgeschlagen)
                 {
                     job.Status = TransportJobStatus.Geplant;
                     job.TruckKontext = null;
-                    jobQueue.Enqueue(job);
+                    this.jobQueue.Enqueue(job);
                 }
             }
         }
@@ -93,11 +98,11 @@ namespace IndustrieLite.Transport.Core.Services
         /// </summary>
         public void MeldeJobGestartet(Guid jobId, object? truckKontext)
         {
-            if (jobsById.TryGetValue(jobId, out var job))
+            if (this.jobsById.TryGetValue(jobId, out var job))
             {
                 job.Status = TransportJobStatus.Unterwegs;
                 job.TruckKontext = truckKontext;
-                JobGestartet?.Invoke(job);
+                this.JobGestartet?.Invoke(job);
             }
         }
 
@@ -106,13 +111,15 @@ namespace IndustrieLite.Transport.Core.Services
         /// </summary>
         public void MeldeJobAbgeschlossen(Guid jobId, int gelieferteMenge)
         {
-            if (!jobsById.TryGetValue(jobId, out var job))
+            if (!this.jobsById.TryGetValue(jobId, out var job))
+            {
                 return;
+            }
 
             job.Status = TransportJobStatus.Abgeschlossen;
             job.TruckKontext = null;
-            jobsById.Remove(jobId);
-            JobAbgeschlossen?.Invoke(job);
+            this.jobsById.Remove(jobId);
+            this.JobAbgeschlossen?.Invoke(job);
         }
 
         /// <summary>
@@ -120,13 +127,15 @@ namespace IndustrieLite.Transport.Core.Services
         /// </summary>
         public void MeldeJobFehlgeschlagen(Guid jobId)
         {
-            if (!jobsById.TryGetValue(jobId, out var job))
+            if (!this.jobsById.TryGetValue(jobId, out var job))
+            {
                 return;
+            }
 
             job.Status = TransportJobStatus.Fehlgeschlagen;
             job.TruckKontext = null;
-            jobsById.Remove(jobId);
-            JobFehlgeschlagen?.Invoke(job);
+            this.jobsById.Remove(jobId);
+            this.JobFehlgeschlagen?.Invoke(job);
         }
 
         /// <summary>
@@ -135,40 +144,43 @@ namespace IndustrieLite.Transport.Core.Services
         public void CancelJobsForNode(Node node)
         {
             if (node == null)
+            {
                 return;
+            }
 
-            int count = jobQueue.Count;
+            int count = this.jobQueue.Count;
             for (int i = 0; i < count; i++)
             {
-                var job = jobQueue.Dequeue();
+                var job = this.jobQueue.Dequeue();
                 if (ReferenceEquals(job.LieferantKontext, node) || ReferenceEquals(job.ZielKontext, node))
                 {
                     job.Status = TransportJobStatus.Fehlgeschlagen;
-                    jobsById.Remove(job.JobId);
-                    JobFehlgeschlagen?.Invoke(job);
+                    this.jobsById.Remove(job.JobId);
+                    this.JobFehlgeschlagen?.Invoke(job);
                     continue;
                 }
 
-                jobQueue.Enqueue(job);
+                this.jobQueue.Enqueue(job);
             }
 
-            var laufendeJobs = jobsById.Values
+            var laufendeJobs = this.jobsById.Values
                 .Where(j => ReferenceEquals(j.LieferantKontext, node) || ReferenceEquals(j.ZielKontext, node))
                 .Select(j => j.JobId)
                 .ToList();
 
             foreach (var laufenderJobId in laufendeJobs)
             {
-                MeldeJobFehlgeschlagen(laufenderJobId);
+                this.MeldeJobFehlgeschlagen(laufenderJobId);
             }
         }
 
         /// <summary>
         /// Liefert die Job-IDs der aktuellen Queue in Reihenfolge.
         /// </summary>
+        /// <returns></returns>
         public IEnumerable<Guid> HoleJobQueueIds()
         {
-            return jobQueue.ToArray().Select(job => job.JobId);
+            return this.jobQueue.ToArray().Select(job => job.JobId);
         }
 
         /// <summary>
@@ -177,14 +189,16 @@ namespace IndustrieLite.Transport.Core.Services
         public void SetJobQueue(IEnumerable<Guid> jobReihenfolge)
         {
             if (jobReihenfolge == null)
+            {
                 throw new ArgumentNullException(nameof(jobReihenfolge));
+            }
 
-            jobQueue.Clear();
+            this.jobQueue.Clear();
             foreach (var jobId in jobReihenfolge)
             {
-                if (jobsById.TryGetValue(jobId, out var job))
+                if (this.jobsById.TryGetValue(jobId, out var job))
                 {
-                    jobQueue.Enqueue(job);
+                    this.jobQueue.Enqueue(job);
                 }
             }
         }
@@ -194,8 +208,8 @@ namespace IndustrieLite.Transport.Core.Services
         /// </summary>
         public void EntferneAlleJobs()
         {
-            jobsById.Clear();
-            jobQueue.Clear();
+            this.jobsById.Clear();
+            this.jobQueue.Clear();
         }
     }
 }

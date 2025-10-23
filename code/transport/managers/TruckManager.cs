@@ -1,11 +1,12 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System.Collections.Generic;
+using Godot;
 using IndustrieLite.Transport.Interfaces;
 
 public partial class TruckManager : Node, ITruckManager
 {
     public List<Truck> Trucks { get; private set; } = new List<Truck>();
+
     public int MaxMengeProTruck { get; private set; }
 
     private Fleet? fleet;
@@ -14,6 +15,7 @@ public partial class TruckManager : Node, ITruckManager
 
     // Delegate für Kostenberechnung (wird vom TransportCoordinator gesetzt)
     public System.Func<Vector2, Vector2, int, double>? CalculateCostDelegate { get; set; }
+
     public System.Func<Building, Vector2>? CalculateCenterDelegate { get; set; }
 
     public void Initialize(Fleet fleet, RoadManager? roadManager, BuildingManager buildingManager, int maxMengeProTruck)
@@ -26,20 +28,22 @@ public partial class TruckManager : Node, ITruckManager
 
     private Vector2 Zentrum(Building gebaeude)
     {
-        if (CalculateCenterDelegate != null)
-            return CalculateCenterDelegate(gebaeude);
+        if (this.CalculateCenterDelegate != null)
+        {
+            return this.CalculateCenterDelegate(gebaeude);
+        }
 
         // Fallback implementation
         return ((Node2D)gebaeude).GlobalPosition + new Vector2(
-            gebaeude.Size.X * buildingManager.TileSize / 2,
-            gebaeude.Size.Y * buildingManager.TileSize / 2);
+            gebaeude.Size.X * this.buildingManager.TileSize / 2,
+            gebaeude.Size.Y * this.buildingManager.TileSize / 2);
     }
 
-public Truck SpawnTruck(Vector2 start, Vector2 ziel, int menge, double ppu, float? speedOverride = null)
-{
+    public Truck SpawnTruck(Vector2 start, Vector2 ziel, int menge, double ppu, float? speedOverride)
+    {
         // Debug output to track all truck spawns
         DebugLogger.Debug("debug_transport", "TruckManagerSpawnTruck", $"Creating truck",
-            new System.Collections.Generic.Dictionary<string, object?> { { "amount", menge }, { "start", start }, { "target", ziel } });
+            new System.Collections.Generic.Dictionary<string, object?>(System.StringComparer.Ordinal) { { "amount", menge }, { "start", start }, { "target", ziel } });
 
         // Print stack trace to see who called this
         var stackTrace = System.Environment.StackTrace;
@@ -49,16 +53,18 @@ public Truck SpawnTruck(Vector2 start, Vector2 ziel, int menge, double ppu, floa
         {
             var line = lines[i].Trim();
             if (!string.IsNullOrEmpty(line))
+            {
                 DebugLogger.Debug("debug_transport", "TruckManagerSpawnStackLine", line);
+            }
         }
 
-        var game = GetNode<GameManager>("../../.."); // Adjusted path for new hierarchy
+        var game = this.GetNode<GameManager>("../../.."); // Adjusted path for new hierarchy
         Truck truck;
-        if (fleet != null)
+        if (this.fleet != null)
         {
-            truck = fleet.SpawnTruck(start, ziel, menge, 0.0, game);
+            truck = this.fleet.SpawnTruck(start, ziel, menge, 0.0, game);
             truck.PricePerUnit = ppu;
-            Trucks.Add(truck);
+            this.Trucks.Add(truck);
         }
         else
         {
@@ -68,34 +74,44 @@ public Truck SpawnTruck(Vector2 start, Vector2 ziel, int menge, double ppu, floa
             truck.Amount = menge;
             truck.PricePerUnit = ppu;
             truck.Game = game;
-            AddChild(truck);
-            Trucks.Add(truck);
+            this.AddChild(truck);
+            this.Trucks.Add(truck);
         }
 
         // Darstellungs-Reihenfolge: Trucks ueber Strassen (RoadRenderer ZIndex=10)
-        try { truck.ZAsRelative = false; truck.ZIndex = 11; } catch { }
-
-        if (roadManager != null)
+        try
         {
-            var path = roadManager.GetPath(start, ziel);
+            truck.ZAsRelative = false;
+            truck.ZIndex = 11;
+        }
+        catch
+        {
+        }
+
+        if (this.roadManager != null)
+        {
+            var path = this.roadManager.GetPath(start, ziel);
             if (path != null && path.Count > 0)
             {
                 truck.Path = path;
                 try
                 {
-                    if (CalculateCostDelegate != null)
+                    if (this.CalculateCostDelegate != null)
                     {
-                        truck.TransportCost = CalculateCostDelegate(start, ziel, menge);
+                        truck.TransportCost = this.CalculateCostDelegate(start, ziel, menge);
                     }
                     else
                     {
                         // Fallback cost calculation
                         var worldLen = DistanceCalculator.GetPathWorldLength(path);
-                        var tiles = worldLen / buildingManager.TileSize;
-                        truck.TransportCost = tiles * 0.05 * menge + 1.0; // Default values
+                        var tiles = worldLen / this.buildingManager.TileSize;
+                        truck.TransportCost = (tiles * 0.05 * menge) + 1.0; // Default values
                     }
                 }
-                catch { truck.TransportCost = 1.0; } // Default TruckFixedCost
+                catch
+                {
+                    truck.TransportCost = 1.0;
+                } // Default TruckFixedCost
             }
         }
 
@@ -103,69 +119,89 @@ public Truck SpawnTruck(Vector2 start, Vector2 ziel, int menge, double ppu, floa
         {
             try
             {
-                if (CalculateCostDelegate != null)
+                if (this.CalculateCostDelegate != null)
                 {
-                    truck.TransportCost = CalculateCostDelegate(start, ziel, menge);
+                    truck.TransportCost = this.CalculateCostDelegate(start, ziel, menge);
                 }
                 else
                 {
                     // Fallback cost calculation
-                    double cost = DistanceCalculator.GetTransportCost(start, ziel, 0.05 * menge, buildingManager.TileSize) + 1.0;
+                    double cost = DistanceCalculator.GetTransportCost(start, ziel, 0.05 * menge, this.buildingManager.TileSize) + 1.0;
                     truck.TransportCost = cost;
                 }
             }
-            catch { truck.TransportCost = 1.0; } // Default TruckFixedCost
+            catch
+            {
+                truck.TransportCost = 1.0;
+            } // Default TruckFixedCost
         }
 
         if (speedOverride.HasValue)
         {
-            try { truck.SetSpeed(speedOverride.Value); } catch { }
+            try
+            {
+                truck.SetSpeed(speedOverride.Value);
+            }
+            catch
+            {
+            }
         }
         return truck;
-}
+    }
 
-public Truck SpawnTruck(Vector2 start, Vector2 ziel, int menge, double ppu)
-{
-    return SpawnTruck(start, ziel, menge, ppu, null);
-}
+    public Truck SpawnTruck(Vector2 start, Vector2 ziel, int menge, double ppu)
+    {
+        return this.SpawnTruck(start, ziel, menge, ppu, null);
+    }
 
     public void ProcessTruckTick(double dt)
     {
         // Snapshot verwenden, um Aenderungen (z. B. Rueckfahrten) waehrend Iteration zu erlauben
-        var snapshot = new System.Collections.Generic.List<Truck>(Trucks);
+        var snapshot = new System.Collections.Generic.List<Truck>(this.Trucks);
         foreach (var t in snapshot)
         {
             if (t == null || !GodotObject.IsInstanceValid(t) || t.IsQueuedForDeletion())
+            {
                 continue;
+            }
+
             t.FixedStepTick(dt);
         }
     }
 
     public void RepathAllTrucks()
     {
-        if (!IsInsideTree() || roadManager == null)
+        if (!this.IsInsideTree() || this.roadManager == null)
+        {
             return;
+        }
 
         var alive = new List<Truck>();
-        foreach (var t in Trucks)
+        foreach (var t in this.Trucks)
         {
             if (t == null || !GodotObject.IsInstanceValid(t) || t.IsQueuedForDeletion())
+            {
                 continue;
+            }
+
             alive.Add(t);
-            var path = roadManager.GetPath(t.GlobalPosition, t.Target);
+            var path = this.roadManager.GetPath(t.GlobalPosition, t.Target);
             t.Path = (path != null && path.Count > 0) ? path : null;
         }
-        Trucks.Clear();
-        Trucks.AddRange(alive);
+        this.Trucks.Clear();
+        this.Trucks.AddRange(alive);
     }
 
     public void CancelOrdersFor(Node2D n)
     {
         var alive = new List<Truck>();
-        foreach (var t in Trucks)
+        foreach (var t in this.Trucks)
         {
             if (t == null || !GodotObject.IsInstanceValid(t) || t.IsQueuedForDeletion())
+            {
                 continue;
+            }
+
             if (t.SourceNode == n || t.TargetNode == n)
             {
                 t.QueueFree();
@@ -173,28 +209,33 @@ public Truck SpawnTruck(Vector2 start, Vector2 ziel, int menge, double ppu)
             }
             alive.Add(t);
         }
-        Trucks.Clear();
-        Trucks.AddRange(alive);
+        this.Trucks.Clear();
+        this.Trucks.AddRange(alive);
 
         DebugLogger.LogTransport(() => $"CancelOrdersFor: Trucks für {n.Name} bereinigt");
     }
 
     public void RestartPendingTrucks()
     {
-        foreach (var truck in Trucks)
+        foreach (var truck in this.Trucks)
         {
             if (truck == null)
+            {
                 continue;
+            }
+
             if (!GodotObject.IsInstanceValid(truck))
+            {
                 continue;
+            }
 
             truck.QueueFree();
         }
-        Trucks.Clear();
+        this.Trucks.Clear();
 
-        if (fleet != null)
+        if (this.fleet != null)
         {
-            fleet.Trucks.RemoveAll(t => t == null || !GodotObject.IsInstanceValid(t));
+            this.fleet.Trucks.RemoveAll(t => t == null || !GodotObject.IsInstanceValid(t));
         }
 
         DebugLogger.LogTransport("TruckManager: Pending trucks nach Load neu gestartet");
@@ -205,7 +246,7 @@ public Truck SpawnTruck(Vector2 start, Vector2 ziel, int menge, double ppu)
     /// </summary>
     public void ClearAllTrucks()
     {
-        RestartPendingTrucks();
+        this.RestartPendingTrucks();
         DebugLogger.LogTransport("TruckManager: ClearAllTrucks ausgeführt");
     }
 }

@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using System.Collections.Generic;
 using Godot;
 
@@ -10,41 +10,52 @@ public class Router : System.IDisposable
 {
     private readonly RoadManager roadManager;
     private readonly EventHub? eventHub;
-    private bool _disposed;
-    private readonly AboVerwalter _abos = new();
+    private bool disposed;
+    private readonly AboVerwalter abos = new();
 
     public long GraphVersion { get; private set; } = 0;
-    public void SetGraphVersion(long version) => GraphVersion = version;
-    public int GetGraphVersionAsInt() => GraphVersion > int.MaxValue ? int.MaxValue : (int)GraphVersion;
-    public void SetGraphVersionFromInt(int version) => GraphVersion = version;
+
+    public void SetGraphVersion(long version) => this.GraphVersion = version;
+
+    public int GetGraphVersionAsInt() => this.GraphVersion > int.MaxValue ? int.MaxValue : (int)this.GraphVersion;
+
+    public void SetGraphVersionFromInt(int version) => this.GraphVersion = version;
 
     public Router(RoadManager rm, EventHub? eh)
     {
-        roadManager = rm;
-        eventHub = eh;
-        if (eventHub != null)
+        this.roadManager = rm;
+        this.eventHub = eh;
+        if (this.eventHub != null)
         {
-            _abos.Abonniere(
-                () => eventHub.RoadGraphChanged += OnRoadGraphChanged,
-                () => { try { eventHub.RoadGraphChanged -= OnRoadGraphChanged; } catch { } }
-            );
+            this.abos.Abonniere(
+                () => this.eventHub.RoadGraphChanged += this.OnRoadGraphChanged,
+                () =>
+                {
+                    try
+                    {
+                        this.eventHub.RoadGraphChanged -= this.OnRoadGraphChanged;
+                    }
+                    catch
+                    {
+                    }
+                });
         }
     }
 
     private void OnRoadGraphChanged()
     {
-        GraphVersion++;
+        this.GraphVersion++;
     }
 
     public List<Vector2> GetPath(Vector2 start, Vector2 ziel)
     {
-        return roadManager.GetPath(start, ziel);
+        return this.roadManager.GetPath(start, ziel);
     }
 
     public double ComputeCost(Vector2 start, Vector2 ziel, double basePerTilePerUnit, int units, int tileSize, double truckFixedCost)
     {
         // Bevorzugt: Pfadkosten über RoadManager
-        var path = roadManager.GetPath(start, ziel);
+        var path = this.roadManager.GetPath(start, ziel);
         double tiles = 0.0;
         if (path != null && path.Count > 1)
         {
@@ -57,14 +68,24 @@ public class Router : System.IDisposable
             var cost = DistanceCalculator.GetTransportCost(start, ziel, basePerTilePerUnit, tileSize);
             tiles = cost / basePerTilePerUnit; // invertiert, um gleiche Formel zu nutzen
         }
-        return tiles * basePerTilePerUnit * units + truckFixedCost;
+        return (tiles * basePerTilePerUnit * units) + truckFixedCost;
     }
 
     public void Dispose()
     {
-        if (_disposed) return;
-        _disposed = true;
-        try { _abos.DisposeAll(); } catch { }
+        if (this.disposed)
+        {
+            return;
+        }
+
+        this.disposed = true;
+        try
+        {
+            this.abos.DisposeAll();
+        }
+        catch
+        {
+        }
     }
 }
 

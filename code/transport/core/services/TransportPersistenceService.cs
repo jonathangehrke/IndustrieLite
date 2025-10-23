@@ -1,11 +1,11 @@
-﻿// SPDX-License-Identifier: MIT
-using System;
-using Godot;
-using IndustrieLite.Transport.Core.Interfaces;
-using IndustrieLite.Transport.Core.Models;
-
+// SPDX-License-Identifier: MIT
 namespace IndustrieLite.Transport.Core.Services
 {
+    using System;
+    using Godot;
+    using IndustrieLite.Transport.Core.Interfaces;
+    using IndustrieLite.Transport.Core.Models;
+
     /// <summary>
     /// Übernimmt Save/Load für das Transport-Subsystem.
     /// </summary>
@@ -14,7 +14,8 @@ namespace IndustrieLite.Transport.Core.Services
         private ITransportJobManager? jobManager;
         private ITransportOrderManager? orderManager;
 
-        public void SetServiceReferences(ITransportJobManager jobManager,
+        public void SetServiceReferences(
+            ITransportJobManager jobManager,
                                          ITransportOrderManager orderManager,
                                          ITransportSupplyService supplyService,
                                          ITransportPlanningService planningService)
@@ -27,12 +28,14 @@ namespace IndustrieLite.Transport.Core.Services
 
         public TransportCoreSaveData CaptureState()
         {
-            if (jobManager == null || orderManager == null)
+            if (this.jobManager == null || this.orderManager == null)
+            {
                 throw new InvalidOperationException("Services für Persistenz wurden nicht initialisiert.");
+            }
 
             var save = new TransportCoreSaveData();
 
-            foreach (var job in jobManager.Jobs.Values)
+            foreach (var job in this.jobManager.Jobs.Values)
             {
                 var jobData = new TransportJobSaveData
                 {
@@ -44,23 +47,28 @@ namespace IndustrieLite.Transport.Core.Services
                     PreisProEinheit = job.PreisProEinheit,
                     StartPosition = job.StartPosition,
                     ZielPosition = job.ZielPosition,
-                    Status = job.Status
+                    Status = job.Status,
                 };
 
                 if (job.LieferantKontext is Building supplier && Guid.TryParse(supplier.BuildingId, out var supplierGuid))
+                {
                     jobData.SupplierBuildingId = supplierGuid;
+                }
+
                 if (job.ZielKontext is Building ziel && Guid.TryParse(ziel.BuildingId, out var zielGuid))
+                {
                     jobData.TargetBuildingId = zielGuid;
+                }
 
                 save.Jobs.Add(jobData);
             }
 
-            foreach (var jobId in jobManager.HoleJobQueueIds())
+            foreach (var jobId in this.jobManager.HoleJobQueueIds())
             {
                 save.JobQueue.Add(jobId);
             }
 
-            foreach (var order in orderManager.DeliveryOrders.Values)
+            foreach (var order in this.orderManager.DeliveryOrders.Values)
             {
                 var orderData = new DeliveryOrderSaveData
                 {
@@ -70,7 +78,7 @@ namespace IndustrieLite.Transport.Core.Services
                     Gesamtmenge = order.Gesamtmenge,
                     Remaining = order.Remaining,
                     PreisProEinheit = order.PreisProEinheit,
-                    Status = order.Status
+                    Status = order.Status,
                 };
                 orderData.JobIds.AddRange(order.JobIds);
                 save.DeliveryOrders.Add(orderData);
@@ -82,12 +90,17 @@ namespace IndustrieLite.Transport.Core.Services
         public void RestoreState(TransportCoreSaveData state, Func<Guid, Building?>? buildingResolver = null)
         {
             if (state == null)
+            {
                 throw new ArgumentNullException(nameof(state));
-            if (jobManager == null || orderManager == null)
-                throw new InvalidOperationException("Services für Persistenz wurden nicht initialisiert.");
+            }
 
-            jobManager.EntferneAlleJobs();
-            orderManager.EntferneAlleOrders();
+            if (this.jobManager == null || this.orderManager == null)
+            {
+                throw new InvalidOperationException("Services für Persistenz wurden nicht initialisiert.");
+            }
+
+            this.jobManager.EntferneAlleJobs();
+            this.orderManager.EntferneAlleOrders();
 
             foreach (var orderData in state.DeliveryOrders)
             {
@@ -105,7 +118,7 @@ namespace IndustrieLite.Transport.Core.Services
                     null)
                 {
                     Remaining = orderData.Remaining,
-                    Status = orderData.Status
+                    Status = orderData.Status,
                 };
 
                 foreach (var jobId in orderData.JobIds)
@@ -113,7 +126,7 @@ namespace IndustrieLite.Transport.Core.Services
                     delivery.JobIds.Add(jobId);
                 }
 
-                orderManager.RegistriereWiederhergestelltenAuftrag(delivery);
+                this.orderManager.RegistriereWiederhergestelltenAuftrag(delivery);
             }
 
             foreach (var jobData in state.Jobs)
@@ -130,13 +143,13 @@ namespace IndustrieLite.Transport.Core.Services
                     ZielPosition = jobData.ZielPosition,
                     Status = jobData.Status,
                     LieferantKontext = jobData.SupplierBuildingId.HasValue ? buildingResolver?.Invoke(jobData.SupplierBuildingId.Value) : null,
-                    ZielKontext = jobData.TargetBuildingId.HasValue ? buildingResolver?.Invoke(jobData.TargetBuildingId.Value) : null
+                    ZielKontext = jobData.TargetBuildingId.HasValue ? buildingResolver?.Invoke(jobData.TargetBuildingId.Value) : null,
                 };
 
-                jobManager.AddJob(job);
+                this.jobManager.AddJob(job);
             }
 
-            jobManager.SetJobQueue(state.JobQueue);
+            this.jobManager.SetJobQueue(state.JobQueue);
         }
     }
 }

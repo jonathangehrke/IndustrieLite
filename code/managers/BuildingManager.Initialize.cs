@@ -1,6 +1,6 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
+using Godot;
 
 public partial class BuildingManager
 {
@@ -10,18 +10,25 @@ public partial class BuildingManager
     /// </summary>
     public void Initialize(LandManager landManager, EconomyManager economyManager, Database? database = null, EventHub? eventHub = null, ProductionManager? productionManager = null, Simulation? simulation = null, GameTimeManager? gameTimeManager = null, RoadManager? roadManager = null)
     {
-        if (landManager == null) throw new ArgumentNullException(nameof(landManager));
-        if (economyManager == null) throw new ArgumentNullException(nameof(economyManager));
+        if (landManager == null)
+        {
+            throw new ArgumentNullException(nameof(landManager));
+        }
+
+        if (economyManager == null)
+        {
+            throw new ArgumentNullException(nameof(economyManager));
+        }
 
         this.landManager = landManager;
         this.economyManager = economyManager;
         this.database = database;
         this.eventHub = eventHub;
 
-        placementService = new PlacementService(this.landManager, this.economyManager, this.database, roadManager);
-        buildingFactory = new BuildingFactory(this.database, productionManager, this.economyManager, this.eventHub, simulation, gameTimeManager);
+        this.placementService = new PlacementService(this.landManager, this.economyManager, this.database, roadManager);
+        this.buildingFactory = new BuildingFactory(this.database, productionManager, this.economyManager, this.eventHub, simulation, gameTimeManager);
 
-        _initialized = true;
+        this.initialized = true;
         DebugLogger.LogServices("BuildingManager.Initialize(): Abhaengigkeiten gesetzt (typed DI)");
     }
 }

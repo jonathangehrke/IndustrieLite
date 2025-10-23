@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using System.Collections.Generic;
 using Godot;
 
@@ -11,7 +11,7 @@ public class RoadPathfinder : System.IDisposable
     private readonly int tileSize;
     private readonly AStarGrid2D astar;
     private readonly RoadQuadtree? quadtree;
-    private readonly AboVerwalter _abos = new();
+    private readonly AboVerwalter abos = new();
 
     // Parameter für Phase 1: BFS-Suche
     private readonly int maxNearestRoadRadius;
@@ -25,18 +25,18 @@ public class RoadPathfinder : System.IDisposable
         this.maxNearestRoadRadius = Mathf.Max(1, maxNearestRoadRadius);
         this.enablePathDebug = enablePathDebug;
         this.useQuadtreeNearest = useQuadtreeNearest;
-        astar = new AStarGrid2D();
-        astar.Region = new Rect2I(0, 0, grid.Width, grid.Height);
-        astar.CellSize = new Vector2(tileSize, tileSize);
-        astar.DiagonalMode = AStarGrid2D.DiagonalModeEnum.Never;
-        astar.Update();
+        this.astar = new AStarGrid2D();
+        this.astar.Region = new Rect2I(0, 0, grid.Width, grid.Height);
+        this.astar.CellSize = new Vector2(tileSize, tileSize);
+        this.astar.DiagonalMode = AStarGrid2D.DiagonalModeEnum.Never;
+        this.astar.Update();
 
         // Start: alles blockiert, RoadCells entsperren
         for (int x = 0; x < grid.Width; x++)
         {
             for (int y = 0; y < grid.Height; y++)
             {
-                astar.SetPointSolid(new Vector2I(x, y), true);
+                this.astar.SetPointSolid(new Vector2I(x, y), true);
             }
         }
         // Sync bestehende Strassen
@@ -44,30 +44,52 @@ public class RoadPathfinder : System.IDisposable
         {
             for (int y = 0; y < grid.Height; y++)
             {
-                if (grid.GetCell(x, y)) astar.SetPointSolid(new Vector2I(x, y), false);
+                if (grid.GetCell(x, y))
+                {
+                    this.astar.SetPointSolid(new Vector2I(x, y), false);
+                }
             }
         }
 
         // Events via AboVerwalter (sauberes Aufräumen)
-        _abos.Abonniere(
-            () => grid.RoadAdded += OnRoadAdded,
-            () => { try { grid.RoadAdded -= OnRoadAdded; } catch { } }
-        );
-        _abos.Abonniere(
-            () => grid.RoadRemoved += OnRoadRemoved,
-            () => { try { grid.RoadRemoved -= OnRoadRemoved; } catch { } }
-        );
+        this.abos.Abonniere(
+            () => grid.RoadAdded += this.OnRoadAdded,
+            () =>
+            {
+                try
+                {
+                    grid.RoadAdded -= this.OnRoadAdded;
+                }
+                catch
+                {
+                }
+            });
+        this.abos.Abonniere(
+            () => grid.RoadRemoved += this.OnRoadRemoved,
+            () =>
+            {
+                try
+                {
+                    grid.RoadRemoved -= this.OnRoadRemoved;
+                }
+                catch
+                {
+                }
+            });
 
         // Optional: Quadtree fuer schnellere Nearest-Suche aufbauen
         if (useQuadtreeNearest)
         {
-            quadtree = new RoadQuadtree(new Rect2I(0, 0, grid.Width, grid.Height));
+            this.quadtree = new RoadQuadtree(new Rect2I(0, 0, grid.Width, grid.Height));
             // Initiale Befuellung durch Scan (einmalig)
             for (int x = 0; x < grid.Width; x++)
             {
                 for (int y = 0; y < grid.Height; y++)
                 {
-                    if (grid.GetCell(x, y)) quadtree.Insert(new Vector2I(x, y));
+                    if (grid.GetCell(x, y))
+                    {
+                        this.quadtree.Insert(new Vector2I(x, y));
+                    }
                 }
             }
         }
@@ -75,38 +97,53 @@ public class RoadPathfinder : System.IDisposable
 
     private void OnRoadAdded(Vector2I cell)
     {
-        astar.SetPointSolid(cell, false);
-        if (quadtree != null) quadtree.Insert(cell);
+        this.astar.SetPointSolid(cell, false);
+        if (this.quadtree != null)
+        {
+            this.quadtree.Insert(cell);
+        }
     }
 
     private void OnRoadRemoved(Vector2I cell)
     {
-        astar.SetPointSolid(cell, true);
-        if (quadtree != null) quadtree.Remove(cell);
+        this.astar.SetPointSolid(cell, true);
+        if (this.quadtree != null)
+        {
+            this.quadtree.Remove(cell);
+        }
     }
 
     public List<Vector2> GetPathWorld(Vector2 fromWorld, Vector2 toWorld)
     {
-        var fromCell = new Vector2I(Mathf.FloorToInt(fromWorld.X / tileSize), Mathf.FloorToInt(fromWorld.Y / tileSize));
-        var toCell = new Vector2I(Mathf.FloorToInt(toWorld.X / tileSize), Mathf.FloorToInt(toWorld.Y / tileSize));
+        var fromCell = new Vector2I(Mathf.FloorToInt(fromWorld.X / this.tileSize), Mathf.FloorToInt(fromWorld.Y / this.tileSize));
+        var toCell = new Vector2I(Mathf.FloorToInt(toWorld.X / this.tileSize), Mathf.FloorToInt(toWorld.Y / this.tileSize));
 
-        if (!grid.AnyRoadExists())
+        if (!this.grid.AnyRoadExists())
+        {
             return new List<Vector2>();
+        }
 
         // Phase 1: BFS, optional Phase 2: Quadtree bevorzugen
-        var start = FindNearestRoadCellFast(fromCell);
-        var end = FindNearestRoadCellFast(toCell);
+        var start = this.FindNearestRoadCellFast(fromCell);
+        var end = this.FindNearestRoadCellFast(toCell);
         if (start == null || end == null)
+        {
             return new List<Vector2>();
+        }
 
-        var idPath = astar.GetIdPath(start.Value, end.Value);
+        var idPath = this.astar.GetIdPath(start.Value, end.Value);
         if (idPath == null || idPath.Count == 0)
+        {
             return new List<Vector2>();
+        }
 
-        var simplified = SimplifyGridPath(idPath);
+        var simplified = this.SimplifyGridPath(idPath);
         var world = new List<Vector2>(simplified.Count);
         foreach (var c in simplified)
-            world.Add(CellCenterToWorld(c));
+        {
+            world.Add(this.CellCenterToWorld(c));
+        }
+
         return world;
     }
 
@@ -115,12 +152,13 @@ public class RoadPathfinder : System.IDisposable
     {
         // Falls Start außerhalb liegt, auf Kartenbereich clampen
         var start = new Vector2I(
-            Mathf.Clamp(from.X, 0, grid.Width - 1),
-            Mathf.Clamp(from.Y, 0, grid.Height - 1)
-        );
+            Mathf.Clamp(from.X, 0, this.grid.Width - 1),
+            Mathf.Clamp(from.Y, 0, this.grid.Height - 1));
 
-        if (grid.IsRoad(start))
+        if (this.grid.IsRoad(start))
+        {
             return start;
+        }
 
         var besucht = new HashSet<Vector2I>();
         var queue = new Queue<(Vector2I zelle, int dist)>();
@@ -135,25 +173,37 @@ public class RoadPathfinder : System.IDisposable
 
             // Nachbarn nur bis zum Maxradius erweitern
             if (dist >= maxRadius)
-                continue;
-
-            foreach (var n in GetNachbarn4(zelle))
             {
-                if (besucht.Contains(n)) continue;
+                continue;
+            }
+
+            foreach (var n in this.GetNachbarn4(zelle))
+            {
+                if (besucht.Contains(n))
+                {
+                    continue;
+                }
+
                 besucht.Add(n);
 
-                if (grid.IsRoad(n))
+                if (this.grid.IsRoad(n))
                 {
-                    if (enablePathDebug)
+                    if (this.enablePathDebug)
+                    {
                         DebugLogger.LogRoad(() => $"RoadPathfinder: Nearest road in r={dist + 1}, visits={besuche} at cell={n}");
+                    }
+
                     return n;
                 }
                 queue.Enqueue((n, dist + 1));
             }
         }
 
-        if (enablePathDebug)
+        if (this.enablePathDebug)
+        {
             DebugLogger.LogRoad(() => $"RoadPathfinder: Nearest road not found within r={maxRadius} from={from}");
+        }
+
         return null;
     }
 
@@ -169,20 +219,26 @@ public class RoadPathfinder : System.IDisposable
         };
         foreach (var k in kandidaten)
         {
-            if (grid.InBounds(k))
+            if (this.grid.InBounds(k))
+            {
                 yield return k;
+            }
         }
     }
 
     private Vector2 CellCenterToWorld(Vector2I cell)
     {
-        return new Vector2(cell.X * tileSize + tileSize / 2f, cell.Y * tileSize + tileSize / 2f);
+        return new Vector2((cell.X * this.tileSize) + (this.tileSize / 2f), (cell.Y * this.tileSize) + (this.tileSize / 2f));
     }
 
     private List<Vector2I> SimplifyGridPath(Godot.Collections.Array<Vector2I> gridPath)
     {
         var result = new List<Vector2I>();
-        if (gridPath.Count == 0) return result;
+        if (gridPath.Count == 0)
+        {
+            return result;
+        }
+
         result.Add(gridPath[0]);
 
         Vector2I? prev = null;
@@ -207,47 +263,65 @@ public class RoadPathfinder : System.IDisposable
         }
         var finalCell = gridPath[gridPath.Count - 1];
         if (result.Count == 0 || result[result.Count - 1] != finalCell)
+        {
             result.Add(finalCell);
+        }
+
         return result;
     }
 
     private Vector2I? FindNearestRoadCellFast(Vector2I from)
     {
-        if (quadtree != null)
+        if (this.quadtree != null)
         {
-            var q = quadtree.Nearest(from, maxNearestRoadRadius);
+            var q = this.quadtree.Nearest(from, this.maxNearestRoadRadius);
             if (q != null)
             {
-                if (enablePathDebug)
-                    DebugLogger.LogRoad(() => $"RoadPathfinder: Quadtree nearest at {q.Value} (r<= {maxNearestRoadRadius})");
+                if (this.enablePathDebug)
+                {
+                    DebugLogger.LogRoad(() => $"RoadPathfinder: Quadtree nearest at {q.Value} (r<= {this.maxNearestRoadRadius})");
+                }
+
                 return q;
             }
         }
         // Fallback auf BFS
-        return FindNearestRoadCellBFS(from, maxNearestRoadRadius);
+        return this.FindNearestRoadCellBFS(from, this.maxNearestRoadRadius);
     }
 
-    private bool _disposed;
+    private bool disposed;
 
     /// <summary>
     /// Event-Abos sauber lösen.
     /// </summary>
     public void Dispose()
     {
-        if (_disposed) return;
+        if (this.disposed)
+        {
+            return;
+        }
+
         try
         {
-            _abos.DisposeAll();
+            this.abos.DisposeAll();
             DebugLogger.LogRoad(() => "RoadPathfinder: Event-Abos (AboVerwalter) geloest");
         }
-        catch { /* defensiv: keine Exceptions beim Dispose propagieren */ }
-        _disposed = true;
+        catch
+        { /* defensiv: keine Exceptions beim Dispose propagieren */
+        }
+        this.disposed = true;
         System.GC.SuppressFinalize(this);
     }
 
     ~RoadPathfinder()
     {
         // Fallback, falls Dispose nicht aufgerufen wurde
-        try { _abos.DisposeAll(); } catch { }
+        try
+        {
+            this.abos.DisposeAll();
+        }
+        catch
+        {
+        }
     }
 }

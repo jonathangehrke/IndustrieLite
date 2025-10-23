@@ -1,8 +1,8 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using System;
 
 /// <summary>
-/// Eindeutige Fehlercodes für Save/Load-Operationen (SL001-SL999)
+/// Eindeutige Fehlercodes für Save/Load-Operationen (SL001-SL999).
 /// </summary>
 public static class SaveLoadErrorCodes
 {
@@ -37,51 +37,61 @@ public static class SaveLoadErrorCodes
 }
 
 /// <summary>
-/// Strukturierte Exception für Save/Load-Operationen
+/// Strukturierte Exception für Save/Load-Operationen.
 /// </summary>
 public class SaveLoadException : Exception
 {
     public string ErrorCode { get; }
+
     public string? FilePath { get; }
+
     public object? Context { get; }
 
-    public SaveLoadException(string errorCode, string message, string? filePath = null, object? context = null) 
+    public SaveLoadException(string errorCode, string message, string? filePath = null, object? context = null)
         : base($"[{errorCode}] {message}")
     {
-        ErrorCode = errorCode;
-        FilePath = filePath;
-        Context = context;
+        this.ErrorCode = errorCode;
+        this.FilePath = filePath;
+        this.Context = context;
     }
 
-    public SaveLoadException(string errorCode, string message, Exception innerException, string? filePath = null, object? context = null) 
+    public SaveLoadException(string errorCode, string message, Exception innerException, string? filePath = null, object? context = null)
         : base($"[{errorCode}] {message}", innerException)
     {
-        ErrorCode = errorCode;
-        FilePath = filePath;
-        Context = context;
+        this.ErrorCode = errorCode;
+        this.FilePath = filePath;
+        this.Context = context;
     }
 }
 
 /// <summary>
-/// Spezifische Exception für Save-Operationen
+/// Spezifische Exception für Save-Operationen.
 /// </summary>
 public class SaveException : SaveLoadException
 {
-    public SaveException(string errorCode, string message, string? filePath = null, object? context = null) 
-        : base(errorCode, message, filePath, context) { }
+    public SaveException(string errorCode, string message, string? filePath = null, object? context = null)
+        : base(errorCode, message, filePath, context)
+    {
+    }
 
-    public SaveException(string errorCode, string message, Exception innerException, string? filePath = null, object? context = null) 
-        : base(errorCode, message, innerException, filePath, context) { }
+    public SaveException(string errorCode, string message, Exception innerException, string? filePath = null, object? context = null)
+        : base(errorCode, message, innerException, filePath, context)
+    {
+    }
 }
 
 /// <summary>
-/// Spezifische Exception für Load-Operationen
+/// Spezifische Exception für Load-Operationen.
 /// </summary>
 public class LoadException : SaveLoadException
 {
-    public LoadException(string errorCode, string message, string? filePath = null, object? context = null) 
-        : base(errorCode, message, filePath, context) { }
+    public LoadException(string errorCode, string message, string? filePath = null, object? context = null)
+        : base(errorCode, message, filePath, context)
+    {
+    }
 
-    public LoadException(string errorCode, string message, Exception innerException, string? filePath = null, object? context = null) 
-        : base(errorCode, message, innerException, filePath, context) { }
+    public LoadException(string errorCode, string message, Exception innerException, string? filePath = null, object? context = null)
+        : base(errorCode, message, innerException, filePath, context)
+    {
+    }
 }

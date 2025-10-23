@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
@@ -8,21 +8,21 @@ public enum ServiceLifecycle
 {
     /// <summary>
     /// Singleton (Autoload) - überlebt Scene-Wechsel und Game-Sessions.
-    /// Beispiele: EventHub, Database, UIService
+    /// Beispiele: EventHub, Database, UIService.
     /// </summary>
     Singleton,
 
     /// <summary>
     /// Session-Scoped (Game-Manager) - wird bei NewGame/LoadGame/MainMenu gelöscht.
-    /// Beispiele: EconomyManager, BuildingManager, ResourceManager
+    /// Beispiele: EconomyManager, BuildingManager, ResourceManager.
     /// </summary>
     Session,
 
     /// <summary>
     /// Transient (Runtime-Objekte) - niemals im ServiceContainer registriert.
-    /// Beispiele: Truck, DeliveryOrder, Buildings
+    /// Beispiele: Truck, DeliveryOrder, Buildings.
     /// </summary>
-    Transient
+    Transient,
 }
 
 /// <summary>
@@ -32,7 +32,7 @@ public enum ServiceLifecycle
 public interface ILifecycleScope
 {
     /// <summary>
-    /// Gibt den Lifecycle-Scope dieses Services zurück.
+    /// Gets gibt den Lifecycle-Scope dieses Services zurück.
     /// </summary>
     ServiceLifecycle Lifecycle { get; }
 }

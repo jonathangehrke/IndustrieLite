@@ -1,6 +1,6 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
+using Godot;
 
 /// <summary>
 /// Helper-Klasse für Development-Feature-Setup im GameLifecycleManager.
@@ -16,7 +16,7 @@ internal class DevFeatureSetup
     }
 
     /// <summary>
-    /// Initialize development features based on DevFlags
+    /// Initialize development features based on DevFlags.
     /// </summary>
     public void InitializeDevFeatures(GameManager gameManager)
     {
@@ -28,27 +28,27 @@ internal class DevFeatureSetup
 
         try
         {
-            var devFlags = GetDevFlags();
+            var devFlags = this.GetDevFlags();
             if (devFlags == null)
             {
                 DebugLogger.LogLifecycle("DevFeatureSetup: DevFlags nicht verfügbar - DevFeatures werden übersprungen");
                 return;
             }
 
-            var enableSysTests = GetDevFlagValue(devFlags, "enable_system_tests", false);
-            var enableDevOverlay = GetDevFlagValue(devFlags, "enable_dev_overlay", false);
-            var showDevOverlay = GetDevFlagValue(devFlags, "show_dev_overlay", false);
+            var enableSysTests = this.GetDevFlagValue(devFlags, "enable_system_tests", false);
+            var enableDevOverlay = this.GetDevFlagValue(devFlags, "enable_dev_overlay", false);
+            var showDevOverlay = this.GetDevFlagValue(devFlags, "show_dev_overlay", false);
 
             DebugLogger.LogLifecycle(() => $"DevFeatureSetup: SysTests={enableSysTests}, DevOverlay={enableDevOverlay}, ShowOverlay={showDevOverlay}");
 
             if (enableSysTests)
             {
-                SetupSystemTests(gameManager);
+                this.SetupSystemTests(gameManager);
             }
 
             if (enableDevOverlay)
             {
-                SetupDevOverlay(gameManager, showDevOverlay);
+                this.SetupDevOverlay(gameManager, showDevOverlay);
             }
 
             DebugLogger.LogLifecycle("DevFeatureSetup: Development features initialized successfully");
@@ -61,7 +61,7 @@ internal class DevFeatureSetup
     }
 
     /// <summary>
-    /// Get DevFlags node from ServiceContainer
+    /// Get DevFlags node from ServiceContainer.
     /// </summary>
     private Node? GetDevFlags()
     {
@@ -69,7 +69,7 @@ internal class DevFeatureSetup
     }
 
     /// <summary>
-    /// Safely get DevFlag value with fallback
+    /// Safely get DevFlag value with fallback.
     /// </summary>
     private bool GetDevFlagValue(Node devFlags, string flagName, bool defaultValue)
     {
@@ -84,7 +84,7 @@ internal class DevFeatureSetup
     }
 
     /// <summary>
-    /// Setup system tests (M10Test)
+    /// Setup system tests (M10Test).
     /// </summary>
     private void SetupSystemTests(GameManager gameManager)
     {
@@ -103,7 +103,7 @@ internal class DevFeatureSetup
     }
 
     /// <summary>
-    /// Setup development overlay
+    /// Setup development overlay.
     /// </summary>
     private void SetupDevOverlay(GameManager gameManager, bool showOverlay)
     {
@@ -155,30 +155,38 @@ internal class DevFeatureSetup
     }
 
     /// <summary>
-    /// Check if any dev features are enabled
+    /// Check if any dev features are enabled.
     /// </summary>
+    /// <returns></returns>
     public bool AreDevFeaturesEnabled()
     {
-        var devFlags = GetDevFlags();
-        if (devFlags == null) return false;
+        var devFlags = this.GetDevFlags();
+        if (devFlags == null)
+        {
+            return false;
+        }
 
-        var enableSysTests = GetDevFlagValue(devFlags, "enable_system_tests", false);
-        var enableDevOverlay = GetDevFlagValue(devFlags, "enable_dev_overlay", false);
+        var enableSysTests = this.GetDevFlagValue(devFlags, "enable_system_tests", false);
+        var enableDevOverlay = this.GetDevFlagValue(devFlags, "enable_dev_overlay", false);
 
         return enableSysTests || enableDevOverlay;
     }
 
     /// <summary>
-    /// Get summary of enabled dev features for logging
+    /// Get summary of enabled dev features for logging.
     /// </summary>
+    /// <returns></returns>
     public string GetEnabledFeaturesSummary()
     {
-        var devFlags = GetDevFlags();
-        if (devFlags == null) return "DevFlags nicht verfügbar";
+        var devFlags = this.GetDevFlags();
+        if (devFlags == null)
+        {
+            return "DevFlags nicht verfügbar";
+        }
 
-        var enableSysTests = GetDevFlagValue(devFlags, "enable_system_tests", false);
-        var enableDevOverlay = GetDevFlagValue(devFlags, "enable_dev_overlay", false);
-        var showDevOverlay = GetDevFlagValue(devFlags, "show_dev_overlay", false);
+        var enableSysTests = this.GetDevFlagValue(devFlags, "enable_system_tests", false);
+        var enableDevOverlay = this.GetDevFlagValue(devFlags, "enable_dev_overlay", false);
+        var showDevOverlay = this.GetDevFlagValue(devFlags, "show_dev_overlay", false);
 
         return $"SysTests={enableSysTests}, DevOverlay={enableDevOverlay}, ShowOverlay={showDevOverlay}";
     }

@@ -1,4 +1,5 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
+
 /// <summary>
 /// Minimales Interface fuer Geld-Abfragen (Anti-Zyklen).
 /// </summary>

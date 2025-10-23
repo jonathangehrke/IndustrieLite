@@ -1,34 +1,45 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
+using Godot;
 
 /// <summary>
 /// GameTimeManager: Kalender-Zeit auf Basis der GameClock (SimTick)
 /// - 6 Minuten pro Monat => 12 Sekunden pro Tag (Standard)
 /// - Startdatum konfigurierbar
-/// - Emittiert Events via EventHub: DayChanged, MonthChanged, YearChanged, DateChanged
+/// - Emittiert Events via EventHub: DayChanged, MonthChanged, YearChanged, DateChanged.
 /// </summary>
 public partial class GameTimeManager : Node, ITickable, ILifecycleScope
 {
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
-    [Export] public int StartYear { get; set; } = 2015;
-    [Export] public int StartMonth { get; set; } = 1;
-    [Export] public int StartDay { get; set; } = 1;
-    [Export] public double SecondsPerDay { get; set; } = 12.0;
-    [Export] public bool DebugLogs { get; set; } = false;
 
-    private DateTime _currentDate;
-    private double _accum;
-    private EventHub? _eventHub;
+    [Export]
+    public int StartYear { get; set; } = 2015;
+
+    [Export]
+    public int StartMonth { get; set; } = 1;
+
+    [Export]
+    public int StartDay { get; set; } = 1;
+
+    [Export]
+    public double SecondsPerDay { get; set; } = 12.0;
+
+    [Export]
+    public bool DebugLogs { get; set; } = false;
+
+    private DateTime currentDate;
+    private double accum;
+    private EventHub? eventHub;
+
     // ITickable-Name nur ueber explizite Interface-Implementierung, damit Node.Name weiterhin setzbar bleibt
     string ITickable.Name => "GameTimeManager";
 
-    public DateTime CurrentDate => _currentDate;
+    public DateTime CurrentDate => this.currentDate;
 
     public override void _Ready()
     {
-        _currentDate = new DateTime(StartYear, StartMonth, StartDay);
-        _accum = 0.0;
+        this.currentDate = new DateTime(this.StartYear, this.StartMonth, this.StartDay);
+        this.accum = 0.0;
 
         // Named-Self-Registration für GDScript-Bridge
         var sc = ServiceContainer.Instance;
@@ -50,76 +61,88 @@ public partial class GameTimeManager : Node, ITickable, ILifecycleScope
 
     public override void _ExitTree()
     {
-        try { Simulation.Instance?.Unregister(this); } catch { }
+        try
+        {
+            Simulation.Instance?.Unregister(this);
+        }
+        catch
+        {
+        }
         base._ExitTree();
     }
+
     public void Tick(double dt)
     {
-        if (SecondsPerDay <= 0) return;
-        _accum += dt;
-        while (_accum >= SecondsPerDay)
+        if (this.SecondsPerDay <= 0)
         {
-            _accum -= SecondsPerDay;
-            DebugLogger.Debug("debug_gameclock", "AdvanceOneDay", $"Advancing one day", new System.Collections.Generic.Dictionary<string, object?> { { "date", _currentDate.ToString("dd.MM.yyyy") } });
-            AdvanceOneDay();
+            return;
+        }
+
+        this.accum += dt;
+        while (this.accum >= this.SecondsPerDay)
+        {
+            this.accum -= this.SecondsPerDay;
+            DebugLogger.Debug("debug_gameclock", "AdvanceOneDay", $"Advancing one day", new System.Collections.Generic.Dictionary<string, object?>(StringComparer.Ordinal) { { "date", this.currentDate.ToString("dd.MM.yyyy") } });
+            this.AdvanceOneDay();
         }
     }
-
 
     private void AdvanceOneDay()
     {
-        var before = _currentDate;
-        _currentDate = _currentDate.AddDays(1);
+        var before = this.currentDate;
+        this.currentDate = this.currentDate.AddDays(1);
 
         // DayChanged
-        _eventHub?.EmitSignal(EventHub.SignalName.DayChanged, _currentDate.Year, _currentDate.Month, _currentDate.Day);
+        this.eventHub?.EmitSignal(EventHub.SignalName.DayChanged, this.currentDate.Year, this.currentDate.Month, this.currentDate.Day);
 
         // Month/Year Changed
-        if (_currentDate.Month != before.Month || _currentDate.Year != before.Year)
+        if (this.currentDate.Month != before.Month || this.currentDate.Year != before.Year)
         {
-            _eventHub?.EmitSignal(EventHub.SignalName.MonthChanged, _currentDate.Year, _currentDate.Month);
+            this.eventHub?.EmitSignal(EventHub.SignalName.MonthChanged, this.currentDate.Year, this.currentDate.Month);
         }
-        if (_currentDate.Year != before.Year)
+        if (this.currentDate.Year != before.Year)
         {
-            _eventHub?.EmitSignal(EventHub.SignalName.YearChanged, _currentDate.Year);
+            this.eventHub?.EmitSignal(EventHub.SignalName.YearChanged, this.currentDate.Year);
         }
 
-        EmitDateChanged();
-        if (DebugLogs)
+        this.EmitDateChanged();
+        if (this.DebugLogs)
         {
-            DebugLogger.Log("debug_gameclock", DebugLogger.LogLevel.Info, () => $"GameTime: {_currentDate:dd.MM.yyyy}");
+            DebugLogger.Log("debug_gameclock", DebugLogger.LogLevel.Info, () => $"GameTime: {this.currentDate:dd.MM.yyyy}");
         }
     }
 
     private void EmitDateChanged()
     {
-        var s = _currentDate.ToString("dd.MM.yyyy");
-        DebugLogger.Debug("debug_gameclock", "EmitDateChanged", $"EmitDateChanged", new System.Collections.Generic.Dictionary<string, object?> { { "date", s }, { "eventHub", _eventHub != null } });
-        _eventHub?.EmitSignal(EventHub.SignalName.DateChanged, s);
+        var s = this.currentDate.ToString("dd.MM.yyyy");
+        DebugLogger.Debug("debug_gameclock", "EmitDateChanged", $"EmitDateChanged", new System.Collections.Generic.Dictionary<string, object?>(StringComparer.Ordinal) { { "date", s }, { "eventHub", this.eventHub != null } });
+        this.eventHub?.EmitSignal(EventHub.SignalName.DateChanged, s);
     }
 
     // Public API
     public void ResetToStart()
     {
-        _currentDate = new DateTime(StartYear, StartMonth, StartDay);
-        _accum = 0.0;
-        EmitDateChanged();
+        this.currentDate = new DateTime(this.StartYear, this.StartMonth, this.StartDay);
+        this.accum = 0.0;
+        this.EmitDateChanged();
     }
 
     public void SetDate(int year, int month, int day)
     {
         try
         {
-            _currentDate = new DateTime(year, month, day);
-            _accum = 0.0;
-            EmitDateChanged();
+            this.currentDate = new DateTime(year, month, day);
+            this.accum = 0.0;
+            this.EmitDateChanged();
         }
-        catch { /* ignore invalid */ }
+        catch
+        { /* ignore invalid */
+        }
     }
 
     public string GetCurrentDateString()
     {
-        return _currentDate.ToString("dd.MM.yyyy");
+        return this.currentDate.ToString("dd.MM.yyyy");
     }
 }
 

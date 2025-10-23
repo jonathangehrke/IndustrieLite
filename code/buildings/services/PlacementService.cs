@@ -1,6 +1,6 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System.Collections.Generic;
+using Godot;
 
 /// <summary>
 /// PlacementService prueft Platzierungsregeln (Bounds, Besitz, Kollision, Kosten).
@@ -29,16 +29,16 @@ public class PlacementService
 
         // Daten aus Database lesen (akzeptiert auch LegacyIds)
         BuildingDef? def = null;
-        if (database != null)
+        if (this.database != null)
         {
-            def = database.GetBuilding(type);
+            def = this.database.GetBuilding(type);
             // Falls nicht gefunden, kanonische ID probieren
             if (def == null)
             {
                 var canon = IdMigration.ToCanonical(type);
-                if (!string.IsNullOrEmpty(canon) && canon != type)
+                if (!string.IsNullOrEmpty(canon) && !string.Equals(canon, type, System.StringComparison.Ordinal))
                 {
-                    def = database.GetBuilding(canon);
+                    def = this.database.GetBuilding(canon);
                 }
             }
         }
@@ -50,16 +50,25 @@ public class PlacementService
 
         // Bounds & Besitz
         for (int x = 0; x < size.X; x++)
-        for (int y = 0; y < size.Y; y++)
         {
-            Vector2I c = new Vector2I(cell.X + x, cell.Y + y);
-            if (c.X < 0 || c.Y < 0 || c.X >= land.GridW || c.Y >= land.GridH)
-                return false;
-            if (!land.IsOwned(c))
-                return false;
-            // Kollision mit Strassen: Gebaeude duerfen nicht ueber vorhandene Strassen gebaut werden
-            if (roadManager != null && roadManager.IsRoad(c))
-                return false;
+            for (int y = 0; y < size.Y; y++)
+            {
+                Vector2I c = new Vector2I(cell.X + x, cell.Y + y);
+                if (c.X < 0 || c.Y < 0 || c.X >= this.land.GridW || c.Y >= this.land.GridH)
+                {
+                    return false;
+                }
+
+                if (!this.land.IsOwned(c))
+                {
+                    return false;
+                }
+                // Kollision mit Strassen: Gebaeude duerfen nicht ueber vorhandene Strassen gebaut werden
+                if (this.roadManager != null && this.roadManager.IsRoad(c))
+                {
+                    return false;
+                }
+            }
         }
 
         // Kollision
@@ -67,12 +76,16 @@ public class PlacementService
         foreach (var b in existing)
         {
             if (rect.Intersects(new Rect2I(b.GridPos, b.Size)))
+            {
                 return false;
+            }
         }
 
         // Geld
-        if (!economy.CanAfford(cost))
+        if (!this.economy.CanAfford(cost))
+        {
             return false;
+        }
 
         return true;
     }
@@ -82,21 +95,25 @@ public class PlacementService
     {
         // Validierung
         if (string.IsNullOrWhiteSpace(buildingId))
+        {
             return Result<Building>.Fail(new ErrorInfo(ErrorIds.TransportInvalidArgumentName, "Leere Building-ID",
-                new System.Collections.Generic.Dictionary<string, object?> { { "type", buildingId } }));
+                new System.Collections.Generic.Dictionary<string, object?>(System.StringComparer.Ordinal) { { "type", buildingId } }));
+        }
 
         // Size/Cost bestimmen (mit Database-Fallbacks)
         Vector2I size = new Vector2I(2, 2);
         int cost = 200;
         BuildingDef? def = null;
-        if (database != null)
+        if (this.database != null)
         {
-            def = database.GetBuilding(buildingId);
+            def = this.database.GetBuilding(buildingId);
             if (def == null)
             {
                 var canon = IdMigration.ToCanonical(buildingId);
-                if (!string.IsNullOrEmpty(canon) && canon != buildingId)
-                    def = database.GetBuilding(canon);
+                if (!string.IsNullOrEmpty(canon) && !string.Equals(canon, buildingId, System.StringComparison.Ordinal))
+                {
+                    def = this.database.GetBuilding(canon);
+                }
             }
         }
         if (def != null)
@@ -108,29 +125,31 @@ public class PlacementService
         // Schrittweise, detailierte Validierung fuer klares Feedback
         // 1) Bounds & Besitz fuer jede Zelle des Gebaeudes
         for (int x = 0; x < size.X; x++)
-        for (int y = 0; y < size.Y; y++)
         {
-            Vector2I c = new Vector2I(cell.X + x, cell.Y + y);
-            if (c.X < 0 || c.Y < 0 || c.X >= land.GridW || c.Y >= land.GridH)
+            for (int y = 0; y < size.Y; y++)
             {
-                return Result<Building>.Fail(new ErrorInfo(
-                    ErrorIds.LandOutOfBoundsName,
-                    "Ein Teil des Gebaeudes liegt ausserhalb des Spielfelds",
-                    new System.Collections.Generic.Dictionary<string, object?> { { "cell", cell }, { "size", size } }));
-            }
-            if (!land.IsOwned(c))
-            {
-                return Result<Building>.Fail(new ErrorInfo(
-                    ErrorIds.LandNotOwnedName,
-                    "Ein Teil des Gebaeudes liegt auf nicht gekauftem Land",
-                    new System.Collections.Generic.Dictionary<string, object?> { { "cell", cell }, { "size", size }, { "missingCell", c } }));
-            }
-            if (roadManager != null && roadManager.IsRoad(c))
-            {
-                return Result<Building>.Fail(new ErrorInfo(
-                    ErrorIds.TransportInvalidArgumentName,
-                    "Kollision mit Strasse: Entferne die Strasse oder waehle eine andere Position",
-                    new System.Collections.Generic.Dictionary<string, object?> { { "cell", cell }, { "size", size }, { "roadCell", c } }));
+                Vector2I c = new Vector2I(cell.X + x, cell.Y + y);
+                if (c.X < 0 || c.Y < 0 || c.X >= this.land.GridW || c.Y >= this.land.GridH)
+                {
+                    return Result<Building>.Fail(new ErrorInfo(
+                        ErrorIds.LandOutOfBoundsName,
+                        "Ein Teil des Gebaeudes liegt ausserhalb des Spielfelds",
+                        new System.Collections.Generic.Dictionary<string, object?>(System.StringComparer.Ordinal) { { "cell", cell }, { "size", size } }));
+                }
+                if (!this.land.IsOwned(c))
+                {
+                    return Result<Building>.Fail(new ErrorInfo(
+                        ErrorIds.LandNotOwnedName,
+                        "Ein Teil des Gebaeudes liegt auf nicht gekauftem Land",
+                        new System.Collections.Generic.Dictionary<string, object?>(System.StringComparer.Ordinal) { { "cell", cell }, { "size", size }, { "missingCell", c } }));
+                }
+                if (this.roadManager != null && this.roadManager.IsRoad(c))
+                {
+                    return Result<Building>.Fail(new ErrorInfo(
+                        ErrorIds.TransportInvalidArgumentName,
+                        "Kollision mit Strasse: Entferne die Strasse oder waehle eine andere Position",
+                        new System.Collections.Generic.Dictionary<string, object?>(System.StringComparer.Ordinal) { { "cell", cell }, { "size", size }, { "roadCell", c } }));
+                }
             }
         }
 
@@ -143,7 +162,7 @@ public class PlacementService
                 return Result<Building>.Fail(new ErrorInfo(
                     ErrorIds.BuildingInvalidPlacementName,
                     "Kollision mit bestehendem Gebaeude",
-                    new System.Collections.Generic.Dictionary<string, object?> { { "cell", cell }, { "size", size }, { "other", bExist.DefinitionId ?? bExist.Name } }));
+                    new System.Collections.Generic.Dictionary<string, object?>(System.StringComparer.Ordinal) { { "cell", cell }, { "size", size }, { "other", bExist.DefinitionId ?? bExist.Name } }));
             }
         }
 

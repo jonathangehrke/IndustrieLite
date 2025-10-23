@@ -1,9 +1,9 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
 /// MarketService - Explicit DI Initialization (Phase 6)
-/// Dependencies werden via Initialize() injiziert statt via ServiceContainer lookup
+/// Dependencies werden via Initialize() injiziert statt via ServiceContainer lookup.
 /// </summary>
 public partial class MarketService : Node
 {
@@ -11,7 +11,8 @@ public partial class MarketService : Node
     /// Explizite Initialisierung mit allen Dependencies.
     /// Ersetzt InitializeDependencies() ServiceContainer lookups.
     /// </summary>
-    public void Initialize(ResourceManager? resourceManager,
+    public void Initialize(
+        ResourceManager? resourceManager,
         TransportManager? transportManager,
         EconomyManager? economyManager,
         BuildingManager? buildingManager,
@@ -41,21 +42,41 @@ public partial class MarketService : Node
         }
 
         if (resourceManager == null)
+        {
             DebugLogger.LogServices("MarketService: WARNING - ResourceManager not found");
+        }
+
         if (transportManager == null)
+        {
             DebugLogger.LogServices("MarketService: WARNING - TransportManager not found");
+        }
+
         if (economyManager == null)
+        {
             DebugLogger.LogServices("MarketService: WARNING - EconomyManager not found");
+        }
+
         if (buildingManager == null)
+        {
             DebugLogger.LogServices("MarketService: WARNING - BuildingManager not found");
+        }
+
         if (levelManager == null)
+        {
             DebugLogger.LogServices("MarketService: WARNING - LevelManager not found (Level-System disabled)");
+        }
         else
+        {
             DebugLogger.LogServices("MarketService: LevelManager injected successfully");
+        }
 
         if (database == null)
+        {
             DebugLogger.LogServices("MarketService: WARNING - Database not found (product unlock checks may fallback)");
+        }
         else
+        {
             DebugLogger.LogServices("MarketService: Database injected successfully");
+        }
     }
 }

@@ -1,12 +1,12 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
-/// CityGrowthManager: Explizite Dependency Injection (neue DI-Architektur)
+/// CityGrowthManager: Explizite Dependency Injection (neue DI-Architektur).
 /// </summary>
 public partial class CityGrowthManager
 {
-    private bool _initialized;
+    private bool initialized;
 
     /// <summary>
     /// Explizite Dependency Injection (neue Architektur).
@@ -14,7 +14,7 @@ public partial class CityGrowthManager
     /// </summary>
     public void Initialize(EventHub? eventHub)
     {
-        if (_initialized)
+        if (this.initialized)
         {
             DebugLogger.LogServices("CityGrowthManager.Initialize(): Bereits initialisiert, überspringe");
             return;
@@ -25,10 +25,10 @@ public partial class CityGrowthManager
         // Signal-Verbindung
         if (eventHub != null)
         {
-            _abos.VerbindeSignal(eventHub, EventHub.SignalName.MonthChanged, this, nameof(OnMonthChanged));
+            this.abos.VerbindeSignal(eventHub, EventHub.SignalName.MonthChanged, this, nameof(this.OnMonthChanged));
         }
 
-        _initialized = true;
+        this.initialized = true;
         DebugLogger.LogServices($"CityGrowthManager.Initialize(): Initialisiert (EventHub={(eventHub != null ? "OK" : "null")})");
     }
 }

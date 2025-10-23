@@ -1,11 +1,11 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
+using Godot;
 
 /// <summary>
 /// Verantwortlich fuer Laden und Wiederherstellen des Spielzustands.
@@ -16,14 +16,14 @@ public class LoadManager
 
     public LoadManager(ServiceContainer? container)
     {
-        serviceContainer = container;
+        this.serviceContainer = container;
     }
 
     public void LoadGame(string fileName, LandManager land, BuildingManager buildings, EconomyManager economy, ProductionManager? production, Map? map, TransportManager? transport = null)
     {
         string? filePath = null;
         GameStateSnapshot? snapshot = null;
-        var clock = GetGameClock();
+        var clock = this.GetGameClock();
         GameClockManager.GameClockState? previousClockState = null;
         var loadSucceeded = false;
 
@@ -32,7 +32,8 @@ public class LoadManager
             filePath = SaveLoadPaths.GetSaveFilePath(fileName);
             if (!File.Exists(filePath))
             {
-                throw new LoadException(SaveLoadErrorCodes.Sl301LoadFileNotFound,
+                throw new LoadException(
+                    SaveLoadErrorCodes.Sl301LoadFileNotFound,
                     $"Save file not found: {fileName}", filePath);
             }
 
@@ -47,23 +48,24 @@ public class LoadManager
                 }
             }
 
-            var saveData = LoadFromFileInternal(filePath);
-            ApplySaveData(saveData, land, buildings, economy, production, map, transport);
+            var saveData = this.LoadFromFileInternal(filePath);
+            this.ApplySaveData(saveData, land, buildings, economy, production, map, transport);
 
-            RestoreGameClock(clock, saveData, previousClockState);
+            this.RestoreGameClock(clock, saveData, previousClockState);
             loadSucceeded = true;
             DebugLogger.LogLifecycle(() => $"LoadGame: Successfully loaded from {filePath} (version {saveData.Version}, {saveData.Buildings.Count} buildings, {saveData.Money:F2})");
         }
         catch (LoadException)
         {
-            RestoreSnapshot(snapshot, land, buildings, economy, production);
+            this.RestoreSnapshot(snapshot, land, buildings, economy, production);
             throw;
         }
         catch (Exception ex)
         {
-            RestoreSnapshot(snapshot, land, buildings, economy, production);
+            this.RestoreSnapshot(snapshot, land, buildings, economy, production);
             DebugLogger.Log("debug_lifecycle", DebugLogger.LogLevel.Error, () => $"LoadManager: Unhandled exception during load: {ex}");
-            throw new LoadException(SaveLoadErrorCodes.Sl303LoadDeserializationFailed,
+            throw new LoadException(
+                SaveLoadErrorCodes.Sl303LoadDeserializationFailed,
                 "Unexpected error during load operation", filePath, ex);
         }
         finally
@@ -79,7 +81,7 @@ public class LoadManager
     {
         string? filePath = null;
         GameStateSnapshot? snapshot = null;
-        var clock = GetGameClock();
+        var clock = this.GetGameClock();
         GameClockManager.GameClockState? previousClockState = null;
         var loadSucceeded = false;
 
@@ -88,7 +90,8 @@ public class LoadManager
             filePath = SaveLoadPaths.GetSaveFilePath(fileName);
             if (!File.Exists(filePath))
             {
-                throw new LoadException(SaveLoadErrorCodes.Sl301LoadFileNotFound,
+                throw new LoadException(
+                    SaveLoadErrorCodes.Sl301LoadFileNotFound,
                     $"Save file not found: {fileName}", filePath);
             }
 
@@ -103,23 +106,24 @@ public class LoadManager
                 }
             }
 
-            var saveData = await LoadFromFileInternalAsync(filePath);
-            ApplySaveData(saveData, land, buildings, economy, production, map, transport);
+            var saveData = await this.LoadFromFileInternalAsync(filePath);
+            this.ApplySaveData(saveData, land, buildings, economy, production, map, transport);
 
-            RestoreGameClock(clock, saveData, previousClockState);
+            this.RestoreGameClock(clock, saveData, previousClockState);
             loadSucceeded = true;
             DebugLogger.LogLifecycle(() => $"LoadGameAsync: Successfully loaded from {filePath} (version {saveData.Version}, {saveData.Buildings.Count} buildings, {saveData.Money:F2})");
         }
         catch (LoadException)
         {
-            RestoreSnapshot(snapshot, land, buildings, economy, production);
+            this.RestoreSnapshot(snapshot, land, buildings, economy, production);
             throw;
         }
         catch (Exception ex)
         {
-            RestoreSnapshot(snapshot, land, buildings, economy, production);
+            this.RestoreSnapshot(snapshot, land, buildings, economy, production);
             DebugLogger.Log("debug_lifecycle", DebugLogger.LogLevel.Error, () => $"LoadManager: Unhandled exception during load: {ex}");
-            throw new LoadException(SaveLoadErrorCodes.Sl303LoadDeserializationFailed,
+            throw new LoadException(
+                SaveLoadErrorCodes.Sl303LoadDeserializationFailed,
                 "Unexpected error during load operation", filePath, ex);
         }
         finally
@@ -135,7 +139,7 @@ public class LoadManager
     {
         string? filePath = null;
         GameStateSnapshot? snapshot = null;
-        var clock = GetGameClock();
+        var clock = this.GetGameClock();
         GameClockManager.GameClockState? previousClockState = null;
         var loadSucceeded = false;
 
@@ -146,7 +150,8 @@ public class LoadManager
             filePath = SaveLoadPaths.GetSaveFilePath(fileName);
             if (!File.Exists(filePath))
             {
-                throw new LoadException(SaveLoadErrorCodes.Sl301LoadFileNotFound,
+                throw new LoadException(
+                    SaveLoadErrorCodes.Sl301LoadFileNotFound,
                     $"Save file not found: {fileName}", filePath);
             }
 
@@ -161,28 +166,29 @@ public class LoadManager
                 }
             }
 
-            var saveData = await LoadFromFileInternalAsync(filePath, cancellationToken).ConfigureAwait(false);
-            ApplySaveData(saveData, land, buildings, economy, production, map, transport);
+            var saveData = await this.LoadFromFileInternalAsync(filePath, cancellationToken).ConfigureAwait(false);
+            this.ApplySaveData(saveData, land, buildings, economy, production, map, transport);
 
-            RestoreGameClock(clock, saveData, previousClockState);
+            this.RestoreGameClock(clock, saveData, previousClockState);
             loadSucceeded = true;
             DebugLogger.LogLifecycle(() => $"LoadGameAsync: Successfully loaded from {filePath} (version {saveData.Version}, {saveData.Buildings.Count} buildings, {saveData.Money:F2})");
         }
         catch (LoadException)
         {
-            RestoreSnapshot(snapshot, land, buildings, economy, production);
+            this.RestoreSnapshot(snapshot, land, buildings, economy, production);
             throw;
         }
         catch (OperationCanceledException)
         {
-            RestoreSnapshot(snapshot, land, buildings, economy, production);
+            this.RestoreSnapshot(snapshot, land, buildings, economy, production);
             throw;
         }
         catch (Exception ex)
         {
-            RestoreSnapshot(snapshot, land, buildings, economy, production);
+            this.RestoreSnapshot(snapshot, land, buildings, economy, production);
             DebugLogger.Log("debug_lifecycle", DebugLogger.LogLevel.Error, () => $"LoadManager: Unhandled exception during load: {ex}");
-            throw new LoadException(SaveLoadErrorCodes.Sl303LoadDeserializationFailed,
+            throw new LoadException(
+                SaveLoadErrorCodes.Sl303LoadDeserializationFailed,
                 "Unexpected error during load operation", filePath, ex);
         }
         finally
@@ -199,16 +205,19 @@ public class LoadManager
         var filePath = SaveLoadPaths.GetSaveFilePath(fileName);
         if (!File.Exists(filePath))
         {
-            throw new LoadException(SaveLoadErrorCodes.Sl301LoadFileNotFound,
+            throw new LoadException(
+                SaveLoadErrorCodes.Sl301LoadFileNotFound,
                 $"Save file not found: {fileName}", filePath);
         }
-        return LoadFromFileInternal(filePath);
+        return this.LoadFromFileInternal(filePath);
     }
 
     private SaveData LoadFromFileInternal(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))
+        {
             throw new ArgumentException("File path cannot be null or empty", nameof(filePath));
+        }
 
         string json;
         try
@@ -221,7 +230,8 @@ public class LoadManager
         }
         catch (Exception ex)
         {
-            throw new LoadException(SaveLoadErrorCodes.Sl302LoadFileReadFailed,
+            throw new LoadException(
+                SaveLoadErrorCodes.Sl302LoadFileReadFailed,
                 "Failed to read save file", filePath, ex);
         }
 
@@ -233,19 +243,22 @@ public class LoadManager
         }
         catch (Exception ex)
         {
-            throw new LoadException(SaveLoadErrorCodes.Sl303LoadDeserializationFailed,
+            throw new LoadException(
+                SaveLoadErrorCodes.Sl303LoadDeserializationFailed,
                 "Failed to parse save file JSON", filePath, ex);
         }
 
         if (data == null)
         {
-            throw new LoadException(SaveLoadErrorCodes.Sl303LoadDeserializationFailed,
+            throw new LoadException(
+                SaveLoadErrorCodes.Sl303LoadDeserializationFailed,
                 "Save file deserialized to null", filePath);
         }
 
         if (!SaveDataSchema.IsVersionSupported(data.Version))
         {
-            throw new LoadException(SaveLoadErrorCodes.Sl304LoadInvalidVersion,
+            throw new LoadException(
+                SaveLoadErrorCodes.Sl304LoadInvalidVersion,
                 $"Save file version {data.Version} is not supported (min: {SaveDataSchema.MinSupportedVersion}, max: {SaveDataSchema.MaxSupportedVersion})",
                 filePath, data.Version);
         }
@@ -265,7 +278,8 @@ public class LoadManager
         }
         catch (Exception ex)
         {
-            throw new LoadException(SaveLoadErrorCodes.Sl305LoadMigrationFailed,
+            throw new LoadException(
+                SaveLoadErrorCodes.Sl305LoadMigrationFailed,
                 $"Failed to migrate save file from version {data.Version}", filePath, ex);
         }
 
@@ -275,7 +289,9 @@ public class LoadManager
     private async Task<SaveData> LoadFromFileInternalAsync(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))
+        {
             throw new ArgumentException("File path cannot be null or empty", nameof(filePath));
+        }
 
         try
         {
@@ -284,13 +300,15 @@ public class LoadManager
             var data = await JsonSerializer.DeserializeAsync<SaveData>(stream, options).ConfigureAwait(false);
             if (data == null)
             {
-                throw new LoadException(SaveLoadErrorCodes.Sl303LoadDeserializationFailed,
+                throw new LoadException(
+                    SaveLoadErrorCodes.Sl303LoadDeserializationFailed,
                     "Save file deserialized to null", filePath);
             }
 
             if (!SaveDataSchema.IsVersionSupported(data.Version))
             {
-                throw new LoadException(SaveLoadErrorCodes.Sl304LoadInvalidVersion,
+                throw new LoadException(
+                    SaveLoadErrorCodes.Sl304LoadInvalidVersion,
                     $"Save file version {data.Version} is not supported (min: {SaveDataSchema.MinSupportedVersion}, max: {SaveDataSchema.MaxSupportedVersion})",
                     filePath, data.Version);
             }
@@ -310,7 +328,8 @@ public class LoadManager
             }
             catch (Exception ex)
             {
-                throw new LoadException(SaveLoadErrorCodes.Sl305LoadMigrationFailed,
+                throw new LoadException(
+                    SaveLoadErrorCodes.Sl305LoadMigrationFailed,
                     $"Failed to migrate save file from version {data.Version}", filePath, ex);
             }
 
@@ -322,7 +341,8 @@ public class LoadManager
         }
         catch (Exception ex)
         {
-            throw new LoadException(SaveLoadErrorCodes.Sl302LoadFileReadFailed,
+            throw new LoadException(
+                SaveLoadErrorCodes.Sl302LoadFileReadFailed,
                 "Failed to read/deserialize save file", filePath, ex);
         }
     }
@@ -330,7 +350,9 @@ public class LoadManager
     private async Task<SaveData> LoadFromFileInternalAsync(string filePath, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(filePath))
+        {
             throw new ArgumentException("File path cannot be null or empty", nameof(filePath));
+        }
 
         try
         {
@@ -339,13 +361,15 @@ public class LoadManager
             var data = await JsonSerializer.DeserializeAsync<SaveData>(stream, options, cancellationToken).ConfigureAwait(false);
             if (data == null)
             {
-                throw new LoadException(SaveLoadErrorCodes.Sl303LoadDeserializationFailed,
+                throw new LoadException(
+                    SaveLoadErrorCodes.Sl303LoadDeserializationFailed,
                     "Save file deserialized to null", filePath);
             }
 
             if (!SaveDataSchema.IsVersionSupported(data.Version))
             {
-                throw new LoadException(SaveLoadErrorCodes.Sl304LoadInvalidVersion,
+                throw new LoadException(
+                    SaveLoadErrorCodes.Sl304LoadInvalidVersion,
                     $"Save file version {data.Version} is not supported (min: {SaveDataSchema.MinSupportedVersion}, max: {SaveDataSchema.MaxSupportedVersion})",
                     filePath, data.Version);
             }
@@ -365,7 +389,8 @@ public class LoadManager
             }
             catch (Exception ex)
             {
-                throw new LoadException(SaveLoadErrorCodes.Sl305LoadMigrationFailed,
+                throw new LoadException(
+                    SaveLoadErrorCodes.Sl305LoadMigrationFailed,
                     $"Failed to migrate save file from version {data.Version}", filePath, ex);
             }
 
@@ -381,11 +406,13 @@ public class LoadManager
         }
         catch (Exception ex)
         {
-            throw new LoadException(SaveLoadErrorCodes.Sl302LoadFileReadFailed,
+            throw new LoadException(
+                SaveLoadErrorCodes.Sl302LoadFileReadFailed,
                 "Failed to read/deserialize save file", filePath, ex);
         }
     }
 
+    [Obsolete]
     private void ApplySaveData(SaveData data, LandManager land, BuildingManager buildings, EconomyManager economy, ProductionManager? production, Map? map, TransportManager? transport)
     {
         if (data.GridW != land.GridW || data.GridH != land.GridH)
@@ -396,13 +423,13 @@ public class LoadManager
         economy.SetMoney(data.Money);
 
         // Restore Level-System data (Version 6+)
-        var levelManager = serviceContainer?.GetNamedService<LevelManager>("LevelManager");
+        var levelManager = this.serviceContainer?.GetNamedService<LevelManager>("LevelManager");
         if (levelManager != null)
         {
             levelManager.SetLevelAndRevenue(data.CurrentLevel, data.TotalMarketRevenue);
         }
 
-        var timeManager = GetGameTimeManager();
+        var timeManager = this.GetGameTimeManager();
         if (timeManager != null && data.Year > 0 && data.Month > 0 && data.Day > 0)
         {
             timeManager.SetDate(data.Year, data.Month, data.Day);
@@ -424,11 +451,11 @@ public class LoadManager
         }
 
         // Notify UI to clear all building references before we free them
-        var eventHub = serviceContainer?.GetNamedService<EventHub>("EventHub");
+        var eventHub = this.serviceContainer?.GetNamedService<EventHub>("EventHub");
         eventHub?.EmitSignal(EventHub.SignalName.GameStateReset);
 
         // Version 7+: Restore road network
-        var roadManager = serviceContainer?.GetNamedService<RoadManager>(nameof(RoadManager));
+        var roadManager = this.serviceContainer?.GetNamedService<RoadManager>(nameof(RoadManager));
         if (roadManager != null)
         {
             // Clear all existing roads first (to avoid "already exists" warnings when loading over existing game)
@@ -469,7 +496,7 @@ public class LoadManager
         }
 
         // Clear all supplier routes BEFORE deleting buildings
-        var supplierService = serviceContainer?.GetNamedService<SupplierService>(ServiceNames.SupplierService);
+        var supplierService = this.serviceContainer?.GetNamedService<SupplierService>(ServiceNames.SupplierService);
         if (supplierService != null)
         {
             try
@@ -506,57 +533,63 @@ public class LoadManager
                     // We need to call BuildingFactory.Create directly, set properties, then AddChild
                     string? recipeIdOverride = bd.RecipeState?.AktuellesRezeptId;
 
-                    var placed = PlaceBuildingWithRecipe(buildings, bd.Type, new Vector2I(bd.X, bd.Y), recipeIdOverride);
+                    var placed = this.PlaceBuildingWithRecipe(buildings, bd.Type, new Vector2I(bd.X, bd.Y), recipeIdOverride);
 
-                if (placed != null)
-                {
-                    if (!string.IsNullOrEmpty(bd.BuildingId))
+                    if (placed != null)
                     {
-                        buildings.UnregisterBuildingGuid(placed);
-                        placed.BuildingId = bd.BuildingId;
-                        buildings.RegisterBuildingGuid(placed);
-                    }
-                }
-
-                if (placed is IHasInventory inventar)
-                {
-                    if (bd.Inventory != null)
-                    {
-                        foreach (var kv in bd.Inventory)
+                        if (!string.IsNullOrEmpty(bd.BuildingId))
                         {
-                            inventar.SetInventoryAmount(new StringName(kv.Key), kv.Value);
+                            buildings.UnregisterBuildingGuid(placed);
+                            placed.BuildingId = bd.BuildingId;
+                            buildings.RegisterBuildingGuid(placed);
                         }
                     }
-                    else if (bd.Stock.HasValue)
-                    {
-                        if (placed is ChickenFarm)
-                            inventar.SetInventoryAmount(ChickenFarm.MainResourceId, bd.Stock.Value);
-                        else if (placed is PigFarm)
-                            inventar.SetInventoryAmount(PigFarm.MainResourceId, bd.Stock.Value);
-                        else if (placed is GrainFarm)
-                            inventar.SetInventoryAmount(GrainFarm.MainResourceId, bd.Stock.Value);
-                    }
-                }
-                else if (bd.Stock.HasValue && placed is IHasStock legacyStock)
-                {
-                    DebugLogger.LogServices(() => $"WARNUNG: Legacy-Stock fuer {bd.Type} ohne Inventar gesetzt: {legacyStock.Stock}");
-                }
 
-                // Version 7+: Restore logistics upgrades
-                if (placed != null)
-                {
-                    if (bd.LogisticsTruckCapacity.HasValue)
+                    if (placed is IHasInventory inventar)
                     {
-                        placed.LogisticsTruckCapacity = bd.LogisticsTruckCapacity.Value;
+                        if (bd.Inventory != null)
+                        {
+                            foreach (var kv in bd.Inventory)
+                            {
+                                inventar.SetInventoryAmount(new StringName(kv.Key), kv.Value);
+                            }
+                        }
+                        else if (bd.Stock.HasValue)
+                        {
+                            if (placed is ChickenFarm)
+                            {
+                                inventar.SetInventoryAmount(ChickenFarm.MainResourceId, bd.Stock.Value);
+                            }
+                            else if (placed is PigFarm)
+                            {
+                                inventar.SetInventoryAmount(PigFarm.MainResourceId, bd.Stock.Value);
+                            }
+                            else if (placed is GrainFarm)
+                            {
+                                inventar.SetInventoryAmount(GrainFarm.MainResourceId, bd.Stock.Value);
+                            }
+                        }
                     }
-                    if (bd.LogisticsTruckSpeed.HasValue)
+                    else if (bd.Stock.HasValue && placed is IHasStock legacyStock)
                     {
-                        placed.LogisticsTruckSpeed = bd.LogisticsTruckSpeed.Value;
+                        DebugLogger.LogServices(() => $"WARNUNG: Legacy-Stock fuer {bd.Type} ohne Inventar gesetzt: {legacyStock.Stock}");
                     }
 
-                    // Version 10+: RezeptIdOverride is set BEFORE _Ready via PlaceBuildingWithRecipe
-                    // No additional action needed here
-                }
+                    // Version 7+: Restore logistics upgrades
+                    if (placed != null)
+                    {
+                        if (bd.LogisticsTruckCapacity.HasValue)
+                        {
+                            placed.LogisticsTruckCapacity = bd.LogisticsTruckCapacity.Value;
+                        }
+                        if (bd.LogisticsTruckSpeed.HasValue)
+                        {
+                            placed.LogisticsTruckSpeed = bd.LogisticsTruckSpeed.Value;
+                        }
+
+                        // Version 10+: RezeptIdOverride is set BEFORE _Ready via PlaceBuildingWithRecipe
+                        // No additional action needed here
+                    }
                 }
             }
 
@@ -577,7 +610,7 @@ public class LoadManager
             if (recipeStatesByPosition.Count > 0)
             {
                 // Restore recipe states after all child nodes are initialized
-                RestoreRecipeStates(buildings, recipeStatesByPosition);
+                this.RestoreRecipeStates(buildings, recipeStatesByPosition);
             }
 
             if (transport?.TransportCore != null && data.Transport != null)
@@ -612,7 +645,7 @@ public class LoadManager
         // Version 8+: Restore City Market Orders
         if (data.CityOrders != null && data.CityOrders.Count > 0)
         {
-            var buildingsByGuid = new Dictionary<string, Building>();
+            var buildingsByGuid = new Dictionary<string, Building>(StringComparer.Ordinal);
             foreach (var building in buildings.Buildings)
             {
                 if (!string.IsNullOrEmpty(building.BuildingId))
@@ -641,7 +674,7 @@ public class LoadManager
                                 Accepted = orderData.Accepted,
                                 Delivered = orderData.Delivered,
                                 CreatedOn = DateTime.Parse(orderData.CreatedOn, System.Globalization.CultureInfo.InvariantCulture),
-                                ExpiresOn = DateTime.Parse(orderData.ExpiresOn, System.Globalization.CultureInfo.InvariantCulture)
+                                ExpiresOn = DateTime.Parse(orderData.ExpiresOn, System.Globalization.CultureInfo.InvariantCulture),
                             };
                             city.Orders.Add(order);
                             restoredOrdersCount++;
@@ -664,7 +697,7 @@ public class LoadManager
         // Version 9+: Restore Supplier Routes (fixed logistics routes)
         if (data.SupplierRoutes != null && data.SupplierRoutes.Count > 0)
         {
-            var supplierSvc = serviceContainer?.GetNamedService<SupplierService>(ServiceNames.SupplierService);
+            var supplierSvc = this.serviceContainer?.GetNamedService<SupplierService>(ServiceNames.SupplierService);
             if (supplierSvc != null)
             {
                 var routesToImport = new List<(string ConsumerBuildingId, string ResourceId, string SupplierBuildingId)>();
@@ -758,7 +791,7 @@ public class LoadManager
     }
 
     /// <summary>
-    /// Helper: Places a building with optional recipe override set BEFORE _Ready
+    /// Helper: Places a building with optional recipe override set BEFORE _Ready.
     /// </summary>
     private Building? PlaceBuildingWithRecipe(BuildingManager buildings, string type, Vector2I cell, string? recipeIdOverride)
     {
@@ -835,62 +868,65 @@ public class LoadManager
 
     private GameClockManager? GetGameClock()
     {
-        return serviceContainer?.GetNamedService<GameClockManager>(nameof(GameClockManager))
+        return this.serviceContainer?.GetNamedService<GameClockManager>(nameof(GameClockManager))
             ?? ServiceContainer.Instance?.GetNamedService<GameClockManager>(nameof(GameClockManager));
     }
 
     private GameTimeManager? GetGameTimeManager()
     {
-        return serviceContainer?.GetNamedService<GameTimeManager>(nameof(GameTimeManager))
+        return this.serviceContainer?.GetNamedService<GameTimeManager>(nameof(GameTimeManager))
             ?? ServiceContainer.Instance?.GetNamedService<GameTimeManager>(nameof(GameTimeManager));
     }
 
     private class GameStateSnapshot
     {
         public double Money { get; }
+
         public bool[,] LandState { get; }
+
         public List<Building> Buildings { get; }
+
         public List<IProducer> Producers { get; }
 
         public GameStateSnapshot(LandManager land, BuildingManager buildings, EconomyManager economy)
         {
-            Money = economy.GetMoney();
-            LandState = new bool[land.GridW, land.GridH];
+            this.Money = economy.GetMoney();
+            this.LandState = new bool[land.GridW, land.GridH];
             for (int x = 0; x < land.GridW; x++)
             {
                 for (int y = 0; y < land.GridH; y++)
                 {
-                    LandState[x, y] = land.Land[x, y];
+                    this.LandState[x, y] = land.Land[x, y];
                 }
             }
 
-            Buildings = new List<Building>(buildings.Buildings);
-            Producers = new List<IProducer>();
+            this.Buildings = new List<Building>(buildings.Buildings);
+            this.Producers = new List<IProducer>();
             foreach (var building in buildings.Buildings)
             {
                 if (building is IProducer producer)
                 {
-                    Producers.Add(producer);
+                    this.Producers.Add(producer);
                 }
             }
         }
 
         public void RestoreState(LandManager land, BuildingManager buildings, EconomyManager economy, ProductionManager? production)
         {
-            economy.SetMoney(Money);
+            economy.SetMoney(this.Money);
 
-            for (int x = 0; x < land.GridW && x < LandState.GetLength(0); x++)
+            for (int x = 0; x < land.GridW && x < this.LandState.GetLength(0); x++)
             {
-                for (int y = 0; y < land.GridH && y < LandState.GetLength(1); y++)
+                for (int y = 0; y < land.GridH && y < this.LandState.GetLength(1); y++)
                 {
-                    land.SetOwnedCell(new Vector2I(x, y), LandState[x, y]);
+                    land.SetOwnedCell(new Vector2I(x, y), this.LandState[x, y]);
                 }
             }
 
             var currentBuildings = new List<Building>(buildings.Buildings);
             foreach (var building in currentBuildings)
             {
-                if (!Buildings.Contains(building))
+                if (!this.Buildings.Contains(building))
                 {
                     if (building is IProducer producer && production != null)
                     {
@@ -901,10 +937,10 @@ public class LoadManager
             }
 
             buildings.Buildings.Clear();
-            buildings.Buildings.AddRange(Buildings);
+            buildings.Buildings.AddRange(this.Buildings);
 
             buildings.Cities.Clear();
-            foreach (var building in Buildings)
+            foreach (var building in this.Buildings)
             {
                 if (building is City city)
                 {

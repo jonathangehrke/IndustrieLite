@@ -1,9 +1,9 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
 /// LogisticsService - Explicit DI Initialization (Phase 6)
-/// Dependencies werden via Initialize() injiziert statt via ServiceContainer lookup
+/// Dependencies werden via Initialize() injiziert statt via ServiceContainer lookup.
 /// </summary>
 public partial class LogisticsService : Node
 {
@@ -22,8 +22,10 @@ public partial class LogisticsService : Node
         }
 
         if (eventHub == null)
+        {
             DebugLogger.Warn("debug_services", "LogisticsEventHubMissing", "EventHub not found");
+        }
 
-        _isInitialized = true;
+        this.isInitialized = true;
     }
 }

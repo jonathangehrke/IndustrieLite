@@ -1,9 +1,9 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using Godot;
 
 /// <summary>
 /// Initialisiert alle neuen C# Services beim Spielstart
-/// Diese Klasse sollte früh im Spielzyklus geladen werden
+/// Diese Klasse sollte früh im Spielzyklus geladen werden.
 /// </summary>
 public partial class ServicesInitializer : Node
 {
@@ -12,7 +12,7 @@ public partial class ServicesInitializer : Node
         GD.Print("ServicesInitializer: Starting service initialization");
 
         // Warte einen Frame, damit ServiceContainer bereit ist
-        CallDeferred(nameof(InitializeServices));
+        this.CallDeferred(nameof(this.InitializeServices));
     }
 
     private void InitializeServices()
@@ -22,27 +22,27 @@ public partial class ServicesInitializer : Node
             // SupplierService
             var supplierService = new SupplierService();
             supplierService.Name = "SupplierService";
-            AddChild(supplierService);
+            this.AddChild(supplierService);
 
             // LogisticsService
             var logisticsService = new LogisticsService();
             logisticsService.Name = "LogisticsService";
-            AddChild(logisticsService);
+            this.AddChild(logisticsService);
 
             // MarketService
             var marketService = new MarketService();
             marketService.Name = "MarketService";
-            AddChild(marketService);
+            this.AddChild(marketService);
 
             // ProductionCalculationService
             var productionCalculationService = new ProductionCalculationService();
             productionCalculationService.Name = "ProductionCalculationService";
-            AddChild(productionCalculationService);
+            this.AddChild(productionCalculationService);
 
             GD.Print("ServicesInitializer: All services initialized successfully");
 
             // Validiere Service-Registrierung
-            ValidateServiceRegistration();
+            this.ValidateServiceRegistration();
         }
         catch (System.Exception ex)
         {
@@ -65,7 +65,7 @@ public partial class ServicesInitializer : Node
             "SupplierService",
             "LogisticsService",
             "MarketService",
-            "ProductionCalculationService"
+            "ProductionCalculationService",
         };
 
         foreach (var serviceName in services)
@@ -86,33 +86,33 @@ public partial class ServicesInitializer : Node
     }
 
     /// <summary>
-    /// Manueller Service-Reset für Debugging
+    /// Manueller Service-Reset für Debugging.
     /// </summary>
     public void ResetServices()
     {
         GD.Print("ServicesInitializer: Resetting services");
 
         // Entferne alle Service-Kinder
-        foreach (Node child in GetChildren())
+        foreach (Node child in this.GetChildren())
         {
-            if (child.Name.ToString().EndsWith("Service"))
+            if (child.Name.ToString().EndsWith("Service", System.StringComparison.Ordinal))
             {
                 child.QueueFree();
             }
         }
 
         // Warte einen Frame und initialisiere neu
-        CallDeferred(nameof(InitializeServices));
+        this.CallDeferred(nameof(this.InitializeServices));
     }
 
     /// <summary>
-    /// Zeigt Service-Status für Debugging
+    /// Zeigt Service-Status für Debugging.
     /// </summary>
     public void ShowServiceStatus()
     {
         GD.Print("=== Service Status ===");
 
-        foreach (Node child in GetChildren())
+        foreach (Node child in this.GetChildren())
         {
             GD.Print($"- {child.Name}: {child.GetType().Name}");
         }

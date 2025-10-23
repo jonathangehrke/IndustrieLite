@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 using System.Collections.Generic;
 using Godot;
 
@@ -11,10 +11,11 @@ public class Scheduler
     /// <summary>
     /// Plant Teillieferungen fuer eine Ressource basierend auf Lieferanten mit Bestand.
     /// </summary>
-    /// <param name="resourceId">Ressourcen-ID</param>
-    /// <param name="lieferanten">Lieferanten-Liste</param>
-    /// <param name="totalAmount">Gesamtbedarf</param>
-    /// <param name="maxProTruck">Maximale Menge je Truck</param>
+    /// <param name="resourceId">Ressourcen-ID.</param>
+    /// <param name="lieferanten">Lieferanten-Liste.</param>
+    /// <param name="totalAmount">Gesamtbedarf.</param>
+    /// <param name="maxProTruck">Maximale Menge je Truck.</param>
+    /// <returns></returns>
     public List<(SupplyIndex.Supplier Lieferant, int Menge)> Plan(StringName resourceId, List<SupplyIndex.Supplier> lieferanten, int totalAmount, int maxProTruck)
     {
         var result = new List<(SupplyIndex.Supplier, int)>();

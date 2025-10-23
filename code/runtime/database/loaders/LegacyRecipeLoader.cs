@@ -1,8 +1,8 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Godot;
 
 /// <summary>
 /// Legacy-Fallback fuer Rezepte.
@@ -17,21 +17,22 @@ public sealed class LegacyRecipeLoader : IDataLoader<RecipeDef>
     }
 
     public string LoaderName => nameof(LegacyRecipeLoader);
+
     public int Priority => 100;
 
     public Task<IReadOnlyCollection<RecipeDef>> LoadAsync(SceneTree sceneTree)
     {
-        if (!IsFallbackAktiv())
+        if (!this.IsFallbackAktiv())
         {
             return Task.FromResult<IReadOnlyCollection<RecipeDef>>(System.Array.Empty<RecipeDef>());
         }
 
-        var rezepte = ErzeugeLegacyRezepte();
+        var rezepte = this.ErzeugeLegacyRezepte();
         DebugLogger.LogServices(() => $"LegacyRecipeLoader: {rezepte.Count} Legacy-Rezepte erstellt");
         return Task.FromResult<IReadOnlyCollection<RecipeDef>>(rezepte);
     }
 
-    private bool IsFallbackAktiv() => OS.IsDebugBuild() || legacyErlaubt();
+    private bool IsFallbackAktiv() => OS.IsDebugBuild() || this.legacyErlaubt();
 
     private List<RecipeDef> ErzeugeLegacyRezepte()
     {

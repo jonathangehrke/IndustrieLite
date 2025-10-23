@@ -1,6 +1,6 @@
-﻿// SPDX-License-Identifier: MIT
-using Godot;
+// SPDX-License-Identifier: MIT
 using System.Collections.Generic;
+using Godot;
 
 /// <summary>
 /// Registry haelt schnelle Indizes auf Gebaeude (per Zelle, per Id optional).
@@ -13,10 +13,12 @@ public class BuildingRegistry
     {
         var size = b.Size;
         for (int x = 0; x < size.X; x++)
-        for (int y = 0; y < size.Y; y++)
         {
-            var c = new Vector2I(b.GridPos.X + x, b.GridPos.Y + y);
-            byCell[c] = b;
+            for (int y = 0; y < size.Y; y++)
+            {
+                var c = new Vector2I(b.GridPos.X + x, b.GridPos.Y + y);
+                this.byCell[c] = b;
+            }
         }
     }
 
@@ -24,22 +26,30 @@ public class BuildingRegistry
     {
         var size = b.Size;
         for (int x = 0; x < size.X; x++)
-        for (int y = 0; y < size.Y; y++)
         {
-            var c = new Vector2I(b.GridPos.X + x, b.GridPos.Y + y);
-            if (byCell.ContainsKey(c) && byCell[c] == b)
-                byCell.Remove(c);
+            for (int y = 0; y < size.Y; y++)
+            {
+                var c = new Vector2I(b.GridPos.X + x, b.GridPos.Y + y);
+                if (this.byCell.ContainsKey(c) && this.byCell[c] == b)
+                {
+                    this.byCell.Remove(c);
+                }
+            }
         }
     }
 
     public Building? GetAt(Vector2I cell)
     {
-        if (byCell.TryGetValue(cell, out var b)) return b;
+        if (this.byCell.TryGetValue(cell, out var b))
+        {
+            return b;
+        }
+
         return null;
     }
 
     public void Clear()
     {
-        byCell.Clear();
+        this.byCell.Clear();
     }
 }
