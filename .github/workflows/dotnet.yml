@@ -39,7 +39,7 @@ jobs:
           if (-not $json.sdk.version.StartsWith('8.')) { throw "global.json sdk.version must be 8.x; found $($json.sdk.version)" }
 
       - name: Verify formatting
-        run: dotnet format --verify-no-changes
+        run: dotnet format IndustrieLite.sln --verify-no-changes
 
       - name: Build (warnings as errors)
         run: dotnet build --configuration Release -warnaserror
@@ -141,7 +141,17 @@ jobs:
           $exe = (Get-ChildItem -Recurse -Path ./godot -Filter *mono_win64.exe -ErrorAction SilentlyContinue | Select-Object -First 1 | % { $_.FullName })
           if (-not $exe) {
             $url = "https://downloads.tuxfamily.org/godotengine/4.4/Godot_v4.4-stable_mono_win64.zip"
-            Invoke-WebRequest -Uri $url -OutFile godot.zip
+            $maxAttempts = 3
+            for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+              try {
+                Invoke-WebRequest -Uri $url -OutFile godot.zip -ErrorAction Stop
+                break
+              } catch {
+                if ($attempt -eq $maxAttempts) { throw }
+                Write-Warning "Godot download failed (attempt $attempt/$maxAttempts). Retrying in 30s..."
+                Start-Sleep -Seconds 30
+              }
+            }
             if (!(Test-Path ./godot)) { New-Item -ItemType Directory -Force -Path ./godot | Out-Null }
             Expand-Archive godot.zip -DestinationPath ./godot -Force
           } else {
