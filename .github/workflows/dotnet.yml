@@ -41,8 +41,8 @@ jobs:
       - name: Verify formatting (whitespace only)
         run: dotnet format whitespace IndustrieLite.sln --verify-no-changes
 
-      - name: Build
-        run: dotnet build --configuration Release
+      - name: Build (warnings as errors)
+        run: dotnet build --configuration Release -warnaserror
 
       - name: Run unit tests (logic)
         run: dotnet test ./tests/IndustrieLite.Tests/IndustrieLite.Tests.csproj -c Release --no-restore --logger 'trx;LogFileName=tests.trx'
@@ -141,22 +141,23 @@ jobs:
           $exe = (Get-ChildItem -Recurse -Path ./godot -Filter *mono_win64.exe -ErrorAction SilentlyContinue | Select-Object -First 1 | % { $_.FullName })
           if (-not $exe) {
             $url = "https://downloads.tuxfamily.org/godotengine/4.4/Godot_v4.4-stable_mono_win64.zip"
-            $maxAttempts = 3
+            $maxRetries = 3
+            $retryCount = 0
             $downloaded = $false
-            for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+            while (-not $downloaded -and $retryCount -lt $maxRetries) {
               try {
                 Invoke-WebRequest -Uri $url -OutFile godot.zip -ErrorAction Stop -MaximumRedirection 5 -UseBasicParsing -TimeoutSec 120
                 $downloaded = $true
-                break
               } catch {
-                if ($attempt -lt $maxAttempts) {
-                  Write-Warning "Godot download failed (attempt $attempt/$maxAttempts). Retrying in 30s..."
+                $retryCount++
+                if ($retryCount -lt $maxRetries) {
+                  Write-Warning "Godot download failed (attempt $retryCount/$maxRetries). Retrying in 30s..."
                   Start-Sleep -Seconds 30
                 }
               }
             }
             if (-not $downloaded) {
-              Write-Warning "Primary download failed after $maxAttempts attempts. Trying GitHub mirror..."
+              Write-Warning "Primary download failed after $maxRetries attempts. Trying GitHub mirror..."
               $mirror = "https://github.com/godotengine/godot-builds/releases/download/4.4-stable/Godot_v4.4-stable_mono_win64.zip"
               Invoke-WebRequest -Uri $mirror -OutFile godot.zip -ErrorAction Stop -MaximumRedirection 5 -UseBasicParsing -TimeoutSec 120
             }
