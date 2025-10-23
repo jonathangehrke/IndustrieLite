@@ -145,8 +145,8 @@ func _gui_input(event: InputEvent) -> void:
 		if bg != null:
 			var mp: Vector2 = get_viewport().get_mouse_position()
 			if not bg.get_global_rect().has_point(mp):
-				if event_hub:
-					event_hub.emit_signal("SelectedBuildingChanged", null)
+                if event_hub:
+                    event_hub.emit_signal(EventNames.SELECTED_BUILDING_CHANGED, null)
 
 func _deferred_adjust_min_size() -> void:
 	# Warte einen Frame, bis Container ihre Mindestgroessen berechnet haben

@@ -142,15 +142,23 @@ jobs:
           if (-not $exe) {
             $url = "https://downloads.tuxfamily.org/godotengine/4.4/Godot_v4.4-stable_mono_win64.zip"
             $maxAttempts = 3
+            $downloaded = $false
             for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
               try {
                 Invoke-WebRequest -Uri $url -OutFile godot.zip -ErrorAction Stop
+                $downloaded = $true
                 break
               } catch {
-                if ($attempt -eq $maxAttempts) { throw }
-                Write-Warning "Godot download failed (attempt $attempt/$maxAttempts). Retrying in 30s..."
-                Start-Sleep -Seconds 30
+                if ($attempt -lt $maxAttempts) {
+                  Write-Warning "Godot download failed (attempt $attempt/$maxAttempts). Retrying in 30s..."
+                  Start-Sleep -Seconds 30
+                }
               }
+            }
+            if (-not $downloaded) {
+              Write-Warning "Primary download failed after $maxAttempts attempts. Trying GitHub mirror..."
+              $mirror = "https://github.com/godotengine/godot-builds/releases/download/4.4-stable/Godot_v4.4-stable_mono_win64.zip"
+              Invoke-WebRequest -Uri $mirror -OutFile godot.zip -ErrorAction Stop
             }
             if (!(Test-Path ./godot)) { New-Item -ItemType Directory -Force -Path ./godot | Out-Null }
             Expand-Archive godot.zip -DestinationPath ./godot -Force
