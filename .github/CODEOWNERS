@@ -1,0 +1,19 @@
+# Code Owners
+#
+# This file defines code owners for the repository.
+# Owners are automatically requested for review when files they own are modified.
+#
+# Syntax: https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for everything
+* @jonathangehrke
+
+# CI/CD and tooling
+/.github/ @jonathangehrke
+/tools/ @jonathangehrke
+/dev-scripts/ @jonathangehrke
+
+# Documentation
+/docs/ @jonathangehrke
+/README.md @jonathangehrke
+/CONTRIBUTING.md @jonathangehrke

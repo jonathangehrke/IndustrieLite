@@ -1,0 +1,67 @@
+name: Feature Request
+description: Schlage eine Idee oder Verbesserung vor.
+title: "Feature: "
+labels: [enhancement]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke für deinen Vorschlag! Bitte beschreibe das Problem und die gewünschte Lösung möglichst konkret.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Vorab
+      options:
+        - label: Ich habe nach ähnlichen Issues/PRs gesucht (inkl. geschlossenen) und nichts Passendes gefunden.
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem-Beschreibung
+      description: Welche Motivation oder welches Problem soll das Feature lösen?
+      placeholder: Als Nutzer möchte ich …, damit …
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Vorgeschlagene Lösung
+      description: Beschreibe, wie das Feature funktionieren soll (inkl. UI/UX, API, Datenfluss).
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativen/Workarounds
+      description: Falls vorhanden, nenne alternative Ansätze und warum diese nicht ausreichen.
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Akzeptanzkriterien
+      description: Konkrete, überprüfbare Kriterien, ab wann das Feature als „fertig“ gilt.
+      placeholder: |
+        - [ ] Kriterium 1
+        - [ ] Kriterium 2
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priorität (Einschätzung)
+      options:
+        - P3 (niedrig)
+        - P2 (normal)
+        - P1 (hoch)
+        - P0 (sofort)
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Weitere Hinweise/Kontext
+      placeholder: Zusätzliche Informationen, Mockups, Links, …
+

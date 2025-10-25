@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=5 format=3 uid="uid://dye2sf2cots1"]
+
+[ext_resource type="Script" uid="uid://derd6wedxi60v" path="res://code/data/RecipeDef.cs" id="1_0"]
+[ext_resource type="Script" uid="uid://bgu2tpnd1tfcy" path="res://code/data/Amount.cs" id="1_1"]
+
+[sub_resource type="Resource" id="3"]
+script = ExtResource("1_1")
+ResourceId = "grain"
+PerMinute = 60.0
+
+[sub_resource type="Resource" id="2"]
+script = ExtResource("1_1")
+ResourceId = "chickens"
+PerMinute = 30.0
+
+[resource]
+script = ExtResource("1_0")
+Id = "chicken_production"
+DisplayName = "Huehnerproduktion"
+Inputs = Array[ExtResource("1_1")]([SubResource("3")])
+Outputs = Array[ExtResource("1_1")]([SubResource("2")])
+CycleSeconds = 1.0
+StartupSeconds = 0.0
+PowerRequirement = 2.0
+WaterRequirement = 2.0
+ProductionCost = 0.5
+MaintenanceCost = 2.0

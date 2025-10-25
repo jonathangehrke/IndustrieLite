@@ -1,0 +1,156 @@
+[gd_scene load_steps=28 format=3 uid="uid://bko2c75dfm54i"]
+
+[ext_resource type="Script" uid="uid://pb56p2w84i4o" path="res://code/runtime/GameManager.cs" id="1_t3dpx"]
+[ext_resource type="Script" uid="uid://dnxohsvlginx8" path="res://code/runtime/Map.cs" id="2_f2xgb"]
+[ext_resource type="PackedScene" path="res://scenes/HUD.tscn" id="3_uihud"]
+[ext_resource type="Script" uid="uid://dosh53sxyqxai" path="res://code/managers/LandManager.cs" id="4_land"]
+[ext_resource type="Script" uid="uid://cxcv40r48xjus" path="res://code/managers/EconomyManager.cs" id="5_econ"]
+[ext_resource type="Script" uid="uid://b477wouxnk5n0" path="res://code/managers/BuildingManager.cs" id="6_build"]
+[ext_resource type="Script" uid="uid://bdgghkss1y4cr" path="res://code/managers/TransportManager.cs" id="7_trans"]
+[ext_resource type="Script" uid="uid://fygpxsvxf40t" path="res://code/input/InputManager.cs" id="8_input"]
+[ext_resource type="Script" path="res://code/input/InputHandler.cs" id="27_input_handler"]
+[ext_resource type="Script" path="res://code/input/ToolManager.cs" id="28_tool_manager"]
+[ext_resource type="Script" path="res://code/input/InputEventRouter.cs" id="29_input_router"]
+[ext_resource type="Script" uid="uid://b11hp3ioykrt2" path="res://code/managers/ResourceManager.cs" id="10_resource"]
+[ext_resource type="Script" uid="uid://ch0as26dljrl6" path="res://code/managers/ProductionManager.cs" id="11_production"]
+[ext_resource type="Script" uid="uid://bl48dhrvx2ytx" path="res://code/managers/RoadManager.cs" id="13_road"]
+[ext_resource type="Script" path="res://code/managers/GameClockManager.cs" id="12_clock"]
+[ext_resource type="Script" path="res://code/sim/ProductionSystem.cs" id="14_prodsys"]
+[ext_resource type="Script" path="res://code/sim/Simulation.cs" id="15_simulation"]
+[ext_resource type="Script" uid="uid://c517k4djqis1h" path="res://code/runtime/ResourceTotalsService.cs" id="21_totalsvc"]
+[ext_resource type="Script" uid="uid://btbgak2pic4li" path="res://code/runtime/CameraController.cs" id="22_cam"]
+
+[ext_resource type="Script" path="res://code/runtime/services/ResourceRegistry.cs" id="23_registry"]
+
+[ext_resource type="Script" path="res://code/runtime/services/SaveLoadService.cs" id="24_saveload"]
+
+[ext_resource type="Script" path="res://code/runtime/DIContainer.cs" id="25_di"]
+[ext_resource type="Script" path="res://code/runtime/ManagerCoordinator.cs" id="26_coord"]
+[ext_resource type="Script" path="res://code/managers/SupplierService.cs" id="27_supplier"]
+[ext_resource type="Script" path="res://code/managers/LogisticsService.cs" id="28_logistics"]
+[ext_resource type="Script" path="res://code/managers/MarketService.cs" id="29_market"]
+[ext_resource type="Script" path="res://code/managers/ProductionCalculationService.cs" id="30_prodcalc"]
+[ext_resource type="Script" path="res://code/managers/CityGrowthManager.cs" id="31_citygrowth"]
+[ext_resource type="Script" uid="uid://bepyo2y85eh85" path="res://code/managers/GameTimeManager.cs" id="32_gametime"]
+[ext_resource type="Script" uid="uid://d3vyflvmgfu87" path="res://code/managers/LevelManager.cs" id="33_level"]
+
+[node name="Main" type="Node2D"]
+
+[node name="GameManager" type="Node2D" parent="."]
+script = ExtResource("1_t3dpx")
+
+[node name="DIContainer" type="Node" parent="GameManager"]
+script = ExtResource("25_di")
+
+[node name="ManagerCoordinator" type="Node" parent="GameManager"]
+script = ExtResource("26_coord")
+
+[node name="LandManager" type="Node" parent="GameManager"]
+script = ExtResource("4_land")
+
+[node name="EconomyManager" type="Node" parent="GameManager"]
+script = ExtResource("5_econ")
+
+[node name="BuildingManager" type="Node" parent="GameManager"]
+script = ExtResource("6_build")
+
+[node name="RoadManager" type="Node2D" parent="GameManager"]
+script = ExtResource("13_road")
+max_nearest_road_radius = 50
+enable_path_debug = false
+use_quadtree_nearest = true
+
+[node name="TransportManager" type="Node" parent="GameManager"]
+script = ExtResource("7_trans")
+RoadManagerPath = NodePath("../RoadManager")
+BuildingManagerPath = NodePath("../BuildingManager")
+EconomyManagerPath = NodePath("../EconomyManager")
+EventHubPath = NodePath("../../EventHub")
+
+[node name="InputManager" type="Node" parent="GameManager"]
+script = ExtResource("8_input")
+LandManagerPath = NodePath("../LandManager")
+BuildingManagerPath = NodePath("../BuildingManager")
+TransportManagerPath = NodePath("../TransportManager")
+EconomyManagerPath = NodePath("../EconomyManager")
+RoadManagerPath = NodePath("../RoadManager")
+GameManagerPath = NodePath("..")
+MapPath = NodePath("../../Map")
+EventHubPath = NodePath("../../EventHub")
+CameraControllerPath = NodePath("../../Camera")
+
+[node name="InputHandler" type="Node" parent="GameManager/InputManager"]
+script = ExtResource("27_input_handler")
+
+[node name="ToolManager" type="Node" parent="GameManager/InputManager/InputHandler"]
+script = ExtResource("28_tool_manager")
+
+[node name="InputEventRouter" type="Node" parent="GameManager/InputManager/InputHandler"]
+script = ExtResource("29_input_router")
+
+[node name="ResourceRegistry" type="Node" parent="GameManager"]
+script = ExtResource("23_registry")
+
+[node name="SaveLoadService" type="Node" parent="GameManager"]
+script = ExtResource("24_saveload")
+
+[node name="ResourceManager" type="Node" parent="GameManager"]
+script = ExtResource("10_resource")
+
+[node name="ProductionManager" type="Node" parent="GameManager"]
+script = ExtResource("11_production")
+
+[node name="ProductionSystem" type="Node" parent="GameManager"]
+script = ExtResource("14_prodsys")
+
+[node name="GameClockManager" type="Node" parent="GameManager"]
+script = ExtResource("12_clock")
+
+[node name="Simulation" type="Node" parent="GameManager"]
+script = ExtResource("15_simulation")
+
+[node name="CityGrowthManager" type="Node" parent="GameManager"]
+script = ExtResource("31_citygrowth")
+
+[node name="GameTimeManager" type="Node" parent="GameManager"]
+script = ExtResource("32_gametime")
+
+[node name="LevelManager" type="Node" parent="GameManager"]
+script = ExtResource("33_level")
+
+[node name="SupplierService" type="Node" parent="GameManager"]
+script = ExtResource("27_supplier")
+BuildingManagerPath = NodePath("../BuildingManager")
+TransportManagerPath = NodePath("../TransportManager")
+
+[node name="LogisticsService" type="Node" parent="GameManager"]
+script = ExtResource("28_logistics")
+EconomyManagerPath = NodePath("../EconomyManager")
+EventHubPath = NodePath("../../EventHub")
+
+[node name="MarketService" type="Node" parent="GameManager"]
+script = ExtResource("29_market")
+ResourceManagerPath = NodePath("../ResourceManager")
+TransportManagerPath = NodePath("../TransportManager")
+EconomyManagerPath = NodePath("../EconomyManager")
+
+[node name="ProductionCalculationService" type="Node" parent="GameManager"]
+script = ExtResource("30_prodcalc")
+DatabasePath = NodePath("../../Database")
+
+[node name="Map" type="Node2D" parent="."]
+script = ExtResource("2_f2xgb")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="HUD" parent="UI" instance=ExtResource("3_uihud")]
+
+[node name="ResourceTotalsService" type="Node" parent="."]
+script = ExtResource("21_totalsvc")
+
+[node name="Camera" type="Camera2D" parent="."]
+script = ExtResource("22_cam")
+
+
+
+

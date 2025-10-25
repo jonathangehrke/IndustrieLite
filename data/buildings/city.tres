@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://code/data/BuildingDef.cs" id="1_0"]
+[ext_resource type="Texture2D" uid="uid://cjedobs6tyc5g" path="res://assets/buildings/Stadt.png" id="2_0"]
+
+[resource]
+script = ExtResource("1_0")
+Id = "city"
+DisplayName = "Stadt"
+Width = 4
+Height = 4
+Cost = 0
+Icon = ExtResource("2_0")
+Category = "Städte"
+LegacyIds = ["City"]
+DefaultRecipeId = "city_orders"
+AvailableRecipes = ["city_orders"]
+AutoStartProduction = true

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://cp8f6go1hj4gg" path="res://code/data/BuildingDef.cs" id="1_0"]
+[ext_resource type="Texture2D" uid="uid://ca80lf8raqyoq" path="res://assets/buildings/Haus.png" id="2_0"]
+
+[resource]
+script = ExtResource("1_0")
+Id = "house"
+DisplayName = "Haus"
+Width = 2
+Height = 2
+Cost = 400
+Category = "Wohnen"
+Icon = ExtResource("2_0")
+Alternatives = Array[String]([])
+Tags = Array[String]([])
+LegacyIds = Array[String](["House"])
+DefaultRecipeId = ""
+AvailableRecipes = Array[String]([])
+AutoStartProduction = true

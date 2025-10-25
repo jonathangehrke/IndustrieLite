@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://cp8f6go1hj4gg" path="res://code/data/BuildingDef.cs" id="1_0"]
+[ext_resource type="Texture2D" uid="uid://baafo4obtasxi" path="res://assets/buildings/Schweinestall.png" id="2_0"]
+
+[resource]
+script = ExtResource("1_0")
+Id = "pig_farm"
+DisplayName = "Schweinestall"
+Width = 3
+Height = 3
+Cost = 5000
+Category = "Produktion"
+Icon = ExtResource("2_0")
+Alternatives = Array[String]([])
+Tags = Array[String]([])
+LegacyIds = Array[String](["PigFarm", "Schweinestall"])
+RequiredLevel = 3
+DefaultRecipeId = "pig_production"
+AvailableRecipes = Array[String](["pig_production"])
+AutoStartProduction = true
+WorkersRequired = 3

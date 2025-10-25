@@ -1,0 +1,10 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/common/ui_layout.gd" id="1_layout"]
+
+[resource]
+script = ExtResource("1_layout")
+minimap_size = Vector2(160, 160)
+bottom_buttons_separation = 8
+market_panel_anchors = Vector4(1, 0, 1, 1)
+market_panel_offsets = Vector4(-780, 56, -20, -116)

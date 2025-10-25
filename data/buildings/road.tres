@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://code/data/BuildingDef.cs" id="1_0"]
+[ext_resource type="Texture2D" uid="uid://06n1avbg7bxd" path="res://assets/tiles/strasse.png" id="2_0"]
+
+[resource]
+script = ExtResource("1_0")
+Id = "road"
+DisplayName = "Straße"
+Width = 1
+Height = 1
+Cost = 50
+Category = "Infrastruktur"
+LegacyIds = ["Road"]
+Icon = ExtResource("2_0")

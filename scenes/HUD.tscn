@@ -1,0 +1,185 @@
+[gd_scene load_steps=16 format=3 uid="uid://c4rbe4420tx88"]
+
+[ext_resource type="Script" uid="uid://2s3fx5hfkkun" path="res://ui/hud.gd" id="1_hud"]
+[ext_resource type="PackedScene" path="res://ui/hud/TopBarContainer.tscn" id="2_topbar"]
+[ext_resource type="PackedScene" path="res://ui/hud/Minimap.tscn" id="3_minimap"]
+[ext_resource type="PackedScene" path="res://ui/hud/BuildBar.tscn" id="4_buildbar"]
+[ext_resource type="PackedScene" path="res://ui/hud/LandPanel.tscn" id="5_landpanel"]
+[ext_resource type="PackedScene" path="res://ui/hud/LowLeftButtons.tscn" id="6_lowleft"]
+[ext_resource type="Script" uid="uid://s25tyojsunp4" path="res://ui/hud/HUDValidator.gd" id="7_hudvalidator"]
+[ext_resource type="Texture2D" uid="uid://ydyjbkyqipf4" path="res://assets/menu/Baumenu.png" id="8_bau"]
+[ext_resource type="PackedScene" path="res://ui/hud/MarketPanel.tscn" id="9_marketpanel"]
+[ext_resource type="Script" path="res://ui/buildings/ProductionPanelHost.gd" id="11_prodhost"]
+[ext_resource type="PackedScene" path="res://ui/hud/CapacityPanel.tscn" id="12_capacity"]
+[ext_resource type="PackedScene" path="res://ui/hud/LevelBar.tscn" id="13_levelbar"]
+
+[ext_resource type="Script" path="res://ui/buildings/services/ResourceIconService.gd" id="14_resicon"]
+[ext_resource type="Script" path="res://ui/buildings/services/BuildingDataService.gd" id="15_bdatasvc"]
+[ext_resource type="Script" path="res://ui/buildings/services/SupplierDataService.gd" id="16_suppliersvc"]
+[ext_resource type="Script" path="res://ui/buildings/services/ProductionStatusCalculator.gd" id="17_prodcalc"]
+
+[node name="HUD" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_hud")
+
+[node name="TopBar" parent="." instance=ExtResource("2_topbar")]
+layout_mode = 0
+anchor_right = 0.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+
+[node name="CapacityPanel" parent="." instance=ExtResource("12_capacity")]
+z_index = 60
+layout_mode = 0
+anchors_preset = 0
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = -188.0
+offset_top = 8.0
+offset_right = -16.0
+offset_bottom = 116.0
+
+[node name="LevelBar" parent="." instance=ExtResource("13_levelbar")]
+z_index = 60
+layout_mode = 0
+anchors_preset = 0
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+; Positioniere LevelBar statisch relativ zum CapacityPanel (Gap 8px)
+; CapacityPanel: left = -188, right = -16  => width 172
+; LevelBar: width ~220, right = -(188 + 8) = -196, left = right - width = -416
+offset_left = -416.0
+offset_top = 8.0
+offset_right = -196.0
+offset_bottom = 60.0
+
+
+
+[node name="Minimap" parent="." instance=ExtResource("3_minimap")]
+z_index = 50
+anchors_preset = 0
+offset_left = 8.0
+offset_top = 104.0
+offset_right = 158.0
+offset_bottom = 254.0
+
+[node name="BauUI" type="HBoxContainer" parent="."]
+layout_mode = 0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -88.0
+offset_right = -8.0
+offset_bottom = -56.0
+theme_override_constants/separation = 8
+
+[node name="BauMenueButton" type="TextureButton" parent="BauUI"]
+layout_mode = 2
+tooltip_text = "Bauen"
+focus_mode = 0
+texture_normal = ExtResource("8_bau")
+
+[node name="BauLeiste" type="Control" parent="BauUI"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BauLeisteHintergrund" type="ColorRect" parent="BauUI/BauLeiste"]
+visible = false
+z_index = -1
+layout_mode = 0
+offset_right = 608.0
+offset_bottom = 80.0
+mouse_filter = 2
+color = Color(0, 0.6, 0, 0.9)
+
+[node name="BuildBar" parent="BauUI/BauLeiste" instance=ExtResource("4_buildbar")]
+visible = false
+z_index = 65
+layout_mode = 0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+
+[node name="LowLeftButtons" parent="." instance=ExtResource("6_lowleft")]
+
+[node name="LandPanel" parent="." instance=ExtResource("5_landpanel")]
+visible = false
+z_index = 100
+anchors_preset = 0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 88.0
+offset_top = -196.0
+offset_right = 248.0
+offset_bottom = -116.0
+
+[node name="HUDValidator" type="Node" parent="."]
+script = ExtResource("7_hudvalidator")
+
+[node name="MarketPanel" parent="." instance=ExtResource("9_marketpanel")]
+z_index = 100
+
+[node name="ProductionPanelHost" type="Control" parent="."]
+visible = false
+z_index = 100
+layout_mode = 0
+anchors_preset = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -240.0
+offset_top = -200.0
+offset_right = 240.0
+offset_bottom = 200.0
+custom_minimum_size = Vector2(480, 400)
+script = ExtResource("11_prodhost")
+
+
+[node name="ModeBadge" type="Label" parent="."]
+visible = false
+z_index = 150
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.0
+anchor_right = 0.5
+anchor_bottom = 0.0
+offset_left = -140.0
+offset_top = 8.0
+offset_right = 140.0
+offset_bottom = 40.0
+text = "ABRISS-MODUS AKTIV"
+horizontal_alignment = 1
+vertical_alignment = 1
+modulate = Color(1, 0.4, 0.4, 1)
+
+
+
+
+[node name="ResourceIconService" type="Node" parent="."]
+script = ExtResource("14_resicon")
+
+[node name="BuildingDataService" type="Node" parent="."]
+script = ExtResource("15_bdatasvc")
+
+[node name="SupplierDataService" type="Node" parent="."]
+script = ExtResource("16_suppliersvc")
+
+[node name="ProductionStatusCalculator" type="Node" parent="."]
+script = ExtResource("17_prodcalc")
