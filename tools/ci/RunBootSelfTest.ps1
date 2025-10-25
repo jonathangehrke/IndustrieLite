@@ -1,34 +1,86 @@
-﻿# SPDX-License-Identifier: MIT
-Param(
-  [switch]$VerboseLog
-)
+# SPDX-License-Identifier: MIT
+# tools/ci/RunBootSelfTest.ps1
+param([switch]$VerboseLog)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-$ProjectRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
-Push-Location $ProjectRoot
-try {
-  $candidates = @()
-  if ($env:GODOT4_BIN) { $candidates += $env:GODOT4_BIN }
-  if ($env:GODOT_BIN) { $candidates += $env:GODOT_BIN }
-  $candidates += 'godot4'
-  $candidates += 'godot'
-  $godot = $null
-  foreach ($bin in $candidates) { try { $null = & $bin --version 2>$null; if ($LASTEXITCODE -eq 0) { $godot = $bin; break } } catch { } }
-  if (-not $godot) { Write-Error 'Godot Binary nicht gefunden.'; exit 3 }
-  if ($VerboseLog) { Write-Host "[CI] Verwende Godot: $godot" }
 
-  $args = @('--headless','--script','res://tools/ci/CheckBootSelfTest.gd')
-  $output = & $godot @args 2>&1
-  $exitCode = $LASTEXITCODE
-  $output | ForEach-Object { Write-Host $_ }
+function Get-GodotLauncher {
+  param([string[]]$Args)
 
-  $jsonLine = ($output | Where-Object { $_ -match '^JSON_RESULT:' } | Select-Object -First 1)
-  $ok = $false
-  if ($jsonLine) {
-    $json = ($jsonLine -replace '^JSON_RESULT:\s*','')
-    try { $obj = $json | ConvertFrom-Json -Depth 4; $ok = [bool]$obj.dev_did_not_quit } catch { Write-Warning "[CI] JSON_RESULT parse error: $_" }
+  # Kandidatenquellen: Env + Get-Command
+  $candidates = @(
+    $env:GODOT_BIN, $env:GODOT4_BIN, $env:GODOT4, $env:GODOT,
+    (Get-Command godot4 -ErrorAction SilentlyContinue)?.Source,
+    (Get-Command godot  -ErrorAction SilentlyContinue)?.Source
+  ) | Where-Object { $_ } | Select-Object -Unique
+
+  # akzeptierte Endungen
+  $okExt = @('.exe','.cmd','.bat','.lnk')
+
+  # 1) Direkter Datei-Pfad?
+  foreach ($c in $candidates) {
+    if (-not (Test-Path $c)) { continue }
+    $it = Get-Item $c
+    if ($it.PSIsContainer) {
+      # rekursiv passende Datei suchen (headless bevorzugt)
+      $files = Get-ChildItem -Path $it.FullName -Recurse -File -ErrorAction SilentlyContinue |
+               Where-Object { $_.Name -match 'godot' -and $okExt -contains $_.Extension.ToLower() }
+      $pref = $files | Where-Object { $_.Name -match 'headless' } | Select-Object -First 1
+      if ($pref) { return @{ FilePath = $pref.FullName; UseCmd = ($pref.Extension -in @('.cmd','.bat')); Bare = $false } }
+      if ($files) { $f = $files[0]; return @{ FilePath = $f.FullName; UseCmd = ($f.Extension -in @('.cmd','.bat')); Bare = $false } }
+    } elseif ($it -is [System.IO.FileInfo]) {
+      # Wenn es eine Datei ohne Extension ist (z.B. "godot"), verwende sie direkt
+      # statt nach Wrapper-Dateien wie "godot.cmd" zu suchen
+      if ([string]::IsNullOrEmpty($it.Extension)) {
+        return @{ FilePath = $it.FullName; UseCmd = $false; Bare = $false }
+      }
+
+      if ($okExt -contains $it.Extension.ToLower()) {
+        return @{ FilePath = $it.FullName; UseCmd = ($it.Extension -in @('.cmd','.bat')); Bare = $false }
+      }
+      # Nachbar-Varianten probieren (nur als letztes Resort)
+      foreach ($name in @('godot.windows.headless.x86_64.exe','godot.exe','Godot.exe','godot.cmd','godot.bat')) {
+        $p = Join-Path $it.DirectoryName $name
+        if (Test-Path $p) { $fi = Get-Item $p; return @{ FilePath = $fi.FullName; UseCmd = ($fi.Extension -in @('.cmd','.bat')); Bare = $false } }
+      }
+    }
   }
-  if ($exitCode -ne 0) { exit $exitCode }
-  exit ($ok ? 0 : 1)
+
+  # 2) Fallback: über PATH als reines Kommando starten
+  # -> wir geben cmd.exe + '/c godot …' zurück, damit auch .cmd/.bat sicher laufen
+  $comspec = $env:ComSpec; if (-not $comspec) { $comspec = "$env:WINDIR\System32\cmd.exe" }
+  return @{ FilePath = $comspec; UseCmd = $true; Bare = $true }
 }
-finally { Pop-Location }
+
+# Godot-Args
+$godotArgs = @('--headless','--path','.', '--script','res://tools/ci/CheckBootSelfTest.gd')
+if ($VerboseLog) { $godotArgs += '--verbose' }
+
+# Launcher bestimmen
+$launcher = Get-GodotLauncher -Args $godotArgs
+
+# Start vorbereiten
+if ($launcher.Bare) {
+  # PATH-Fallback: cmd /c godot <args>
+  $filePath = $launcher.FilePath
+  $argList  = @('/c','godot') + $godotArgs
+  Write-Host "[CI] Starte über PATH: cmd /c godot $($godotArgs -join ' ')"
+} elseif ($launcher.UseCmd) {
+  # .cmd/.bat direkt: ebenfalls über cmd.exe starten (robuster ExitCode/Quoting)
+  $filePath = $env:ComSpec; if (-not $filePath) { $filePath = "$env:WINDIR\System32\cmd.exe" }
+  $argList  = @('/c', ('"{0}"' -f $launcher.FilePath)) + $godotArgs
+  Write-Host "[CI] Verwende Godot (cmd): $($launcher.FilePath)"
+} else {
+  # .exe/.lnk direkt
+  $filePath = $launcher.FilePath
+  $argList  = $godotArgs
+  Write-Host "[CI] Verwende Godot: $filePath"
+}
+
+# Starten & Exitcode ermitteln
+$proc = Start-Process -FilePath $filePath -ArgumentList $argList -NoNewWindow -PassThru -Wait
+$exitCode = $proc.ExitCode
+Write-Host "[CI] Godot ExitCode: $exitCode"
+
+if ($exitCode -ne 0) { throw "BootSelfTest fehlgeschlagen (ExitCode=$exitCode)" }
+exit $exitCode

@@ -76,6 +76,7 @@ public partial class InputEventRouter : Node, ITickable
     private bool demolishTasteGedrueckt;
     private Vector2 aktuelleKameraRichtung = Vector2.Zero;
 
+    /// <inheritdoc/>
     string ITickable.Name => "InputEventRouter";
 
     public void InjiziereDependencies(
@@ -148,6 +149,7 @@ public partial class InputEventRouter : Node, ITickable
         this.RouteMausKlick(zelle);
     }
 
+    /// <inheritdoc/>
     public void Tick(double dt)
     {
         this.zoomBefehle.Clear();
@@ -379,6 +381,7 @@ public partial class InputEventRouter : Node, ITickable
         }
     }
 
+    /// <inheritdoc/>
     public override void _ExitTree()
     {
         if (this.simulation != null)

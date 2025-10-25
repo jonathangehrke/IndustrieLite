@@ -33,6 +33,7 @@ public partial class GameLifecycleManager : Node
         this.devFeatureSetup = new DevFeatureSetup(this);
     }
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         this.ScheduleInitializeServices();
@@ -143,7 +144,7 @@ public partial class GameLifecycleManager : Node
     /// <summary>
     /// Save current game state to file (asynchron).
     /// </summary>
-    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task SaveGameAsync(string filePath)
     {
         if (!this.EnsureServicesReadyFor("SaveGameAsync"))
@@ -190,7 +191,7 @@ public partial class GameLifecycleManager : Node
     /// <summary>
     /// Load game state from file (asynchron).
     /// </summary>
-    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task LoadGameAsync(string filePath)
     {
         if (!this.EnsureServicesReadyFor("LoadGameAsync"))

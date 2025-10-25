@@ -16,8 +16,8 @@ namespace IndustrieLite.Transport.Core.Interfaces
 
         void SetServiceReferences(
             ITransportJobManager jobManager,
-                                  ITransportOrderManager orderManager,
-                                  ITransportSupplyService supplyService,
-                                  ITransportPlanningService planningService);
+            ITransportOrderManager orderManager,
+            ITransportSupplyService supplyService,
+            ITransportPlanningService planningService);
     }
 }

@@ -15,16 +15,19 @@ public class DemolishTool : IInputTool
         this.buildingManager = buildingManager;
     }
 
+    /// <inheritdoc/>
     public void Enter()
     {
         DebugLogger.LogInput("DemolishTool aktiviert");
     }
 
+    /// <inheritdoc/>
     public void Exit()
     {
         DebugLogger.LogInput("DemolishTool deaktiviert");
     }
 
+    /// <inheritdoc/>
     public void OnClick(Vector2I zelle)
     {
         // Erst Strassen

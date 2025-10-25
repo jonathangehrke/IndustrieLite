@@ -6,8 +6,11 @@ using Godot;
 public partial class ChickenFarm
 {
     // --- IHasInventory Implementierung ---
+
+    /// <inheritdoc/>
     public IReadOnlyDictionary<StringName, float> GetInventory() => this.inventar;
 
+    /// <inheritdoc/>
     public void SetInventoryAmount(StringName resourceId, float amount)
     {
         this.inventar[resourceId] = amount;
@@ -17,6 +20,7 @@ public partial class ChickenFarm
         }
     }
 
+    /// <inheritdoc/>
     public void AddToInventory(StringName resourceId, float amount)
     {
         var current = this.inventar.TryGetValue(resourceId, out var v) ? v : 0f;
@@ -27,6 +31,7 @@ public partial class ChickenFarm
         }
     }
 
+    /// <inheritdoc/>
     public bool ConsumeFromInventory(StringName resourceId, float amount)
     {
         var current = this.inventar.TryGetValue(resourceId, out var v) ? v : 0f;

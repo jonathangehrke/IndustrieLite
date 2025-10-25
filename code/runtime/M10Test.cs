@@ -8,6 +8,8 @@ using Godot;
 public partial class M10Test : Node
 {
     // SC-only: keine NodePath-Felder mehr
+
+    /// <inheritdoc/>
     public override async void _Ready()
     {
 #if DEBUG

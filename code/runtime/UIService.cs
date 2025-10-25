@@ -7,6 +7,7 @@ using Godot;
 /// </summary>
 public partial class UIService : Node, ILifecycleScope
 {
+    /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Singleton;
 }
 

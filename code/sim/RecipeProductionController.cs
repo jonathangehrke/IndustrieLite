@@ -15,7 +15,7 @@ public enum Produktionszustand
     Starting,
     Producing,
     Paused,
-    Blocked
+    Blocked,
 }
 
 public partial class RecipeProductionController : Node
@@ -44,6 +44,7 @@ public partial class RecipeProductionController : Node
     [Export]
     public bool DebugLogs { get; set; } = false;
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // DI erwartet: AktualisiereTickDauer() nutzt _produktionsManager falls gesetzt

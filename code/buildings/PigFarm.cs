@@ -34,6 +34,7 @@ public partial class PigFarm : Building, IProducer, IHasInventory, IProductionBu
         this.Color = new Color(0.95f, 0.75f, 0.6f);
     }
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         base._Ready();
@@ -67,12 +68,14 @@ public partial class PigFarm : Building, IProducer, IHasInventory, IProductionBu
         }
     }
 
+    /// <inheritdoc/>
     public override void _ExitTree()
     {
         this.productionManager?.UnregisterProducer(this);
         base._ExitTree();
     }
 
+    /// <inheritdoc/>
     public Dictionary<StringName, int> GetResourceNeeds()
     {
         var neu = new Dictionary<StringName, int>();
@@ -91,12 +94,14 @@ public partial class PigFarm : Building, IProducer, IHasInventory, IProductionBu
         return neu;
     }
 
+    /// <inheritdoc/>
     public Dictionary<StringName, int> GetResourceProduction()
     {
         // Keine Basiskapazitaeten
         return new Dictionary<StringName, int>();
     }
 
+    /// <inheritdoc/>
     public void OnProductionTick(bool canProduce)
     {
         this.uiLastCanProduce = canProduce;
@@ -172,6 +177,7 @@ public partial class PigFarm : Building, IProducer, IHasInventory, IProductionBu
         return 1.0 / rate;
     }
 
+    /// <inheritdoc/>
     public string GetRecipeIdForUI()
     {
         if (this.controller != null && this.controller.AktuellesRezept != null)
@@ -187,6 +193,7 @@ public partial class PigFarm : Building, IProducer, IHasInventory, IProductionBu
         return this.HoleStandardRezeptId();
     }
 
+    /// <inheritdoc/>
     public bool SetRecipeFromUI(string rezeptId)
     {
         this.RezeptIdOverride = rezeptId ?? string.Empty;
@@ -210,6 +217,7 @@ public partial class PigFarm : Building, IProducer, IHasInventory, IProductionBu
         return true;
     }
 
+    /// <inheritdoc/>
     public Godot.Collections.Dictionary GetNeedsForUI()
     {
         var d = new Godot.Collections.Dictionary();
@@ -240,6 +248,7 @@ public partial class PigFarm : Building, IProducer, IHasInventory, IProductionBu
         return d;
     }
 
+    /// <inheritdoc/>
     public Godot.Collections.Dictionary GetProductionForUI()
     {
         var d = new Godot.Collections.Dictionary();
@@ -314,6 +323,7 @@ public partial class PigFarm : Building, IProducer, IHasInventory, IProductionBu
         return d;
     }
 
+    /// <inheritdoc/>
     public override Godot.Collections.Dictionary GetInspectorData()
     {
         var data = base.GetInspectorData();
@@ -337,6 +347,7 @@ public partial class PigFarm : Building, IProducer, IHasInventory, IProductionBu
         return "pig_production";
     }
 
+    /// <inheritdoc/>
     public override void InitializeDependencies(ProductionManager? productionManager, EconomyManager? economyManager, EventHub? eventHub)
     {
         if (productionManager != null)
@@ -360,6 +371,7 @@ public partial class PigFarm : Building, IProducer, IHasInventory, IProductionBu
         }
     }
 
+    /// <inheritdoc/>
     public override void OnRecipeStateRestored(string recipeId)
     {
         // Synchronize RezeptIdOverride with restored recipe state

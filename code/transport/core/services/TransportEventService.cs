@@ -28,6 +28,7 @@ namespace IndustrieLite.Transport.Core.Services
         private Action<TransportJob>? dJobFehlgeschlagen;
         private Action<TransportJob>? dJobGeplant;
 
+        /// <inheritdoc/>
         public void PublishJobEvent(string eventType, TransportJob job)
         {
             if (job == null)
@@ -67,6 +68,7 @@ namespace IndustrieLite.Transport.Core.Services
             }
         }
 
+        /// <inheritdoc/>
         public IDisposable SubscribeToJobEvents(Action<string, TransportJob> handler)
         {
             if (handler == null)
@@ -90,6 +92,7 @@ namespace IndustrieLite.Transport.Core.Services
             });
         }
 
+        /// <inheritdoc/>
         public void ConnectJobManager(ITransportJobManager jobManager)
         {
             if (jobManager == null)
@@ -112,6 +115,7 @@ namespace IndustrieLite.Transport.Core.Services
             this.connectedJobManager = jobManager;
         }
 
+        /// <inheritdoc/>
         public void ConnectPlanningService(ITransportPlanningService planningService)
         {
             if (planningService == null)
@@ -129,6 +133,7 @@ namespace IndustrieLite.Transport.Core.Services
             this.connectedPlanningService = planningService;
         }
 
+        /// <inheritdoc/>
         public void DisconnectJobManager(ITransportJobManager jobManager)
         {
             if (jobManager == null)
@@ -170,6 +175,7 @@ namespace IndustrieLite.Transport.Core.Services
             }
         }
 
+        /// <inheritdoc/>
         public void DisconnectPlanningService(ITransportPlanningService planningService)
         {
             if (planningService == null)
@@ -199,6 +205,7 @@ namespace IndustrieLite.Transport.Core.Services
             }
         }
 
+        /// <inheritdoc/>
         public void AddLegacyJobGeplantHandler(Action<TransportJob> handler)
         {
             if (handler == null)
@@ -212,6 +219,7 @@ namespace IndustrieLite.Transport.Core.Services
             }
         }
 
+        /// <inheritdoc/>
         public void RemoveLegacyJobGeplantHandler(Action<TransportJob> handler)
         {
             if (handler == null)
@@ -225,6 +233,7 @@ namespace IndustrieLite.Transport.Core.Services
             }
         }
 
+        /// <inheritdoc/>
         public void AddLegacyJobGestartetHandler(Action<TransportJob> handler)
         {
             if (handler == null)
@@ -238,6 +247,7 @@ namespace IndustrieLite.Transport.Core.Services
             }
         }
 
+        /// <inheritdoc/>
         public void RemoveLegacyJobGestartetHandler(Action<TransportJob> handler)
         {
             if (handler == null)
@@ -251,6 +261,7 @@ namespace IndustrieLite.Transport.Core.Services
             }
         }
 
+        /// <inheritdoc/>
         public void AddLegacyJobAbgeschlossenHandler(Action<TransportJob> handler)
         {
             if (handler == null)
@@ -264,6 +275,7 @@ namespace IndustrieLite.Transport.Core.Services
             }
         }
 
+        /// <inheritdoc/>
         public void RemoveLegacyJobAbgeschlossenHandler(Action<TransportJob> handler)
         {
             if (handler == null)
@@ -277,6 +289,7 @@ namespace IndustrieLite.Transport.Core.Services
             }
         }
 
+        /// <inheritdoc/>
         public void AddLegacyJobFehlgeschlagenHandler(Action<TransportJob> handler)
         {
             if (handler == null)
@@ -290,6 +303,7 @@ namespace IndustrieLite.Transport.Core.Services
             }
         }
 
+        /// <inheritdoc/>
         public void RemoveLegacyJobFehlgeschlagenHandler(Action<TransportJob> handler)
         {
             if (handler == null)
@@ -388,6 +402,7 @@ namespace IndustrieLite.Transport.Core.Services
             }
         }
 
+        /// <inheritdoc/>
         public void Dispose()
         {
             // Saubere Trennung von Core-Eventquellen

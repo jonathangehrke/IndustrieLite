@@ -7,6 +7,7 @@ using Godot;
 #pragma warning disable CA1050
 public partial class Database : DatabaseLegacyAdapter, ILifecycleScope
 {
+    /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Singleton;
 
     [Export]
@@ -18,6 +19,7 @@ public partial class Database : DatabaseLegacyAdapter, ILifecycleScope
 
     private GameDatabase? gameDatabase;
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         ServiceContainer.Instance?.RegisterNamedService("Database", this);

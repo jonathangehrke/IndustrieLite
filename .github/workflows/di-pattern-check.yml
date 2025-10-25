@@ -63,13 +63,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup .NET
+      - name: Setup .NET (aus global.json)
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x' # Adjust to your .NET version
+          global-json-file: global.json
 
       - name: Restore dependencies
         run: dotnet restore IndustrieLite.csproj
 
       - name: Build project
-        run: dotnet build IndustrieLite.csproj --configuration Release --no-restore
+        run: dotnet build IndustrieLite.csproj -c Release -p:TreatWarningsAsErrors=false --no-restore

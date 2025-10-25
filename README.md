@@ -1,8 +1,8 @@
 # IndustrieLite
 > Economic simulation game built with Godot 4 and C#
 
-[![Build & Tests](https://github.com/jonathangehrke/IndustrieLite/actions/workflows/dotnet.yml/badge.svg)](https://github.com/jonathangehrke/IndustrieLite/actions/workflows/dotnet.yml)
-[![DI Pattern Enforcement](https://github.com/jonathangehrke/IndustrieLite/actions/workflows/di-pattern-check.yml/badge.svg)](https://github.com/jonathangehrke/IndustrieLite/actions/workflows/di-pattern-check.yml)
+[![Build & Tests](https://github.com/jonathangehrke/IndustrieLite-dev/actions/workflows/dotnet.yml/badge.svg)](https://github.com/jonathangehrke/IndustrieLite-dev/actions/workflows/dotnet.yml)
+[![DI Pattern Enforcement](https://github.com/jonathangehrke/IndustrieLite-dev/actions/workflows/di-pattern-check.yml/badge.svg)](https://github.com/jonathangehrke/IndustrieLite-dev/actions/workflows/di-pattern-check.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## What is this?

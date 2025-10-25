@@ -4,6 +4,7 @@ using Godot;
 
 public partial class Map : Node2D, ILifecycleScope
 {
+    /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
 
     // Keine NodePath-DI mehr: GameManager/Kamera über ServiceContainer
@@ -36,6 +37,7 @@ public partial class Map : Node2D, ILifecycleScope
     private Texture2D? grasTex; // Geladene Gras-Textur fuer Landflaechen
     private Color sellableColor = new Color(0.8f, 0.2f, 0.2f, 0.4f); // Rot fuer verkaufbares Land
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // Dependencies werden via Initialize() injiziert (explizite DI)
@@ -95,6 +97,8 @@ public partial class Map : Node2D, ILifecycleScope
     }
 
     // Achtung: Nur Visual-Redraw-Steuerung, keine Spielzustandslogik
+
+    /// <inheritdoc/>
     public override void _Process(double delta)
     {
         this.sinceLastRedraw += delta;
@@ -145,6 +149,7 @@ public partial class Map : Node2D, ILifecycleScope
         this.forceRedraw = true;
     }
 
+    /// <inheritdoc/>
     public override void _Draw()
     {
         if (this.game == null)
@@ -252,6 +257,7 @@ public partial class Map : Node2D, ILifecycleScope
             () => "Map: Reset to initial state");
     }
 
+    /// <inheritdoc/>
     public override void _ExitTree()
     {
         // Alle Verbindungen loesen und Referenzen abbauen

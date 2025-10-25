@@ -9,6 +9,7 @@ using Godot;
 /// </summary>
 public partial class BuildingManager : Node, ILifecycleScope
 {
+    /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
 
     /// <summary>
@@ -39,12 +40,14 @@ public partial class BuildingManager : Node, ILifecycleScope
     private EconomyManager economyManager = default!;
     private Database? database; // optional
     private EventHub? eventHub;
+    private ISceneGraph sceneGraph = default!;
 
     // Neue Services
     private PlacementService placementService = default!;
     private BuildingFactory buildingFactory = default!;
     private BuildingRegistry registry = new BuildingRegistry();
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // Named-Self-Registration für GDScript-Bridge
@@ -227,7 +230,7 @@ public partial class BuildingManager : Node, ILifecycleScope
 
         this.RegisterBuildingGuid(b);
 
-        this.AddChild(b);
+        this.sceneGraph.AddChild(b);
         this.Buildings.Add(b);
         this.registry?.Add(b);
 

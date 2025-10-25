@@ -25,6 +25,7 @@ public partial class UIService : Node
 
     private bool servicesInitialized = false;
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // Registriere UIService im ServiceContainer (named + typed), damit BootSelfTest bestehen kann

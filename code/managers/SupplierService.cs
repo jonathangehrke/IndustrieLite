@@ -10,6 +10,7 @@ using Godot;
 /// </summary>
 public partial class SupplierService : Node, ILifecycleScope
 {
+    /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
 
     private BuildingManager? buildingManager;
@@ -20,6 +21,7 @@ public partial class SupplierService : Node, ILifecycleScope
     // Fixed supplier routes: (ConsumerBuildingId::ResourceId) -> SupplierBuildingId
     private readonly Dictionary<string, string> fixedSupplierRoutes = new(StringComparer.Ordinal);
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // No self-registration - managed by DIContainer (Clean Architecture)
@@ -206,8 +208,8 @@ public partial class SupplierService : Node, ILifecycleScope
             var code = res.ErrorInfo?.Code ?? ErrorIds.TransportInvalidArgumentName;
             var msg = res.ErrorInfo?.Message ?? res.Error;
             DebugLogger.Warn("debug_services", "SupplierRouteStartFailed", msg,
-                new System.Collections.Generic.Dictionary<string, object?>
-(StringComparer.Ordinal)
+                new System.Collections.Generic.Dictionary<string, object?>(
+StringComparer.Ordinal)
                 {
                     { "supplier", this.GetBuildingDisplayName(supplier) },
                     { "consumer", this.GetBuildingDisplayName(consumer) },
@@ -219,8 +221,8 @@ public partial class SupplierService : Node, ILifecycleScope
         }
         DebugLogger.Info("debug_services", "SupplierRouteStarted",
             $"Periodic route active {resourceId} from {this.GetBuildingDisplayName(supplier)} to {this.GetBuildingDisplayName(consumer)}",
-            new System.Collections.Generic.Dictionary<string, object?>
-(StringComparer.Ordinal)
+            new System.Collections.Generic.Dictionary<string, object?>(
+StringComparer.Ordinal)
             {
                 { "resource", resourceId },
                 { "capacity", capacity },
@@ -246,8 +248,8 @@ public partial class SupplierService : Node, ILifecycleScope
             var code = res.ErrorInfo?.Code ?? ErrorIds.TransportInvalidArgumentName;
             var msg = res.ErrorInfo?.Message ?? res.Error;
             DebugLogger.Warn("debug_services", "SupplierRouteStopFailed", msg,
-                new System.Collections.Generic.Dictionary<string, object?>
-(StringComparer.Ordinal)
+                new System.Collections.Generic.Dictionary<string, object?>(
+StringComparer.Ordinal)
                 {
                     { "consumer", this.GetBuildingDisplayName(consumer) },
                     { "resource", resourceId },
@@ -258,8 +260,8 @@ public partial class SupplierService : Node, ILifecycleScope
         }
         DebugLogger.Info("debug_services", "SupplierRouteStopped",
             $"Periodic route stopped {resourceId} for {this.GetBuildingDisplayName(consumer)}",
-            new System.Collections.Generic.Dictionary<string, object?>
-(StringComparer.Ordinal)
+            new System.Collections.Generic.Dictionary<string, object?>(
+StringComparer.Ordinal)
             {
                 { "resource", resourceId },
             });

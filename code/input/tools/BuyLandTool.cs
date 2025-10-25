@@ -17,16 +17,19 @@ public class BuyLandTool : IInputTool
         this.karte = karte;
     }
 
+    /// <inheritdoc/>
     public void Enter()
     {
         DebugLogger.LogInput("BuyLandTool aktiviert");
     }
 
+    /// <inheritdoc/>
     public void Exit()
     {
         DebugLogger.LogInput("BuyLandTool deaktiviert");
     }
 
+    /// <inheritdoc/>
     public void OnClick(Vector2I zelle)
     {
         DebugLogger.LogInput(() => $"BuyLandTool: versuche Land bei {zelle} zu kaufen");

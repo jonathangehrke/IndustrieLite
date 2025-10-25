@@ -17,6 +17,7 @@ using IndustrieLite.Transport.Core;
 /// </summary>
 public partial class TransportManager : Node, ITickable, ILifecycleScope
 {
+    /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
 
     private TransportCoordinator coordinator = default!;
@@ -142,12 +143,16 @@ public partial class TransportManager : Node, ITickable, ILifecycleScope
     public void CancelOrdersFor(Node2D node) => this.coordinator?.CancelOrdersFor(node);
 
     // ITickable
+
+    /// <inheritdoc/>
     string ITickable.Name => "TransportManager";
 
     public new string Name => "TransportManager";
 
+    /// <inheritdoc/>
     public void Tick(double dt) => this.coordinator?.Tick(dt);
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         this.coordinator = new TransportCoordinator();
@@ -158,7 +163,13 @@ public partial class TransportManager : Node, ITickable, ILifecycleScope
         this.coordinator.DefaultPricePerUnit = this.exportStandardpreis;
         this.coordinator.MaxMengeProTruck = this.exportMaxMengeProTruck;
 
-        this.AddChild(this.coordinator);
+        // ISceneGraph must be injected via Initialize - no direct Godot coupling allowed
+        if (this.pendingSceneGraph == null)
+        {
+            throw new System.InvalidOperationException("ISceneGraph fehlt - DI-Konfiguration prüfen (Initialize muss vor _Ready aufgerufen werden)");
+        }
+
+        this.pendingSceneGraph.AddChild(this.coordinator);
 
         // Initialize coordinator with pending dependencies (if Initialize() was called before _Ready)
         this.InitializeCoordinatorIfPending();
@@ -180,6 +191,7 @@ public partial class TransportManager : Node, ITickable, ILifecycleScope
         DebugLogger.LogTransport("TransportManager: Initialized as compatibility wrapper");
     }
 
+    /// <inheritdoc/>
     public override void _ExitTree()
     {
         // Cleanup is managed by the Coordinator

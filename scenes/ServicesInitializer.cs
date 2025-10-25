@@ -7,6 +7,7 @@ using Godot;
 /// </summary>
 public partial class ServicesInitializer : Node
 {
+    /// <inheritdoc/>
     public override void _Ready()
     {
         GD.Print("ServicesInitializer: Starting service initialization");

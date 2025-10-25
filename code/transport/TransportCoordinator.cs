@@ -69,6 +69,7 @@ public partial class TransportCoordinator : Node, ITickable
     private RoadManager? roadManager;
     private BuildingManager buildingManager = default!;
     private EconomyManager economyManager = default!;
+    private GameManager gameManager = default!;
     private EventHub? eventHub;
     private readonly AboVerwalter abos = new();
 
@@ -87,6 +88,8 @@ public partial class TransportCoordinator : Node, ITickable
     public TransportEconomyService EconomyService => this.economyService;
 
     // ITickable
+
+    /// <inheritdoc/>
     string ITickable.Name => "TransportCoordinator";
 
     /// <summary>
@@ -97,6 +100,7 @@ public partial class TransportCoordinator : Node, ITickable
     // Partial method für DI-Architektur (implementiert in .Initialize.cs)
     partial void OnReady_LegacyCheck();
 
+    /// <inheritdoc/>
     public override async void _Ready()
     {
         // 1. External Dependencies - Neue Architektur via Initialize() oder Legacy Fallback
@@ -146,13 +150,13 @@ public partial class TransportCoordinator : Node, ITickable
 
         // 4. Truck Manager creation
         this.truckManager = new TruckManager();
-        if (this.buildingManager != null)
+        if (this.buildingManager != null && this.gameManager != null)
         {
-            this.truckManager.Initialize(this.fleet, this.roadManager, this.buildingManager, this.MaxMengeProTruck);
+            this.truckManager.Initialize(this.fleet, this.roadManager, this.buildingManager, this.gameManager, this.MaxMengeProTruck);
         }
         else
         {
-            DebugLogger.LogTransport("TransportCoordinator: TruckManager waiting for BuildingManager dependency");
+            DebugLogger.LogTransport($"TransportCoordinator: TruckManager waiting for dependencies - BuildingManager={this.buildingManager != null}, GameManager={this.gameManager != null}");
         }
         // Set up delegates for cost calculation
         this.truckManager.CalculateCostDelegate = (start, target, amount) => this.economyService.CalculateTransportCost(start, target, amount);
@@ -197,6 +201,7 @@ public partial class TransportCoordinator : Node, ITickable
         }
     }
 
+    /// <inheritdoc/>
     public override void _ExitTree()
     {
         this.UnsubscribeFromEvents();
@@ -373,6 +378,8 @@ public partial class TransportCoordinator : Node, ITickable
     }
 
     // COMPLETE Tick with all Sub-Service calls
+
+    /// <inheritdoc/>
     public void Tick(double dt)
     {
         // 1. Truck-Tick (Movement, Pathfinding)

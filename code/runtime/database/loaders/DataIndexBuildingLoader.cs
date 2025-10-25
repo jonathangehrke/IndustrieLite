@@ -9,13 +9,23 @@ using Godot;
 /// </summary>
 public sealed class DataIndexBuildingLoader : IDataLoader<BuildingDef>
 {
+    /// <inheritdoc/>
     public string LoaderName => nameof(DataIndexBuildingLoader);
 
+    /// <inheritdoc/>
     public int Priority => 0;
 
+    /// <inheritdoc/>
     public Task<IReadOnlyCollection<BuildingDef>> LoadAsync(SceneTree sceneTree)
     {
-        var dataIndex = sceneTree.Root.GetNodeOrNull("/root/DataIndex");
+        // Try to get DataIndex from ServiceContainer first
+        Node? dataIndex = null;
+        var sc = ServiceContainer.Instance;
+        if (sc != null)
+        {
+            dataIndex = sc.GetNamedService<Node>("DataIndex");
+        }
+
         if (dataIndex == null)
         {
             DebugLogger.LogServices("DataIndexBuildingLoader: Kein DataIndex gefunden");

@@ -31,6 +31,7 @@ public partial class CameraController : Camera2D
     private float interpAccum = 1f;
     private float interpInterval = 1f;
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // Manager-Referenzen fuer Weltgrenzen ermitteln (ServiceContainer)
@@ -137,6 +138,7 @@ public partial class CameraController : Camera2D
         this.interpInterval = (float)dt;
     }
 
+    /// <inheritdoc/>
     public override void _Process(double delta)
     {
         this.interpAccum += (float)delta;

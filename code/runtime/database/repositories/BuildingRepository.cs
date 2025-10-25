@@ -18,10 +18,13 @@ public sealed class BuildingRepository : BaseRepository<BuildingDef>, IBuildingR
         this.ladeReihenfolge.Add(new LegacyBuildingLoader(legacyErlaubt));
     }
 
+    /// <inheritdoc/>
     protected override string GetId(BuildingDef item) => item.Id;
 
+    /// <inheritdoc/>
     protected override string? GetKategorie(BuildingDef item) => item.Category;
 
+    /// <inheritdoc/>
     protected override void NachCacheAktualisierung(IReadOnlyCollection<BuildingDef> items)
     {
         this.godotListe.Clear();
@@ -31,16 +34,19 @@ public sealed class BuildingRepository : BaseRepository<BuildingDef>, IBuildingR
         }
     }
 
+    /// <inheritdoc/>
     protected override BuildingDef? ResolveLegacyId(string id)
     {
         return this.eintraegeNachId.Values.FirstOrDefault(def => def.LegacyIds.Contains(id, StringComparer.Ordinal));
     }
 
+    /// <inheritdoc/>
     public IReadOnlyCollection<BuildingDef> GetBuildable()
     {
         return this.eintraegeNachId.Values.Where(def => def.Cost > 0 && !def.Tags.Contains("non-buildable", StringComparer.Ordinal)).ToList();
     }
 
+    /// <inheritdoc/>
     public Godot.Collections.Dictionary GetBuildableCatalog()
     {
         var katalog = new Godot.Collections.Dictionary();
@@ -56,6 +62,7 @@ public sealed class BuildingRepository : BaseRepository<BuildingDef>, IBuildingR
         return katalog;
     }
 
+    /// <inheritdoc/>
     public Godot.Collections.Array<Godot.Collections.Dictionary> GetBuildablesByCategory(string category)
     {
         var result = new Godot.Collections.Array<Godot.Collections.Dictionary>();
@@ -79,6 +86,7 @@ public sealed class BuildingRepository : BaseRepository<BuildingDef>, IBuildingR
         return result;
     }
 
+    /// <inheritdoc/>
     public Godot.Collections.Array<BuildingDef> GetGodotArray()
     {
         return new Godot.Collections.Array<BuildingDef>(this.godotListe);

@@ -5,6 +5,7 @@ using Godot;
 
 public partial class LandManager : Node, ILandReadModel, ILifecycleScope
 {
+    /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
 
     [Export]
@@ -20,6 +21,7 @@ public partial class LandManager : Node, ILandReadModel, ILifecycleScope
     // Interner Schalter: wurde StartLand gesetzt? (fr Fallback-Logik)
     private bool startLandInit = false;
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // Named-Self-Registration für GDScript-Bridge
@@ -54,6 +56,7 @@ public partial class LandManager : Node, ILandReadModel, ILifecycleScope
         this.startLandInit = true;
     }
 
+    /// <inheritdoc/>
     public bool IsOwned(Vector2I cell)
     {
         if (cell.X < 0 || cell.Y < 0 || cell.X >= this.GridW || cell.Y >= this.GridH)
@@ -65,8 +68,11 @@ public partial class LandManager : Node, ILandReadModel, ILifecycleScope
     }
 
     // ILandReadModel
+
+    /// <inheritdoc/>
     public int GetGridW() => this.GridW;
 
+    /// <inheritdoc/>
     public int GetGridH() => this.GridH;
 
     public bool CanBuyLand(Vector2I cell, double money)

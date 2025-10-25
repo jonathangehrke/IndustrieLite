@@ -12,7 +12,9 @@ using Godot;
 /// </summary>
 public partial class ProductionSystem : Node, IProductionSystem
 {
+    /// <inheritdoc/>
     public new string Name => "New Production System";
+
     // SC-only: Legacy NodePath-Felder entfernt
     private Database? database;
     private BuildingManager? buildingManager;
@@ -23,6 +25,7 @@ public partial class ProductionSystem : Node, IProductionSystem
     // Production cache per building
     private Dictionary<Node, Dictionary<string, double>> buildingProduction = new();
 
+    /// <inheritdoc/>
     public override async void _Ready()
     {
         await this.InitialisiereAbhaengigkeitenAsync();
@@ -79,6 +82,7 @@ public partial class ProductionSystem : Node, IProductionSystem
         return await ServiceContainer.WhenAvailableAsync(tree);
     }
 
+    /// <inheritdoc/>
     public void Tick(double dt)
     {
         if (dt <= 0)
@@ -110,11 +114,13 @@ public partial class ProductionSystem : Node, IProductionSystem
         }
     }
 
+    /// <inheritdoc/>
     public Dictionary<string, double> GetTotals()
     {
         return new Dictionary<string, double>(this.cachedTotals, StringComparer.Ordinal);
     }
 
+    /// <inheritdoc/>
     public void Reset()
     {
         this.cachedTotals.Clear();

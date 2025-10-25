@@ -12,6 +12,7 @@ using Godot;
 /// </summary>
 public partial class GameClockManager : Node, ILifecycleScope
 {
+    /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
 
     // --- Signale ---
@@ -84,6 +85,7 @@ public partial class GameClockManager : Node, ILifecycleScope
         }
     }
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // Named-Self-Registration für GDScript-Bridge
@@ -101,6 +103,7 @@ public partial class GameClockManager : Node, ILifecycleScope
         }
     }
 
+    /// <inheritdoc/>
     public override void _Process(double delta)
     {
         if (!this.Enabled || this.paused || this.TickRate <= 0)

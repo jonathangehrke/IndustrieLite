@@ -112,6 +112,7 @@ public partial class RoadRenderer : Node2D
         this.QueueRedraw();
     }
 
+    /// <inheritdoc/>
     public override void _Draw()
     {
         if (this.grid == null || this.buildingManager == null)
@@ -168,6 +169,7 @@ public partial class RoadRenderer : Node2D
         }
     }
 
+    /// <inheritdoc/>
     public override void _ExitTree()
     {
         // Abos immer lösen, um Gedächtnislecks/doppelte Redraws zu vermeiden

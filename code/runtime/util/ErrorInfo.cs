@@ -25,6 +25,7 @@ public class ErrorInfo
         this.Cause = cause;
     }
 
+    /// <inheritdoc/>
     public override string ToString()
     {
         return $"{this.Code}: {this.Message}";

@@ -38,6 +38,7 @@ public partial class ServiceContainer : Node
     [Signal]
     public delegate void ServiceRegisteredEventHandler(string serviceName, Node service);
 
+    /// <inheritdoc/>
     public override void _EnterTree()
     {
         base._EnterTree();
@@ -53,6 +54,7 @@ public partial class ServiceContainer : Node
         DebugLogger.Info("debug_services", "ServiceContainerInitialized", "Initialized");
     }
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // Instance already set in _EnterTree
@@ -273,7 +275,7 @@ public partial class ServiceContainer : Node
     /// <summary>
     /// Waits asynchronously until a named service is registered.
     /// </summary>
-    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task<T?> WaitForNamedService<T>(string serviceName)
         where T : Node
     {
@@ -296,7 +298,7 @@ public partial class ServiceContainer : Node
     /// <summary>
     /// Wartet asynchron auf einen benannten Service mit optionaler Cancellation/Timeout.
     /// </summary>
-    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task<T?> WaitForNamedService<T>(string serviceName, CancellationToken ct, TimeSpan? timeout = null)
         where T : Node
     {
@@ -489,6 +491,7 @@ public partial class ServiceContainer : Node
         }
     }
 
+    /// <inheritdoc/>
     public override void _ExitTree()
     {
         if (ReferenceEquals(Interlocked.CompareExchange(ref instance, null, this), this))
@@ -562,7 +565,7 @@ public partial class ServiceContainer : Node
     /// Hilfsmethode: Wartet auf verfuegbaren ServiceContainer (Autoload) ueber Frame-Yield.
     /// Node/Manager-Code kann damit Spin-Waits vermeiden.
     /// </summary>
-    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public static async Task<ServiceContainer> WhenAvailableAsync(SceneTree tree, CancellationToken ct = default, TimeSpan? timeout = null)
     {
         var inst = Instance;

@@ -19,6 +19,7 @@ public partial class WaterPump : Building, IProducer, IHasInventory
         this.Color = new Color(0.3f, 0.8f, 0.6f);
     }
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         base._Ready();
@@ -39,6 +40,7 @@ public partial class WaterPump : Building, IProducer, IHasInventory
         }
     }
 
+    /// <inheritdoc/>
     public override void _ExitTree()
     {
         if (this.productionManager != null)
@@ -48,6 +50,7 @@ public partial class WaterPump : Building, IProducer, IHasInventory
         base._ExitTree();
     }
 
+    /// <inheritdoc/>
     public Dictionary<StringName, int> GetResourceNeeds()
     {
         // Bedarf aus Rezept (ggf. 0)
@@ -58,6 +61,7 @@ public partial class WaterPump : Building, IProducer, IHasInventory
         return new Dictionary<StringName, int>();
     }
 
+    /// <inheritdoc/>
     public Dictionary<StringName, int> GetResourceProduction()
     {
         if (this.controller != null && this.controller.AktuellesRezept != null)
@@ -78,6 +82,7 @@ public partial class WaterPump : Building, IProducer, IHasInventory
         return new Dictionary<StringName, int>();
     }
 
+    /// <inheritdoc/>
     public void OnProductionTick(bool canProduce)
     {
         // Zyklus- und Wartungskosten abrechnen
@@ -142,6 +147,7 @@ public partial class WaterPump : Building, IProducer, IHasInventory
         return 1.0 / rate;
     }
 
+    /// <inheritdoc/>
     public override void InitializeDependencies(ProductionManager? productionManager, EconomyManager? economyManager, EventHub? eventHub)
     {
         if (productionManager != null)
@@ -161,6 +167,7 @@ public partial class WaterPump : Building, IProducer, IHasInventory
         }
     }
 
+    /// <inheritdoc/>
     public override void OnRecipeStateRestored(string recipeId)
     {
         // Synchronize RezeptIdOverride with restored recipe state

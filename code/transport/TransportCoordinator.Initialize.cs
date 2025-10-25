@@ -12,7 +12,7 @@ public partial class TransportCoordinator
     /// Explizite Dependency Injection (neue Architektur).
     /// Wird von TransportManager.Initialize() aufgerufen.
     /// </summary>
-    public void Initialize(BuildingManager buildingManager, RoadManager? roadManager, EconomyManager economyManager, EventHub? eventHub)
+    public void Initialize(BuildingManager buildingManager, RoadManager? roadManager, EconomyManager economyManager, GameManager gameManager, EventHub? eventHub)
     {
         if (this.initialized)
         {
@@ -23,10 +23,11 @@ public partial class TransportCoordinator
         this.buildingManager = buildingManager;
         this.roadManager = roadManager;
         this.economyManager = economyManager;
+        this.gameManager = gameManager;
         this.eventHub = eventHub;
 
         this.initialized = true;
-        DebugLogger.LogTransport($"TransportCoordinator.Initialize(): Dependencies gesetzt OK (Building={buildingManager != null}, Road={roadManager != null}, Economy={economyManager != null})");
+        DebugLogger.LogTransport($"TransportCoordinator.Initialize(): Dependencies gesetzt OK (Building={buildingManager != null}, Road={roadManager != null}, Economy={economyManager != null}, Game={gameManager != null})");
 
         // If services were already created in _Ready() but couldn't be initialized, initialize them now
         if (this.IsInsideTree())
@@ -48,9 +49,9 @@ public partial class TransportCoordinator
             DebugLogger.LogTransport("TransportCoordinator: Re-initialized EconomyService");
         }
 
-        if (this.truckManager != null && this.buildingManager != null && this.fleet != null)
+        if (this.truckManager != null && this.buildingManager != null && this.fleet != null && this.gameManager != null)
         {
-            this.truckManager.Initialize(this.fleet, this.roadManager, this.buildingManager, this.MaxMengeProTruck);
+            this.truckManager.Initialize(this.fleet, this.roadManager, this.buildingManager, this.gameManager, this.MaxMengeProTruck);
             DebugLogger.LogTransport("TransportCoordinator: Re-initialized TruckManager");
         }
 

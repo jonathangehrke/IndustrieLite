@@ -16,10 +16,13 @@ public sealed class LegacyRecipeLoader : IDataLoader<RecipeDef>
         this.legacyErlaubt = legacyErlaubt;
     }
 
+    /// <inheritdoc/>
     public string LoaderName => nameof(LegacyRecipeLoader);
 
+    /// <inheritdoc/>
     public int Priority => 100;
 
+    /// <inheritdoc/>
     public Task<IReadOnlyCollection<RecipeDef>> LoadAsync(SceneTree sceneTree)
     {
         if (!this.IsFallbackAktiv())

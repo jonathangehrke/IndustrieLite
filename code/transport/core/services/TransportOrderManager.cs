@@ -19,10 +19,13 @@ namespace IndustrieLite.Transport.Core.Services
             this.auftragsbuch = orderBook ?? new OrderBook();
         }
 
+        /// <inheritdoc/>
         public IReadOnlyDictionary<int, DeliveryOrder> DeliveryOrders => this.deliveryOrders;
 
+        /// <inheritdoc/>
         public OrderBook Auftragsbuch => this.auftragsbuch;
 
+        /// <inheritdoc/>
         public void AktualisiereAuftragsbuch(IEnumerable<TransportAuftragsDaten> daten)
         {
             foreach (var auftrag in daten)
@@ -53,6 +56,7 @@ namespace IndustrieLite.Transport.Core.Services
             }
         }
 
+        /// <inheritdoc/>
         public DeliveryOrder EnsureDeliveryOrder(TransportAuftragsDaten daten)
         {
             if (!this.deliveryOrders.TryGetValue(daten.AuftragId, out var delivery))
@@ -67,11 +71,13 @@ namespace IndustrieLite.Transport.Core.Services
             return delivery;
         }
 
+        /// <inheritdoc/>
         public DeliveryOrder? HoleDeliveryOrder(int orderId)
         {
             return this.deliveryOrders.TryGetValue(orderId, out var order) ? order : null;
         }
 
+        /// <inheritdoc/>
         public void RemoveJobFromDeliveryOrder(Guid jobId, int orderId)
         {
             if (!this.deliveryOrders.TryGetValue(orderId, out var order))
@@ -86,6 +92,7 @@ namespace IndustrieLite.Transport.Core.Services
             }
         }
 
+        /// <inheritdoc/>
         public void VerarbeiteJobAbschluss(TransportJob job, int gelieferteMenge)
         {
             if (job == null)
@@ -105,6 +112,7 @@ namespace IndustrieLite.Transport.Core.Services
             }
         }
 
+        /// <inheritdoc/>
         public void VerarbeiteJobFehler(TransportJob job)
         {
             if (job == null)
@@ -115,6 +123,7 @@ namespace IndustrieLite.Transport.Core.Services
             this.RemoveJobFromDeliveryOrder(job.JobId, job.OrderId);
         }
 
+        /// <inheritdoc/>
         public void RegistriereWiederhergestelltenAuftrag(DeliveryOrder order)
         {
             if (order == null)
@@ -125,6 +134,7 @@ namespace IndustrieLite.Transport.Core.Services
             this.deliveryOrders[order.OrderId] = order;
         }
 
+        /// <inheritdoc/>
         public void EntferneAlleOrders()
         {
             this.deliveryOrders.Clear();

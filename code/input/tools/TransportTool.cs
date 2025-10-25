@@ -13,16 +13,19 @@ public class TransportTool : IInputTool
         this.transportManager = transportManager;
     }
 
+    /// <inheritdoc/>
     public void Enter()
     {
         DebugLogger.LogInput("TransportTool aktiviert");
     }
 
+    /// <inheritdoc/>
     public void Exit()
     {
         DebugLogger.LogInput("TransportTool deaktiviert");
     }
 
+    /// <inheritdoc/>
     public void OnClick(Vector2I zelle)
     {
         DebugLogger.LogInput(() => $"TransportTool: Klick bei {zelle}");

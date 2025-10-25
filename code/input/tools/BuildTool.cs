@@ -23,16 +23,19 @@ public class BuildTool : IInputTool
         this.roadManager = roadManager;
     }
 
+    /// <inheritdoc/>
     public void Enter()
     {
         DebugLogger.LogInput($"BuildTool aktiviert (Typ: {this.AktuellerBautyp})");
     }
 
+    /// <inheritdoc/>
     public void Exit()
     {
         DebugLogger.LogInput("BuildTool deaktiviert");
     }
 
+    /// <inheritdoc/>
     public void OnClick(Vector2I zelle)
     {
         if (string.IsNullOrEmpty(this.AktuellerBautyp))

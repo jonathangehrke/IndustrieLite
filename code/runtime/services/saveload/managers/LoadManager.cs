@@ -19,6 +19,7 @@ public class LoadManager
         this.serviceContainer = container;
     }
 
+    [Obsolete]
     public void LoadGame(string fileName, LandManager land, BuildingManager buildings, EconomyManager economy, ProductionManager? production, Map? map, TransportManager? transport = null)
     {
         string? filePath = null;
@@ -77,6 +78,7 @@ public class LoadManager
         }
     }
 
+    [Obsolete]
     public async Task LoadGameAsync(string fileName, LandManager land, BuildingManager buildings, EconomyManager economy, ProductionManager? production, Map? map, TransportManager? transport = null)
     {
         string? filePath = null;
@@ -135,6 +137,7 @@ public class LoadManager
         }
     }
 
+    [Obsolete]
     public async Task LoadGameAsync(string fileName, LandManager land, BuildingManager buildings, EconomyManager economy, ProductionManager? production, Map? map, TransportManager? transport, CancellationToken cancellationToken)
     {
         string? filePath = null;

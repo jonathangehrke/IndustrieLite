@@ -54,6 +54,14 @@ public partial class DIContainer : Node
         var gameDatabase = sc.GetNamedService<GameDatabase>("GameDatabase");
         var eventHub = sc.GetNamedService<EventHub>(ServiceNames.EventHub);
 
+        // SceneGraphAdapter (Autoload für Hexagonal Architecture - Ports & Adapters)
+        var sceneGraphAdapter = sc.GetNamedService<SceneGraphAdapter>("SceneGraphAdapter");
+        ISceneGraph? sceneGraph = sceneGraphAdapter;
+        if (sceneGraph == null)
+        {
+            DebugLogger.Error("debug_services", "DIInitSceneGraphNull", "SceneGraphAdapter nicht verfügbar - Manager können keine Nodes hinzufügen");
+        }
+
         // DevFlags: Direkter Autoload-Zugriff (kann noch nicht im SC registriert sein)
         var devFlags = gameManager.GetNodeOrNull<Node>("/root/DevFlags");
 
@@ -119,10 +127,10 @@ public partial class DIContainer : Node
             DebugLogger.LogServices("DIContainer.InitializeAll: LandManager.Initialize() OK");
         }
 
-        // 3.3: RoadManager (benötigt Land, Building, Economy)
-        if (roadManager != null && landManager != null && buildingManager != null && economyManager != null)
+        // 3.3: RoadManager (benötigt Land, Building, Economy, SceneGraph)
+        if (roadManager != null && landManager != null && buildingManager != null && economyManager != null && sceneGraph != null)
         {
-            roadManager.Initialize(landManager, buildingManager, economyManager, eventHub, camera);
+            roadManager.Initialize(landManager, buildingManager, economyManager, sceneGraph, eventHub, camera);
             DebugLogger.LogServices("DIContainer.InitializeAll: RoadManager.Initialize() OK");
         }
 
@@ -155,10 +163,10 @@ public partial class DIContainer : Node
             DebugLogger.LogServices("DIContainer.InitializeAll: LevelManager.Initialize() OK");
         }
 
-        // 3.6: BuildingManager (benötigt viele andere Manager)
-        if (buildingManager != null && landManager != null && economyManager != null)
+        // 3.6: BuildingManager (benötigt viele andere Manager + SceneGraph)
+        if (buildingManager != null && landManager != null && economyManager != null && sceneGraph != null)
         {
-            buildingManager.Initialize(landManager, economyManager, database, eventHub, productionManager, simulation, gameTimeManager, roadManager);
+            buildingManager.Initialize(landManager, economyManager, sceneGraph, database, eventHub, productionManager, simulation, gameTimeManager, roadManager);
             DebugLogger.LogServices("DIContainer.InitializeAll: BuildingManager.Initialize() OK");
         }
 
@@ -168,10 +176,10 @@ public partial class DIContainer : Node
             resourceManager.SetBuildingManager(buildingManager);
         }
 
-        // 3.7: TransportManager (benötigt Building, Road, Economy, Event)
-        if (transportManager != null && buildingManager != null && economyManager != null)
+        // 3.7: TransportManager (benötigt Building, Road, Economy, Game, SceneGraph, Event)
+        if (transportManager != null && buildingManager != null && economyManager != null && sceneGraph != null)
         {
-            transportManager.Initialize(buildingManager, roadManager, economyManager, eventHub);
+            transportManager.Initialize(buildingManager, roadManager, economyManager, gameManager, sceneGraph, eventHub);
             DebugLogger.LogServices("DIContainer.InitializeAll: TransportManager.Initialize() OK");
         }
 

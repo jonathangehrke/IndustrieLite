@@ -8,11 +8,13 @@ using Godot;
 /// </summary>
 public partial class CityGrowthManager : Node, ILifecycleScope
 {
+    /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
 
     private EventHub? eventHub;
     private readonly AboVerwalter abos = new();
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // Named-Self-Registration für GDScript-Bridge
@@ -36,6 +38,7 @@ public partial class CityGrowthManager : Node, ILifecycleScope
         // TODO: künftige Wachstumslogik (Population, Limits, Aufträge)
     }
 
+    /// <inheritdoc/>
     public override void _ExitTree()
     {
         this.abos.DisposeAll();

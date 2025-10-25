@@ -14,11 +14,12 @@ namespace IndustrieLite.Transport.Core.Services
         private ITransportJobManager? jobManager;
         private ITransportOrderManager? orderManager;
 
+        /// <inheritdoc/>
         public void SetServiceReferences(
             ITransportJobManager jobManager,
-                                         ITransportOrderManager orderManager,
-                                         ITransportSupplyService supplyService,
-                                         ITransportPlanningService planningService)
+            ITransportOrderManager orderManager,
+            ITransportSupplyService supplyService,
+            ITransportPlanningService planningService)
         {
             this.jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
             this.orderManager = orderManager ?? throw new ArgumentNullException(nameof(orderManager));
@@ -26,6 +27,7 @@ namespace IndustrieLite.Transport.Core.Services
             _ = planningService ?? throw new ArgumentNullException(nameof(planningService));
         }
 
+        /// <inheritdoc/>
         public TransportCoreSaveData CaptureState()
         {
             if (this.jobManager == null || this.orderManager == null)
@@ -87,6 +89,7 @@ namespace IndustrieLite.Transport.Core.Services
             return save;
         }
 
+        /// <inheritdoc/>
         public void RestoreState(TransportCoreSaveData state, Func<Guid, Building?>? buildingResolver = null)
         {
             if (state == null)

@@ -10,6 +10,7 @@ using Godot;
 /// </summary>
 public partial class MarketService : Node, ILifecycleScope
 {
+    /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
 
     private ResourceManager? resourceManager;
@@ -34,6 +35,7 @@ public partial class MarketService : Node, ILifecycleScope
         { "korn", ResourceIds.Grain },
     };
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // No self-registration - managed by DIContainer (Clean Architecture)
@@ -60,7 +62,7 @@ public partial class MarketService : Node, ILifecycleScope
         }
 
         // Einfache Plural-/Singular-Varianten abfangen (z. B. pigs -> pig, eggs -> egg, grains -> grain)
-        if (normalized.EndsWith("s", StringComparison.Ordinal) && normalized.Length > 1)
+        if (normalized.EndsWith('s') && normalized.Length > 1)
         {
             var singular = normalized.Substring(0, normalized.Length - 1);
             if (this.productNormalization.TryGetValue(singular, out mapped))
@@ -180,6 +182,7 @@ public partial class MarketService : Node, ILifecycleScope
     /// Gets total amount of a resource across all buildings.
     /// </summary>
     /// <returns></returns>
+    [Obsolete]
     public int GetTotalResourceAmount(string resourceId)
     {
         try
@@ -220,8 +223,8 @@ public partial class MarketService : Node, ILifecycleScope
     private float CalculateProductionCost(string resourceId, int amount)
     {
         // Base production costs per unit (simplified model)
-        var baseCosts = new Dictionary<string, float>
-(StringComparer.Ordinal)
+        var baseCosts = new Dictionary<string, float>(
+StringComparer.Ordinal)
         {
             { ResourceIds.Chickens, 2.0f },
             { ResourceIds.Pig, 3.5f },

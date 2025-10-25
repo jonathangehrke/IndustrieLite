@@ -16,10 +16,13 @@ public sealed class FileSystemRecipeLoader : IDataLoader<RecipeDef>
         this.basisPfad = basisPfad;
     }
 
+    /// <inheritdoc/>
     public string LoaderName => nameof(FileSystemRecipeLoader);
 
+    /// <inheritdoc/>
     public int Priority => 10;
 
+    /// <inheritdoc/>
     public Task<IReadOnlyCollection<RecipeDef>> LoadAsync(SceneTree sceneTree)
     {
         var daten = this.LadeAusOrdner(this.basisPfad);

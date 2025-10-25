@@ -7,6 +7,7 @@ using Godot;
 /// </summary>
 public partial class LevelManager : Node, ILifecycleScope
 {
+    /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
 
     // Level-System Konstanten
@@ -27,6 +28,7 @@ public partial class LevelManager : Node, ILifecycleScope
 
     public double TotalMarketRevenue => this.totalMarketRevenue;
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // Registrierung erfolgt jetzt in Initialize() statt hier

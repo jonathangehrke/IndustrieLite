@@ -8,6 +8,7 @@ using Godot;
 /// </summary>
 public partial class LogisticsService : Node, ILifecycleScope
 {
+    /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
 
     private EconomyManager? economyManager;
@@ -23,6 +24,7 @@ public partial class LogisticsService : Node, ILifecycleScope
 
     private bool isInitialized = false;
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // No self-registration - managed by DIContainer (Clean Architecture)

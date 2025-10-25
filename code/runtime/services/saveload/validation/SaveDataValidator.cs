@@ -68,6 +68,7 @@ public class SaveDataValidator
         }
     }
 
+    [Obsolete]
     public bool RoundTripSemanticsEqual(LandManager land, BuildingManager buildings, EconomyManager economy, out string diffInfo)
     {
         diffInfo = string.Empty;

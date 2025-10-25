@@ -315,6 +315,7 @@ public partial class TransportOrderManager : Node, ITransportOrderManager
         DebugLogger.LogTransport(() => $"Manual transport started: {amount} {resourceId} from {sourceFarm.Name} to {city.CityName}");
     }
 
+    /// <inheritdoc/>
     public void StartManualTransport(Building source, Building target)
     {
         // Legacy wrapper: validate and call Try-Version; ignore detailed result
@@ -388,6 +389,7 @@ public partial class TransportOrderManager : Node, ITransportOrderManager
         }
     }
 
+    /// <inheritdoc/>
     public void StartPeriodicSupplyRoute(Building supplier, Building consumer, StringName resourceId, int maxPerTruck, double periodSec, float speed = 120f)
     {
         if (supplier == null || consumer == null)
@@ -422,6 +424,7 @@ public partial class TransportOrderManager : Node, ITransportOrderManager
         });
     }
 
+    /// <inheritdoc/>
     public void StopPeriodicSupplyRoute(Building consumer, StringName resourceId)
     {
         for (int i = 0; i < this.supplyRoutes.Count; i++)
@@ -640,6 +643,7 @@ public partial class TransportOrderManager : Node, ITransportOrderManager
         }
     }
 
+    /// <inheritdoc/>
     public void HandleTransportClick(Vector2I cell)
     {
         Building? clickedBuilding = null;
@@ -779,6 +783,7 @@ public partial class TransportOrderManager : Node, ITransportOrderManager
         this.transportCore.AktualisiereLieferindex(this.SammleLieferantendaten());
     }
 
+    /// <inheritdoc/>
     public void RestartPendingJobs()
     {
         this.jobsNeuZuPlanen = true;
@@ -844,7 +849,7 @@ public partial class TransportOrderManager : Node, ITransportOrderManager
         }
 
         // Getreide
-        if (string.Equals(p, "getreide", StringComparison.Ordinal) || string.Equals(p, "korn", StringComparison.Ordinal) || string.Equals(p, "grain", StringComparison.Ordinal) || string.Equals(p, "grains", StringComparison.Ordinal) || p == "wheat")
+        if (string.Equals(p, "getreide", StringComparison.Ordinal) || string.Equals(p, "korn", StringComparison.Ordinal) || string.Equals(p, "grain", StringComparison.Ordinal) || string.Equals(p, "grains", StringComparison.Ordinal) || string.Equals(p, "wheat", StringComparison.Ordinal))
         {
             return ResourceIds.GrainName;
         }
@@ -943,6 +948,7 @@ public partial class TransportOrderManager : Node, ITransportOrderManager
         }
     }
 
+    [Obsolete]
     private void SpawnTruckFuerJob(TransportJob job)
     {
         double ppu = job.PreisProEinheit > 0.0 ? job.PreisProEinheit : this.coordinator.DefaultPricePerUnit;

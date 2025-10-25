@@ -141,7 +141,7 @@ internal class GameStateOperations
     /// <summary>
     /// Save current game state to file (asynchron).
     /// </summary>
-    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task ExecuteSaveGameAsync(string filePath, ServiceResolver.ServiceReferences services)
     {
         if (services.SaveLoadService == null)
@@ -240,7 +240,7 @@ internal class GameStateOperations
     /// <summary>
     /// Load game state from file (asynchron).
     /// </summary>
-    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task ExecuteLoadGameAsync(string filePath, ServiceResolver.ServiceReferences services)
     {
         DebugLogger.LogLifecycle(() => $"GameStateOperations: Loading game (async) from {filePath}");

@@ -63,6 +63,7 @@ public partial class City : Building, ITickable
     private EventHub? eventHub;
     private readonly AboVerwalter abos = new();
 
+    /// <inheritdoc/>
     string ITickable.Name => "City";
 
     public City()
@@ -97,6 +98,7 @@ public partial class City : Building, ITickable
         }
     }
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         base._Ready();
@@ -121,6 +123,7 @@ public partial class City : Building, ITickable
         }
     }
 
+    /// <inheritdoc/>
     public void Tick(double dt)
     {
         this.ProcessOrderGeneration(dt);
@@ -262,6 +265,7 @@ public partial class City : Building, ITickable
         return true;
     }
 
+    /// <inheritdoc/>
     public override void _ExitTree()
     {
         this.abos.DisposeAll();

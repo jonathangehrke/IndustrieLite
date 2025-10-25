@@ -15,10 +15,13 @@ public sealed class ResourceRepository : BaseRepository<GameResourceDef>, IResou
         this.ladeReihenfolge.Add(new LegacyResourceLoader(legacyErlaubt));
     }
 
+    /// <inheritdoc/>
     protected override string GetId(GameResourceDef item) => item.Id;
 
+    /// <inheritdoc/>
     protected override string? GetKategorie(GameResourceDef item) => item.Category;
 
+    /// <inheritdoc/>
     public IReadOnlyCollection<GameResourceDef> GetByType(string type)
     {
         return this.GetByCategory(type);

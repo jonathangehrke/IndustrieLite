@@ -16,12 +16,16 @@ namespace IndustrieLite.Transport.Core.Services
         private readonly Queue<TransportJob> jobQueue = new Queue<TransportJob>();
         private readonly Dictionary<Guid, TransportJob> jobsById = new Dictionary<Guid, TransportJob>();
 
+        /// <inheritdoc/>
         public IReadOnlyDictionary<Guid, TransportJob> Jobs => this.jobsById;
 
+        /// <inheritdoc/>
         public event Action<TransportJob>? JobGestartet;
 
+        /// <inheritdoc/>
         public event Action<TransportJob>? JobAbgeschlossen;
 
+        /// <inheritdoc/>
         public event Action<TransportJob>? JobFehlgeschlagen;
 
         /// <summary>

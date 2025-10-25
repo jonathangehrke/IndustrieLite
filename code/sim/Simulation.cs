@@ -97,6 +97,7 @@ public partial class Simulation : Node
         }
     }
 
+    /// <inheritdoc/>
     public override async void _Ready()
     {
         var previous = Interlocked.CompareExchange(ref instance, this, null);

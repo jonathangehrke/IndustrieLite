@@ -6,8 +6,10 @@ namespace IndustrieLite.Runtime.Lifecycle
 
     public class ClearStateCommand : IGameLifecycleCommand
     {
+        /// <inheritdoc/>
         public string Name => "ClearState";
 
+        /// <inheritdoc/>
         public bool CanExecute(GameLifecycleContext context)
         {
             if (context == null)
@@ -21,6 +23,7 @@ namespace IndustrieLite.Runtime.Lifecycle
                    context.EconomyManager != null;
         }
 
+        /// <inheritdoc/>
         public Task<GameLifecycleResult> ExecuteAsync(GameLifecycleContext context)
         {
             if (!this.CanExecute(context))

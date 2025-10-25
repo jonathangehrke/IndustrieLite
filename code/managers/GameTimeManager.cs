@@ -10,6 +10,7 @@ using Godot;
 /// </summary>
 public partial class GameTimeManager : Node, ITickable, ILifecycleScope
 {
+    /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
 
     [Export]
@@ -32,10 +33,13 @@ public partial class GameTimeManager : Node, ITickable, ILifecycleScope
     private EventHub? eventHub;
 
     // ITickable-Name nur ueber explizite Interface-Implementierung, damit Node.Name weiterhin setzbar bleibt
+
+    /// <inheritdoc/>
     string ITickable.Name => "GameTimeManager";
 
     public DateTime CurrentDate => this.currentDate;
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         this.currentDate = new DateTime(this.StartYear, this.StartMonth, this.StartDay);
@@ -59,6 +63,7 @@ public partial class GameTimeManager : Node, ITickable, ILifecycleScope
         // Initiales Datum wird nach Initialize() emittiert
     }
 
+    /// <inheritdoc/>
     public override void _ExitTree()
     {
         try
@@ -71,6 +76,7 @@ public partial class GameTimeManager : Node, ITickable, ILifecycleScope
         base._ExitTree();
     }
 
+    /// <inheritdoc/>
     public void Tick(double dt)
     {
         if (this.SecondsPerDay <= 0)

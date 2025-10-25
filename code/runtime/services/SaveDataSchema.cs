@@ -68,7 +68,7 @@ public static class SaveDataSchema
         { 7, new[] { 8, 9, 10 } },                   // v7 -> v8/v9/v10 (City Market Orders)
         { 8, new[] { 9, 10 } },                      // v8 -> v9/v10 (Supplier Routes)
         { 9, new[] { 10 } },                         // v9 -> v10 (Recipe Production State)
-        { 10, Array.Empty<int>() },                   // v10 ist aktuell, keine Migration noetig
+        { 10, Array.Empty<int>() }, // v10 ist aktuell, keine Migration noetig
     };
 
     /// <summary>

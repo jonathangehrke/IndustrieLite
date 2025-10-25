@@ -54,6 +54,7 @@ public partial class GameManager : Node2D
         DebugLogger.LogServices($"GameManager.Initialize(): EventHub={(eventHub != null ? "OK" : "null")}");
     }
 
+    /// <inheritdoc/>
     public override void _EnterTree()
     {
         base._EnterTree();
@@ -79,6 +80,7 @@ public partial class GameManager : Node2D
         }
     }
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         DebugLogger.Info("debug_services", "GameManagerReady", "_Ready() called");

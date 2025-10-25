@@ -18,12 +18,13 @@ config/icon="res://icon.png"
 [autoload]
 
 ServiceContainer="*res://code/runtime/ServiceContainer.cs"
+SceneGraphAdapter="*res://code/runtime/SceneGraphAdapter.cs"
 DevFlags="*res://code/runtime/DevFlags.gd"
 EventHub="*res://code/runtime/EventHub.cs"
-DataIndex="*res://scenes/DataIndex.gd"
 Database="*res://code/runtime/Database.cs"
 UIService="*res://code/runtime/UIService.cs"
 BootSelfTest="*res://code/runtime/BootSelfTest.cs"
+DataIndex="*res://scenes/DataIndex.gd"
 
 [debug]
 

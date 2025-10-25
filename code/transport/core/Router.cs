@@ -71,6 +71,7 @@ public class Router : System.IDisposable
         return (tiles * basePerTilePerUnit * units) + truckFixedCost;
     }
 
+    /// <inheritdoc/>
     public void Dispose()
     {
         if (this.disposed)

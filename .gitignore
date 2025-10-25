@@ -62,3 +62,9 @@ export_presets.cfg
 # Test-Resultate
 **/TestResults/
 *.trx
+
+# Duplicate/Backup directories
+IndustrieLite_repo/
+
+# Windows invalid file artifacts
+nul

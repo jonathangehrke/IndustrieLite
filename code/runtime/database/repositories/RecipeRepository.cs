@@ -18,8 +18,10 @@ public sealed class RecipeRepository : BaseRepository<RecipeDef>, IRecipeReposit
         this.ladeReihenfolge.Add(new LegacyRecipeLoader(legacyErlaubt));
     }
 
+    /// <inheritdoc/>
     protected override string GetId(RecipeDef item) => item.Id;
 
+    /// <inheritdoc/>
     public IReadOnlyCollection<RecipeDef> GetForBuilding(string buildingId)
     {
         if (string.IsNullOrWhiteSpace(buildingId))

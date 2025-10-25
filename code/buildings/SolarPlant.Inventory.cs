@@ -7,19 +7,23 @@ public partial class SolarPlant
 {
     private readonly Dictionary<StringName, float> inventar = new();
 
+    /// <inheritdoc/>
     public IReadOnlyDictionary<StringName, float> GetInventory() => this.inventar;
 
+    /// <inheritdoc/>
     public void SetInventoryAmount(StringName resourceId, float amount)
     {
         this.inventar[resourceId] = amount;
     }
 
+    /// <inheritdoc/>
     public void AddToInventory(StringName resourceId, float amount)
     {
         var current = this.inventar.TryGetValue(resourceId, out var v) ? v : 0f;
         this.inventar[resourceId] = current + amount;
     }
 
+    /// <inheritdoc/>
     public bool ConsumeFromInventory(StringName resourceId, float amount)
     {
         var current = this.inventar.TryGetValue(resourceId, out var v) ? v : 0f;

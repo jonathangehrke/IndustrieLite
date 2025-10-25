@@ -11,6 +11,7 @@ public partial class InputHandler : Node
     private ToolManager? toolManager;
     private Vector2 letzteKameraRichtung = Vector2.Zero;
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         this.SetProcess(true);
@@ -31,6 +32,7 @@ public partial class InputHandler : Node
         this.toolManager = toolManager;
     }
 
+    /// <inheritdoc/>
     public override void _Input(InputEvent @event)
     {
         if (this.inputEventRouter == null)
@@ -56,6 +58,7 @@ public partial class InputHandler : Node
         }
     }
 
+    /// <inheritdoc/>
     public override void _UnhandledInput(InputEvent @event)
     {
         if (this.inputEventRouter == null)
@@ -120,6 +123,7 @@ public partial class InputHandler : Node
         }
     }
 
+    /// <inheritdoc/>
     public override void _Process(double delta)
     {
         if (this.inputEventRouter == null)

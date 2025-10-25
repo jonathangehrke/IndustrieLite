@@ -16,10 +16,13 @@ public sealed class LegacyResourceLoader : IDataLoader<GameResourceDef>
         this.legacyErlaubt = legacyErlaubt;
     }
 
+    /// <inheritdoc/>
     public string LoaderName => nameof(LegacyResourceLoader);
 
+    /// <inheritdoc/>
     public int Priority => 100;
 
+    /// <inheritdoc/>
     public Task<IReadOnlyCollection<GameResourceDef>> LoadAsync(SceneTree sceneTree)
     {
         if (!this.IsFallbackAktiv())

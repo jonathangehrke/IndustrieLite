@@ -17,10 +17,13 @@ public sealed class LegacyBuildingLoader : IDataLoader<BuildingDef>
         this.legacyErlaubt = legacyErlaubt;
     }
 
+    /// <inheritdoc/>
     public string LoaderName => nameof(LegacyBuildingLoader);
 
+    /// <inheritdoc/>
     public int Priority => 100;
 
+    /// <inheritdoc/>
     public Task<IReadOnlyCollection<BuildingDef>> LoadAsync(SceneTree sceneTree)
     {
         if (!this.IsFallbackAktiv())

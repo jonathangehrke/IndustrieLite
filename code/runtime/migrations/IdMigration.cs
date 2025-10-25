@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public static class IdMigration
 {
-    private static readonly Dictionary<string, string> map = new(System.StringComparer.Ordinal)
+    private static readonly Dictionary<string, string> Map = new(System.StringComparer.Ordinal)
     {
         { "House", "house" },
         { "Solar", "solar_plant" },
@@ -20,7 +20,7 @@ public static class IdMigration
             return id;
         }
 
-        return map.TryGetValue(id, out var v) ? v : id;
+        return Map.TryGetValue(id, out var v) ? v : id;
     }
 }
 

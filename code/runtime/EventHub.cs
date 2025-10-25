@@ -7,6 +7,7 @@ using Godot;
 /// </summary>
 public partial class EventHub : Node, ILifecycleScope
 {
+    /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Singleton;
 
     // Wirtschafts-Events
@@ -120,6 +121,7 @@ public partial class EventHub : Node, ILifecycleScope
     [Signal]
     public delegate void MarketRevenueChangedEventHandler(double totalRevenue, int currentLevel);
 
+    /// <inheritdoc/>
     public override void _EnterTree()
     {
         base._EnterTree();
@@ -133,6 +135,7 @@ public partial class EventHub : Node, ILifecycleScope
         }
     }
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // Selbstregistrierung im ServiceContainer (DI) – idempotent

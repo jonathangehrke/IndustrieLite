@@ -8,7 +8,7 @@ public partial class BuildingManager
     /// Explicit DI initialization for core manager to avoid Service-Locator usage.
     /// Deutsche Logs/Kommentare gem. Richtlinie.
     /// </summary>
-    public void Initialize(LandManager landManager, EconomyManager economyManager, Database? database = null, EventHub? eventHub = null, ProductionManager? productionManager = null, Simulation? simulation = null, GameTimeManager? gameTimeManager = null, RoadManager? roadManager = null)
+    public void Initialize(LandManager landManager, EconomyManager economyManager, ISceneGraph sceneGraph, Database? database = null, EventHub? eventHub = null, ProductionManager? productionManager = null, Simulation? simulation = null, GameTimeManager? gameTimeManager = null, RoadManager? roadManager = null)
     {
         if (landManager == null)
         {
@@ -20,8 +20,14 @@ public partial class BuildingManager
             throw new ArgumentNullException(nameof(economyManager));
         }
 
+        if (sceneGraph == null)
+        {
+            throw new ArgumentNullException(nameof(sceneGraph));
+        }
+
         this.landManager = landManager;
         this.economyManager = economyManager;
+        this.sceneGraph = sceneGraph;
         this.database = database;
         this.eventHub = eventHub;
 

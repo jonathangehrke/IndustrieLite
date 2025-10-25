@@ -15,6 +15,7 @@ public abstract class BaseRepository<T> : IDataRepository<T>
     protected readonly Dictionary<string, T> eintraegeNachId = new(StringComparer.Ordinal);
     protected readonly List<IDataLoader<T>> ladeReihenfolge = new();
 
+    /// <inheritdoc/>
     public async Task LoadDataAsync(SceneTree sceneTree)
     {
         foreach (var loader in this.ladeReihenfolge.OrderBy(l => l.Priority))
@@ -54,6 +55,7 @@ public abstract class BaseRepository<T> : IDataRepository<T>
         // Standard: keine zusaetzliche Verarbeitung noetig.
     }
 
+    /// <inheritdoc/>
     public virtual T? GetById(string id)
     {
         if (string.IsNullOrWhiteSpace(id))
@@ -71,8 +73,10 @@ public abstract class BaseRepository<T> : IDataRepository<T>
 
     protected virtual T? ResolveLegacyId(string id) => null;
 
+    /// <inheritdoc/>
     public virtual IReadOnlyCollection<T> GetAll() => this.eintraegeNachId.Values.ToList();
 
+    /// <inheritdoc/>
     public virtual IReadOnlyCollection<T> GetByCategory(string category)
     {
         if (string.IsNullOrWhiteSpace(category))
@@ -94,8 +98,10 @@ public abstract class BaseRepository<T> : IDataRepository<T>
 
     protected virtual string? GetKategorie(T item) => null;
 
+    /// <inheritdoc/>
     public virtual bool Exists(string id) => this.GetById(id) != null;
 
+    /// <inheritdoc/>
     public virtual Result<T> TryGet(string id)
     {
         var eintrag = this.GetById(id);

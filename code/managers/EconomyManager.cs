@@ -6,6 +6,7 @@ using Godot;
 
 public partial class EconomyManager : Node, IEconomyQuery, ILifecycleScope
 {
+    /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
     // Startkapital
 
@@ -31,6 +32,7 @@ public partial class EconomyManager : Node, IEconomyQuery, ILifecycleScope
     /// </summary>
     public double Money { get; private set; }
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // Named-Self-Registration für GDScript-Bridge

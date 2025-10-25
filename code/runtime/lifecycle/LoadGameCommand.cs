@@ -6,8 +6,10 @@ namespace IndustrieLite.Runtime.Lifecycle
 
     public class LoadGameCommand : IGameLifecycleCommand
     {
+        /// <inheritdoc/>
         public string Name => "LoadGame";
 
+        /// <inheritdoc/>
         public bool CanExecute(GameLifecycleContext context)
         {
             if (context == null)
@@ -28,6 +30,7 @@ namespace IndustrieLite.Runtime.Lifecycle
             return context.HasRequiredManagersForLoad();
         }
 
+        /// <inheritdoc/>
         public async Task<GameLifecycleResult> ExecuteAsync(GameLifecycleContext context)
         {
             if (!this.CanExecute(context))

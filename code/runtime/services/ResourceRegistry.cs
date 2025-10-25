@@ -24,6 +24,7 @@ public partial class ResourceRegistry : Node
     private static readonly StringName IdPig = new("pig");
     private static readonly StringName IdGrain = new("grain");
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // Selbstregistrierung im DI-Container

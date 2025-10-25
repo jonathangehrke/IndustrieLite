@@ -10,10 +10,12 @@ using Godot;
 /// </summary>
 public partial class ProductionCalculationService : Node, ILifecycleScope
 {
+    /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
 
     private GameDatabase? gameDatabase;
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // No self-registration - managed by DIContainer (Clean Architecture)

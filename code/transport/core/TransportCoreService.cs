@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 namespace IndustrieLite.Transport.Core
 {
     using System;
@@ -28,11 +28,11 @@ namespace IndustrieLite.Transport.Core
 
         public TransportCoreService(
             ITransportJobManager jobManager,
-                                    ITransportOrderManager orderManager,
-                                    ITransportPlanningService planningService,
-                                    ITransportSupplyService supplyService,
-                                    ITransportPersistenceService persistenceService,
-                                    ITransportEventService eventService)
+            ITransportOrderManager orderManager,
+            ITransportPlanningService planningService,
+            ITransportSupplyService supplyService,
+            ITransportPersistenceService persistenceService,
+            ITransportEventService eventService)
         {
             this.jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
             this.orderManager = orderManager ?? throw new ArgumentNullException(nameof(orderManager));
@@ -46,9 +46,9 @@ namespace IndustrieLite.Transport.Core
 
         public TransportCoreService(
             OrderBook? orderBook = null,
-                                    SupplyIndex? supplyIndex = null,
-                                    Scheduler? scheduler = null,
-                                    Router? router = null)
+            SupplyIndex? supplyIndex = null,
+            Scheduler? scheduler = null,
+            Router? router = null)
         {
             this.jobManager = new JobManagerService();
             this.supplyService = new SupplyService(supplyIndex);
@@ -82,6 +82,7 @@ namespace IndustrieLite.Transport.Core
                     this.eventService.AddLegacyJobGeplantHandler(value);
                 }
             }
+
             remove
             {
                 if (value != null)
@@ -100,6 +101,7 @@ namespace IndustrieLite.Transport.Core
                     this.eventService.AddLegacyJobGestartetHandler(value);
                 }
             }
+
             remove
             {
                 if (value != null)
@@ -118,6 +120,7 @@ namespace IndustrieLite.Transport.Core
                     this.eventService.AddLegacyJobAbgeschlossenHandler(value);
                 }
             }
+
             remove
             {
                 if (value != null)
@@ -136,6 +139,7 @@ namespace IndustrieLite.Transport.Core
                     this.eventService.AddLegacyJobFehlgeschlagenHandler(value);
                 }
             }
+
             remove
             {
                 if (value != null)
@@ -254,6 +258,7 @@ namespace IndustrieLite.Transport.Core
             this.eventService.ConnectPlanningService(this.planningService);
         }
 
+        /// <inheritdoc/>
         public void Dispose()
         {
             if (this.disposed)

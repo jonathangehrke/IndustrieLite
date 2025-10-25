@@ -20,6 +20,7 @@ public class SaveManager
         this.serviceContainer = container;
     }
 
+    [Obsolete]
     public void SaveGame(string fileName, LandManager land, BuildingManager buildings, EconomyManager economy, TransportManager? transport = null)
     {
         string? filePath = null;
@@ -98,6 +99,7 @@ public class SaveManager
         }
     }
 
+    [Obsolete]
     public async Task SaveGameAsync(string fileName, LandManager land, BuildingManager buildings, EconomyManager economy, TransportManager? transport = null)
     {
         string? filePath = null;
@@ -176,6 +178,7 @@ public class SaveManager
         }
     }
 
+    [Obsolete]
     public async Task SaveGameAsync(string fileName, LandManager land, BuildingManager buildings, EconomyManager economy, TransportManager? transport, CancellationToken cancellationToken)
     {
         string? filePath = null;

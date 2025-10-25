@@ -5,6 +5,7 @@ using Godot;
 
 public partial class RoadManager : Node2D, ILifecycleScope
 {
+    /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
 
     [Export]
@@ -28,12 +29,14 @@ public partial class RoadManager : Node2D, ILifecycleScope
     private LandManager landManager = default!;
     private BuildingManager buildingManager = default!;
     private EconomyManager economyManager = default!;
+    private ISceneGraph sceneGraph = default!;
 
     private RoadGrid grid = default!;
     private RoadPathfinder pathfinder = default!;
     private RoadRenderer renderer = default!;
     private EventHub? eventHub;
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // Named-Self-Registration für GDScript-Bridge
@@ -51,6 +54,7 @@ public partial class RoadManager : Node2D, ILifecycleScope
         }
     }
 
+    /// <inheritdoc/>
     public override void _ExitTree()
     {
         // Sicherstellen, dass Event-Abos sauber geloest werden

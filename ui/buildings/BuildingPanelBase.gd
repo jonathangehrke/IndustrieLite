@@ -166,12 +166,6 @@ func _get_building_def() -> Resource:
 func _get_resource_display_name(resource_id: String) -> String:
 	if building_data_service != null:
 		return building_data_service.hole_resource_anzeige(resource_id)
-	var data_index = get_node_or_null("/root/DataIndex")
-	if data_index:
-		var resources = data_index.get_resources()
-		for res in resources:
-			if res.Id == resource_id:
-				return res.DisplayName
 	return resource_id.capitalize()
 
 func _get_available_suppliers(resource_id: String) -> Array:

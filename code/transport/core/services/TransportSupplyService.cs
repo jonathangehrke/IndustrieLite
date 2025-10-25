@@ -19,8 +19,10 @@ namespace IndustrieLite.Transport.Core.Services
             this.lieferIndex = supplyIndex ?? new SupplyIndex();
         }
 
+        /// <inheritdoc/>
         public SupplyIndex LieferIndex => this.lieferIndex;
 
+        /// <inheritdoc/>
         public void AktualisiereLieferindex(IEnumerable<LieferantDaten> daten)
         {
             if (daten == null)
@@ -44,6 +46,7 @@ namespace IndustrieLite.Transport.Core.Services
             this.lieferIndex.RebuildFromSupplierData(liste);
         }
 
+        /// <inheritdoc/>
         public StringName MappeProduktZuResourceId(string produkt)
         {
             // Robuste Zuordnung von Anzeigenamen (DE/EN, Singular/Plural) zu internen Resource-IDs

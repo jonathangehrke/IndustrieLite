@@ -15,6 +15,7 @@ public interface IProducer
 
 public partial class ProductionManager : Node, ITickable, ILifecycleScope
 {
+    /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
     // DI via ServiceContainer (keine NodePaths)
 
@@ -35,8 +36,10 @@ public partial class ProductionManager : Node, ITickable, ILifecycleScope
     private List<IProducer> producers = new();
     private double tickAccum = 0.0; // Akkumulator (Simulation-dt)
 
+    /// <inheritdoc/>
     public new string Name => "ProductionManager";
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // Named-Self-Registration für GDScript-Bridge
@@ -244,6 +247,7 @@ public partial class ProductionManager : Node, ITickable, ILifecycleScope
         }
     }
 
+    /// <inheritdoc/>
     public override void _ExitTree()
     {
         try

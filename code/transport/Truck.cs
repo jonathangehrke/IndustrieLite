@@ -51,6 +51,7 @@ public partial class Truck : Node2D
     // Sprite fuer visuelles Truck-Bild
     private Sprite2D? sprite;
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         this.devFlags = ServiceContainer.Instance?.GetNamedService<Node>(ServiceNames.DevFlags);
@@ -93,6 +94,7 @@ public partial class Truck : Node2D
     private float interpAccum = 1f;
     private float interpInterval = 1f;
 
+    /// <inheritdoc/>
     public override void _Draw()
     {
         // Truck-Koerper zeichnen (nur als Fallback, wenn Sprite fehlt)
@@ -132,6 +134,7 @@ public partial class Truck : Node2D
         }
     }
 
+    /// <inheritdoc/>
     public override void _Process(double delta)
     {
         if (!this.simInitialized)

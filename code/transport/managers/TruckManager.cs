@@ -5,24 +5,28 @@ using IndustrieLite.Transport.Interfaces;
 
 public partial class TruckManager : Node, ITruckManager
 {
+    /// <inheritdoc/>
     public List<Truck> Trucks { get; private set; } = new List<Truck>();
 
+    /// <inheritdoc/>
     public int MaxMengeProTruck { get; private set; }
 
     private Fleet? fleet;
     private RoadManager? roadManager;
     private BuildingManager buildingManager = default!;
+    private GameManager? gameManager;
 
     // Delegate für Kostenberechnung (wird vom TransportCoordinator gesetzt)
     public System.Func<Vector2, Vector2, int, double>? CalculateCostDelegate { get; set; }
 
     public System.Func<Building, Vector2>? CalculateCenterDelegate { get; set; }
 
-    public void Initialize(Fleet fleet, RoadManager? roadManager, BuildingManager buildingManager, int maxMengeProTruck)
+    public void Initialize(Fleet fleet, RoadManager? roadManager, BuildingManager buildingManager, GameManager gameManager, int maxMengeProTruck)
     {
         this.fleet = fleet;
         this.roadManager = roadManager;
         this.buildingManager = buildingManager;
+        this.gameManager = gameManager;
         this.MaxMengeProTruck = maxMengeProTruck;
     }
 
@@ -39,6 +43,7 @@ public partial class TruckManager : Node, ITruckManager
             gebaeude.Size.Y * this.buildingManager.TileSize / 2);
     }
 
+    /// <inheritdoc/>
     public Truck SpawnTruck(Vector2 start, Vector2 ziel, int menge, double ppu, float? speedOverride)
     {
         // Debug output to track all truck spawns
@@ -58,7 +63,7 @@ public partial class TruckManager : Node, ITruckManager
             }
         }
 
-        var game = this.GetNode<GameManager>("../../.."); // Adjusted path for new hierarchy
+        var game = this.gameManager; // Injected via DI in Initialize()
         Truck truck;
         if (this.fleet != null)
         {
@@ -149,11 +154,13 @@ public partial class TruckManager : Node, ITruckManager
         return truck;
     }
 
+    /// <inheritdoc/>
     public Truck SpawnTruck(Vector2 start, Vector2 ziel, int menge, double ppu)
     {
         return this.SpawnTruck(start, ziel, menge, ppu, null);
     }
 
+    /// <inheritdoc/>
     public void ProcessTruckTick(double dt)
     {
         // Snapshot verwenden, um Aenderungen (z. B. Rueckfahrten) waehrend Iteration zu erlauben
@@ -169,6 +176,7 @@ public partial class TruckManager : Node, ITruckManager
         }
     }
 
+    /// <inheritdoc/>
     public void RepathAllTrucks()
     {
         if (!this.IsInsideTree() || this.roadManager == null)
@@ -192,6 +200,7 @@ public partial class TruckManager : Node, ITruckManager
         this.Trucks.AddRange(alive);
     }
 
+    /// <inheritdoc/>
     public void CancelOrdersFor(Node2D n)
     {
         var alive = new List<Truck>();
@@ -215,6 +224,7 @@ public partial class TruckManager : Node, ITruckManager
         DebugLogger.LogTransport(() => $"CancelOrdersFor: Trucks für {n.Name} bereinigt");
     }
 
+    /// <inheritdoc/>
     public void RestartPendingTrucks()
     {
         foreach (var truck in this.Trucks)

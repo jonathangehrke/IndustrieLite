@@ -82,6 +82,7 @@ public sealed class AboVerwalter : IDisposable
         this.abos.Clear();
     }
 
+    /// <inheritdoc/>
     public void Dispose()
     {
         this.DisposeAll();

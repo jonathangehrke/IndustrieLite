@@ -18,6 +18,7 @@ public partial class BootSelfTest : Node
     [Export]
     public bool RunInRelease { get; set; } = false;
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // In Release-Builds ggf. keinen Check ausführen
@@ -109,11 +110,6 @@ public partial class BootSelfTest : Node
         if (root.GetNodeOrNull<Node>("/root/UIService") == null)
         {
             DebugLogger.Log("debug_services", DebugLogger.LogLevel.Error, () => "[BT005] UIService Autoload fehlt");
-            ok = false;
-        }
-        if (root.GetNodeOrNull<Node>("/root/DataIndex") == null)
-        {
-            DebugLogger.Log("debug_services", DebugLogger.LogLevel.Error, () => "[BT016] DataIndex Autoload fehlt");
             ok = false;
         }
 

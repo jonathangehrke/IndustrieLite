@@ -7,6 +7,7 @@ public partial class ToastHud : Control
     private VBoxContainer stack = default!;
     private EventHub? eventHub;
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         this.Name = "ToastHud";

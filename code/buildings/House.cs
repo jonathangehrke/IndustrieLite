@@ -15,6 +15,7 @@ public partial class House : Building, IProducer
         this.Color = new Color(0.9f, 0.2f, 0.2f);
     }
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         base._Ready();
@@ -25,6 +26,7 @@ public partial class House : Building, IProducer
         DebugLogger.LogServices($"House registered with ProductionManager at position {this.GridPos}");
     }
 
+    /// <inheritdoc/>
     public override void _ExitTree()
     {
         if (this.productionManager != null)
@@ -34,11 +36,13 @@ public partial class House : Building, IProducer
         base._ExitTree();
     }
 
+    /// <inheritdoc/>
     public Dictionary<StringName, int> GetResourceNeeds()
     {
         return new Dictionary<StringName, int>();
     }
 
+    /// <inheritdoc/>
     public Dictionary<StringName, int> GetResourceProduction()
     {
         return new Dictionary<StringName, int>
@@ -47,6 +51,7 @@ public partial class House : Building, IProducer
         };
     }
 
+    /// <inheritdoc/>
     public void OnProductionTick(bool canProduce)
     {
         DebugLogger.LogServices($"House stellt {this.Output} Arbeiter bereit");
@@ -69,6 +74,7 @@ public partial class House : Building, IProducer
         return new Godot.Collections.Dictionary();
     }
 
+    /// <inheritdoc/>
     public override void InitializeDependencies(ProductionManager? productionManager, EconomyManager? economyManager, EventHub? eventHub)
     {
         if (productionManager != null)

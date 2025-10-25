@@ -6,8 +6,10 @@ namespace IndustrieLite.Runtime.Lifecycle
 
     public class SaveGameCommand : IGameLifecycleCommand
     {
+        /// <inheritdoc/>
         public string Name => "SaveGame";
 
+        /// <inheritdoc/>
         public bool CanExecute(GameLifecycleContext context)
         {
             if (context == null)
@@ -28,6 +30,7 @@ namespace IndustrieLite.Runtime.Lifecycle
             return context.HasRequiredManagersForSave();
         }
 
+        /// <inheritdoc/>
         public async Task<GameLifecycleResult> ExecuteAsync(GameLifecycleContext context)
         {
             if (!this.CanExecute(context))

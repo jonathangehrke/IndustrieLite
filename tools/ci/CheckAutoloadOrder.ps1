@@ -3,15 +3,16 @@ Param()
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$expected = @('ServiceContainer','DevFlags','EventHub','DataIndex','Database','UIService','BootSelfTest')
+$expected = @('ServiceContainer','SceneGraphAdapter','DevFlags','EventHub','Database','UIService','BootSelfTest','DataIndex')
 $expectedMap = @{
   'ServiceContainer'='*res://code/runtime/ServiceContainer.cs'
+  'SceneGraphAdapter'='*res://code/runtime/SceneGraphAdapter.cs'
   'DevFlags'='*res://code/runtime/DevFlags.gd'
   'EventHub'='*res://code/runtime/EventHub.cs'
-  'DataIndex'='*res://scenes/DataIndex.gd'
   'Database'='*res://code/runtime/Database.cs'
   'UIService'='*res://code/runtime/UIService.cs'
   'BootSelfTest'='*res://code/runtime/BootSelfTest.cs'
+  'DataIndex'='*res://scenes/DataIndex.gd'
 }
 
 $autoloadNames = @()

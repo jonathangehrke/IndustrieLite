@@ -31,6 +31,7 @@ public class ResourceInfo
 
 public partial class ResourceManager : Node, ITickable, ILifecycleScope
 {
+    /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
 
     // Dynamische Ressourcen nach StringName-ID (neu)
@@ -68,6 +69,7 @@ public partial class ResourceManager : Node, ITickable, ILifecycleScope
     private double resetAccum = 0.0;
     private bool registeredWithSimulation;
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // Named-Self-Registration für GDScript-Bridge
@@ -94,6 +96,7 @@ public partial class ResourceManager : Node, ITickable, ILifecycleScope
         this.EnsureResourceExists(IdGrain);
     }
 
+    /// <inheritdoc/>
     public override void _ExitTree()
     {
         try
@@ -204,6 +207,7 @@ public partial class ResourceManager : Node, ITickable, ILifecycleScope
     /// Liefert Gesamtmenge einer Ressource (Manager + Gebaeudeinventare).
     /// </summary>
     /// <returns></returns>
+    [Obsolete]
     public int GetTotalOfResource(StringName resourceId)
     {
         // Zuerst ResourceManager-interne Menge
@@ -268,6 +272,8 @@ public partial class ResourceManager : Node, ITickable, ILifecycleScope
     }
 
     // --- Simulation-Tick (statt GameClock) ---
+
+    /// <inheritdoc/>
     public void Tick(double dt)
     {
         if (!this.GameClockAktiv)
@@ -304,6 +310,8 @@ public partial class ResourceManager : Node, ITickable, ILifecycleScope
     }
 
     // ITickable-Name
+
+    /// <inheritdoc/>
     string ITickable.Name => "ResourceManager";
 
     // --- Hilfsfunktionen für dynamische Ressourcen ---

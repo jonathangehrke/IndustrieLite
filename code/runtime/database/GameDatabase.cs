@@ -8,19 +8,25 @@ using Godot;
 /// </summary>
 public partial class GameDatabase : Node, IGameDatabase
 {
+    /// <inheritdoc/>
     [Export]
     public bool AllowLegacyFallbackInRelease { get; set; }
 
+    /// <inheritdoc/>
     public IBuildingRepository Buildings { get; private set; } = default!;
 
+    /// <inheritdoc/>
     public IResourceRepository Resources { get; private set; } = default!;
 
+    /// <inheritdoc/>
     public IRecipeRepository Recipes { get; private set; } = default!;
 
+    /// <inheritdoc/>
     public bool IsInitialized { get; private set; }
 
     private Task? initialisierungTask;
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         var legacyFlag = new Func<bool>(() => this.AllowLegacyFallbackInRelease);
@@ -39,6 +45,7 @@ public partial class GameDatabase : Node, IGameDatabase
         await this.InitializeAsync();
     }
 
+    /// <inheritdoc/>
     public async Task InitializeAsync()
     {
         if (this.initialisierungTask != null)

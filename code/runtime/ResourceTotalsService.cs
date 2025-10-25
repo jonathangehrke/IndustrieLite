@@ -5,6 +5,7 @@ using Godot;
 
 public partial class ResourceTotalsService : Node, ITickable, ILifecycleScope
 {
+    /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
 
     // SC-only: keine NodePath-DI
@@ -64,6 +65,7 @@ public partial class ResourceTotalsService : Node, ITickable, ILifecycleScope
         this.EmitTotals();
     }
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // Self-registration for GDScript-Bridge only
@@ -79,6 +81,7 @@ public partial class ResourceTotalsService : Node, ITickable, ILifecycleScope
         }
     }
 
+    /// <inheritdoc/>
     public override void _ExitTree()
     {
         try
@@ -91,6 +94,7 @@ public partial class ResourceTotalsService : Node, ITickable, ILifecycleScope
         base._ExitTree();
     }
 
+    /// <inheritdoc/>
     public void Tick(double dt)
     {
         if (this.EmitIntervalSec <= 0)
@@ -111,6 +115,7 @@ public partial class ResourceTotalsService : Node, ITickable, ILifecycleScope
         return gebaeude != null && GodotObject.IsInstanceValid(gebaeude) && !gebaeude.IsQueuedForDeletion();
     }
 
+    /// <inheritdoc/>
     string ITickable.Name => "ResourceTotalsService";
 
     private Godot.Collections.Dictionary CalculateTotals()

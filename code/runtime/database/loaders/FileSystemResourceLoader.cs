@@ -16,10 +16,13 @@ public sealed class FileSystemResourceLoader : IDataLoader<GameResourceDef>
         this.basisPfad = basisPfad;
     }
 
+    /// <inheritdoc/>
     public string LoaderName => nameof(FileSystemResourceLoader);
 
+    /// <inheritdoc/>
     public int Priority => 10;
 
+    /// <inheritdoc/>
     public Task<IReadOnlyCollection<GameResourceDef>> LoadAsync(SceneTree sceneTree)
     {
         var daten = this.LadeAusOrdner(this.basisPfad);

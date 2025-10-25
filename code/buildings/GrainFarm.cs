@@ -40,6 +40,7 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
         this.Color = new Color(0.8f, 0.9f, 0.5f);
     }
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         base._Ready();
@@ -77,6 +78,7 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
         }
     }
 
+    /// <inheritdoc/>
     public override void _ExitTree()
     {
         this.productionManager?.UnregisterProducer(this);
@@ -84,6 +86,8 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
     }
 
     // IProducer: Bedarf (nur Basisressourcen aus Rezept; keine Arbeiterpflicht per Default)
+
+    /// <inheritdoc/>
     public Dictionary<StringName, int> GetResourceNeeds()
     {
         var neu = new Dictionary<StringName, int>();
@@ -103,12 +107,16 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
     }
 
     // IProducer: Kapazitaetsproduktion (Power/Water) - Bauernhof liefert keine Basiskapazitaeten
+
+    /// <inheritdoc/>
     public Dictionary<StringName, int> GetResourceProduction()
     {
         return new Dictionary<StringName, int>();
     }
 
     // Produktions-Tick: Rezept fortschreiben und Ausgaben in Bestand uebernehmen
+
+    /// <inheritdoc/>
     public void OnProductionTick(bool canProduce)
     {
         this.uiLastCanProduce = canProduce;
@@ -167,6 +175,7 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
         return 1.0 / rate;
     }
 
+    /// <inheritdoc/>
     public string GetRecipeIdForUI()
     {
         if (this.controller != null && this.controller.AktuellesRezept != null)
@@ -182,6 +191,7 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
         return this.HoleStandardRezeptId();
     }
 
+    /// <inheritdoc/>
     public bool SetRecipeFromUI(string rezeptId)
     {
         var standardId = this.HoleStandardRezeptId();
@@ -214,6 +224,8 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
     }
 
     // Einfache UI-Hilfen
+
+    /// <inheritdoc/>
     public Godot.Collections.Dictionary GetNeedsForUI()
     {
         var d = new Godot.Collections.Dictionary();
@@ -230,6 +242,7 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
         return d;
     }
 
+    /// <inheritdoc/>
     public Godot.Collections.Dictionary GetProductionForUI()
     {
         var d = new Godot.Collections.Dictionary();
@@ -297,6 +310,7 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
         return d;
     }
 
+    /// <inheritdoc/>
     public override Godot.Collections.Dictionary GetInspectorData()
     {
         var data = base.GetInspectorData();
@@ -320,6 +334,7 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
         return "grain_production";
     }
 
+    /// <inheritdoc/>
     public override void InitializeDependencies(ProductionManager? productionManager, EconomyManager? economyManager, EventHub? eventHub)
     {
         if (productionManager != null)
@@ -343,6 +358,7 @@ public partial class GrainFarm : Building, IProducer, IHasInventory, IProduction
         }
     }
 
+    /// <inheritdoc/>
     public override void OnRecipeStateRestored(string recipeId)
     {
         // Synchronize RezeptIdOverride with restored recipe state

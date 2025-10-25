@@ -17,6 +17,7 @@ public class SaveLoadTest
     /// Führt einen vollständigen Round-trip-Test durch: Save → Load → Save → Vergleich.
     /// </summary>
     /// <returns></returns>
+    [Obsolete]
     public static SaveLoadTestResult RunRoundTripTest(LandManager land, BuildingManager buildings, EconomyManager economy, ProductionManager production, Map? map)
     {
         var result = new SaveLoadTestResult();
@@ -472,6 +473,7 @@ public class SaveLoadTestResult
 
     public string? SecondSaveContent { get; set; }
 
+    /// <inheritdoc/>
     public override string ToString()
     {
         if (this.TestSuccessful)

@@ -4,6 +4,7 @@ using Godot;
 
 public partial class InputManager : Node, ILifecycleScope
 {
+    /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
 
     public enum InputMode
@@ -13,7 +14,7 @@ public partial class InputManager : Node, ILifecycleScope
         BuyLand,
         SellLand,
         Transport,
-        Demolish
+        Demolish,
     }
 
     // Keine NodePath-DI mehr: Alle Abhängigkeiten werden über den ServiceContainer aufgelöst
@@ -50,6 +51,7 @@ public partial class InputManager : Node, ILifecycleScope
 
     private bool initialized = false;
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         // Named-Self-Registration für GDScript-Bridge

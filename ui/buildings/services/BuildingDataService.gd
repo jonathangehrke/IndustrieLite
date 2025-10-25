@@ -19,12 +19,9 @@ func _registriere_service() -> void:
 	# Kein Warning - lokale UI Services müssen nicht global registriert sein
 
 func _aktualisiere_data_index() -> void:
-	_data_index = null
-	var service_container: Node = get_node_or_null("/root/ServiceContainer")
-	if service_container and service_container.has_method("GetNamedService"):
-		_data_index = service_container.GetNamedService("DataIndex")
-	if _data_index == null:
-		_data_index = get_node_or_null("/root/DataIndex")
+	# DataIndex ist ein Godot Autoload-Singleton und direkt verfügbar
+	# Kein /root/ Lookup nötig - Autoloads sind globale Singletons in Godot
+	_data_index = DataIndex
 
 func hole_gebaeude_definition(gebaeude: Node) -> Resource:
 	# Validate building is still valid (not freed/queued for deletion)

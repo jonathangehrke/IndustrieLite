@@ -15,6 +15,7 @@ public partial class MapVisualFeedbackSystem : Node
 
     public Vector2I? AktuelleZelle => this.aktiveZelle;
 
+    /// <inheritdoc/>
     public override void _Ready()
     {
         this.map = this.GetParent() as Map;
@@ -30,6 +31,7 @@ public partial class MapVisualFeedbackSystem : Node
         DebugLogger.LogInput(() => $"MapVisualFeedbackSystem: Feedback gestartet bei {zelle}", this.DebugAusgabe);
     }
 
+    /// <inheritdoc/>
     public override void _Process(double delta)
     {
         if (!this.aktiveZelle.HasValue)

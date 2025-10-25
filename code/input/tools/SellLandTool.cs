@@ -21,16 +21,19 @@ public class SellLandTool : IInputTool
         this.roadManager = roadManager;
     }
 
+    /// <inheritdoc/>
     public void Enter()
     {
         DebugLogger.LogInput("SellLandTool aktiviert");
     }
 
+    /// <inheritdoc/>
     public void Exit()
     {
         DebugLogger.LogInput("SellLandTool deaktiviert");
     }
 
+    /// <inheritdoc/>
     public void OnClick(Vector2I zelle)
     {
         DebugLogger.LogInput(() => $"SellLandTool: versuche Land bei {zelle} zu verkaufen");

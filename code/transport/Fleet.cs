@@ -9,7 +9,7 @@ public partial class Fleet : Node
 {
     public List<Truck> Trucks { get; } = new List<Truck>();
 
-    public Truck SpawnTruck(Vector2 start, Vector2 ziel, int menge, double transportCost, GameManager game)
+    public Truck SpawnTruck(Vector2 start, Vector2 ziel, int menge, double transportCost, GameManager? game)
     {
         DebugLogger.Debug("debug_transport", "FleetSpawnTruck", $"Creating truck",
             new System.Collections.Generic.Dictionary<string, object?>(System.StringComparer.Ordinal) { { "amount", menge }, { "start", start }, { "target", ziel } });
