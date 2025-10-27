@@ -68,7 +68,7 @@ jobs:
         run: dotnet test -c Release --no-build --logger "trx;LogFileName=testresults.trx"
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: testresults
           path: '**/*.trx'
