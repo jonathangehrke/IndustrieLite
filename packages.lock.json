@@ -4,15 +4,24 @@
     "net8.0": {
       "Godot.SourceGenerators": {
         "type": "Direct",
-        "requested": "[4.4.1, )",
-        "resolved": "4.4.1",
-        "contentHash": "V/cuX41BxippWGD79zrP2bhqfXkuyiy9OFuCkTu3flo7I6STSJca637TL2phe7rzROIFre0vQR1+PAMdsjO3zg=="
+        "requested": "[4.5.1, )",
+        "resolved": "4.5.1",
+        "contentHash": "HOHYJQO5A/kzf5CUobeTPOX+JawSvjkDE0v/Fyo4EMYEC2MvCTGUvpJFjqQQmHYLNsiiB7RLVilcnup+jiVfdA=="
       },
       "GodotSharp": {
         "type": "Direct",
         "requested": "[4.4.1, )",
         "resolved": "4.4.1",
         "contentHash": "ghnQEo5LikQPfbCYcVxje8epffNCiyNG4zvGWUDRZRC1O+653+yqG3wdxk3+5RZsA3jaRuGKRavsGcnhLKe12g=="
+      },
+      "GodotSharpEditor": {
+        "type": "Direct",
+        "requested": "[4.4.1, )",
+        "resolved": "4.4.1",
+        "contentHash": "cc3nA24r/sjW8KxrNqfSQk4CQMQYcg/kYk5935R88IhGBdRuTH4miaBXPlzR/td5GR8i1oGtCMWyW8axpQ0DxA==",
+        "dependencies": {
+          "GodotSharp": "4.4.1"
+        }
       },
       "Meziantou.Analyzer": {
         "type": "Direct",
@@ -34,7 +43,6 @@
         "resolved": "1.2.0.354",
         "contentHash": "/3RlM31XbJ02gaWh7dVumWOyMvGHswb/zygGJXd9oEJMRyyYc/HFJlAC5gBPxvi9cB4CMvIyyUTmZz5VLKwTvg=="
       }
-    },
-    "net8.0/win-x64": {}
+    }
   }
 }
