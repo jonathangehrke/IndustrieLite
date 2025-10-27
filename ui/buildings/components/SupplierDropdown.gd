@@ -49,7 +49,7 @@ func _baue_header(required_amount: float) -> void:
 
 func _befuelle_dropdown(supplier_infos: Array, vorwahl: Node = null) -> void:
 	_dropdown.clear()
-	_dropdown.add_item("Auto-Auswahl")
+	_dropdown.add_item("Auswahl erforderlich!")
 	_dropdown.set_item_metadata(0, null)
 
 	var index: int = 1
@@ -73,10 +73,26 @@ func _befuelle_dropdown(supplier_infos: Array, vorwahl: Node = null) -> void:
 		index += 1
 
 	_dropdown.selected = preselect_index
+	_aktualisiere_dropdown_farbe(preselect_index)
 
 func _on_item_selected(index: int) -> void:
+	_aktualisiere_dropdown_farbe(index)
 	var metadata = _dropdown.get_item_metadata(index)
 	emit_signal("lieferant_gewaehlt", _resource_id, metadata)
+
+func _aktualisiere_dropdown_farbe(index: int) -> void:
+	if index == 0:
+		# "Auswahl erforderlich!" ist gewählt - rot darstellen
+		_dropdown.add_theme_color_override("font_color", Color.RED)
+		_dropdown.add_theme_color_override("font_hover_color", Color.RED)
+		_dropdown.add_theme_color_override("font_pressed_color", Color.RED)
+		_dropdown.add_theme_color_override("font_focus_color", Color.RED)
+	else:
+		# Normaler Lieferant ist gewählt - Standard-Farben wiederherstellen
+		_dropdown.remove_theme_color_override("font_color")
+		_dropdown.remove_theme_color_override("font_hover_color")
+		_dropdown.remove_theme_color_override("font_pressed_color")
+		_dropdown.remove_theme_color_override("font_focus_color")
 
 func _leere_children() -> void:
 	for child in get_children():
