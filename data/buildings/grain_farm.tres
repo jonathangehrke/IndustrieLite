@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="BuildingDef" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=3 format=3 uid="uid://ocwaxvrh2164"]
 
 [ext_resource type="Script" uid="uid://cp8f6go1hj4gg" path="res://code/data/BuildingDef.cs" id="1_0"]
 [ext_resource type="Texture2D" uid="uid://brwqvdovjq44j" path="res://assets/buildings/Bauernhof.png" id="2_0"]
@@ -13,7 +13,7 @@ Cost = 1000
 Category = "Produktion"
 Icon = ExtResource("2_0")
 Alternatives = Array[String]([])
-Tags = Array[String]([])
+Tags = Array[String](["production"])
 LegacyIds = Array[String](["Farm", "Bauernhof"])
 RequiredLevel = 1
 DefaultRecipeId = "grain_production"

@@ -11,14 +11,16 @@ public class SellLandTool : IInputTool
     private readonly Map karte;
     private readonly BuildingManager buildingManager;
     private readonly RoadManager? roadManager;
+    private readonly UIService? uiService;
 
-    public SellLandTool(LandManager landManager, EconomyManager economyManager, Map karte, BuildingManager buildingManager, RoadManager? roadManager)
+    public SellLandTool(LandManager landManager, EconomyManager economyManager, Map karte, BuildingManager buildingManager, RoadManager? roadManager, UIService? uiService = null)
     {
         this.landManager = landManager;
         this.economyManager = economyManager;
         this.karte = karte;
         this.buildingManager = buildingManager;
         this.roadManager = roadManager;
+        this.uiService = uiService;
     }
 
     /// <inheritdoc/>
@@ -40,10 +42,9 @@ public class SellLandTool : IInputTool
         var res = this.landManager.TrySellLand(zelle, this.economyManager, this.buildingManager, this.roadManager);
         if (!res.Ok)
         {
-            var ui = ServiceContainer.Instance?.GetNamedService<UIService>(ServiceNames.UIService);
             if (res.ErrorInfo != null)
             {
-                ui?.ShowErrorToast(res.ErrorInfo);
+                this.uiService?.ShowErrorToast(res.ErrorInfo);
             }
 
             return;
@@ -51,8 +52,7 @@ public class SellLandTool : IInputTool
         // Optionales Feedback: gleiches visuelles Feedback wie beim Kauf nutzen
         this.karte?.TriggerPurchaseFeedback(zelle);
         {
-            var ui = ServiceContainer.Instance?.GetNamedService<UIService>(ServiceNames.UIService);
-            ui?.ShowSuccessToast($"Land verkauft bei {zelle}");
+            this.uiService?.ShowSuccessToast($"Land verkauft bei {zelle}");
         }
     }
 }

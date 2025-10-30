@@ -192,14 +192,10 @@ public partial class ProductionSystem : Node, IProductionSystem
 
             if (buildingDef == null)
             {
-                // Export-safe fallback: try DataIndex for BuildingDef before using legacy constants
-                buildingDef = this.TryGetBuildingDefFromDataIndex(buildingId);
-                if (buildingDef == null)
-                {
-                    // Fallback for legacy buildings without BuildingDef
-                    this.CalculateLegacyBuildingProduction(building);
-                    return;
-                }
+                // Fallback for legacy buildings without BuildingDef
+                DebugLogger.LogProduction(() => $"ProductionSystem: BuildingDef not found for '{buildingId}', using legacy fallback");
+                this.CalculateLegacyBuildingProduction(building);
+                return;
             }
 
             // Use BuildingDef data for production calculation
@@ -213,7 +209,7 @@ public partial class ProductionSystem : Node, IProductionSystem
 
             this.cachedTotals["buildings_total"] += 1.0;
 
-            if (building is ChickenFarm)
+            if (building is IProductionBuilding)
             {
                 if (!this.cachedTotals.ContainsKey("farms_total"))
                 {
@@ -262,7 +258,7 @@ public partial class ProductionSystem : Node, IProductionSystem
                     var recipe = this.database?.GetRecipe(rid);
                     if (recipe == null)
                     {
-                        recipe = TryGetRecipeFromDataIndex(rid);
+                        DebugLogger.Warn("debug_production", "RecipeNotFound", $"Recipe '{rid}' not found in Database for SolarPlant, production will be 0");
                     }
                     double perMinute = 0.0;
                     if (recipe != null)
@@ -287,7 +283,7 @@ public partial class ProductionSystem : Node, IProductionSystem
                     var recipe = this.database?.GetRecipe(rid);
                     if (recipe == null)
                     {
-                        recipe = TryGetRecipeFromDataIndex(rid);
+                        DebugLogger.Warn("debug_production", "RecipeNotFound", $"Recipe '{rid}' not found in Database for WaterPump, production will be 0");
                     }
                     double perMinute = 0.0;
                     if (recipe != null)
@@ -306,40 +302,8 @@ public partial class ProductionSystem : Node, IProductionSystem
                 }
                 break;
 
-            case BuildingIds.ChickenFarm:
-                if (building is ChickenFarm farm)
-                {
-                    // Verbrauch aus RecipeDef (wenn verfügbar)
-                    var powerNeed = 2.0;
-                    var waterNeed = 2.0;
-
-                    // Versuche RecipeDef zu finden
-                    var recipeId = this.database?.GetBuilding(BuildingIds.ChickenFarm)?.DefaultRecipeId ?? RecipeIds.ChickenProduction;
-                    var recipeDef = this.database?.GetRecipe(string.IsNullOrEmpty(recipeId) ? RecipeIds.ChickenProduction : recipeId) ?? TryGetRecipeFromDataIndex(recipeId);
-                    double chickensPerMinute = 0.0;
-                    if (recipeDef != null)
-                    {
-                        powerNeed = recipeDef.PowerRequirement;
-                        waterNeed = recipeDef.WaterRequirement;
-                        foreach (var amt in recipeDef.Outputs)
-                        {
-                            if (string.Equals(amt.ResourceId, ResourceIds.Chickens, StringComparison.Ordinal) || string.Equals(amt.ResourceId, "chicken", StringComparison.Ordinal))
-                            {
-                                chickensPerMinute += amt.PerMinute;
-                            }
-                        }
-                    }
-
-                    this.cachedTotals["power_consumption"] += powerNeed;
-                    this.cachedTotals["water_consumption"] += waterNeed;
-                    this.cachedTotals["chickens_total"] += farm.Stock;
-
-                    // Potentielle Produktion (pro Sekunde)
-                    var chickenProduction = chickensPerMinute / 60.0;
-                    production[ResourceIds.Chickens] = chickenProduction;
-                    this.cachedTotals["chickens_production"] += chickenProduction;
-                }
-                break;
+            // Generic production buildings (ChickenFarm, GrainFarm, PigFarm, etc.) are now handled via IProductionBuilding interface
+            // Production/consumption calculations are done through the recipe system
         }
 
         this.buildingProduction[building] = production;
@@ -444,65 +408,6 @@ public partial class ProductionSystem : Node, IProductionSystem
     }
 }
 
-// Helper methods region
-partial class ProductionSystem
-{
-    private RecipeDef? TryGetRecipeFromDataIndex(string id)
-    {
-        try
-        {
-            if (string.IsNullOrEmpty(id)) return null;
-            var sc = ServiceContainer.Instance;
-            var di = sc?.GetNamedService<Node>("DataIndex");
-            di ??= this.GetTree()?.Root?.GetNodeOrNull("/root/DataIndex");
-            if (di != null && di.HasMethod("get_recipes"))
-            {
-                var arrVar = di.Call("get_recipes");
-                if (arrVar.VariantType != Variant.Type.Nil)
-                {
-                    foreach (var v in (Godot.Collections.Array)arrVar)
-                    {
-                        var res = v.AsGodotObject();
-                        if (res is RecipeDef rd && !string.IsNullOrEmpty(rd.Id) && string.Equals(rd.Id, id, System.StringComparison.Ordinal))
-                        {
-                            return rd;
-                        }
-                    }
-                }
-            }
-        }
-        catch { }
-        return null;
-    }
-
-    private BuildingDef? TryGetBuildingDefFromDataIndex(string id)
-    {
-        try
-        {
-            if (string.IsNullOrEmpty(id)) return null;
-            var sc = ServiceContainer.Instance;
-            var di = sc?.GetNamedService<Node>("DataIndex");
-            di ??= this.GetTree()?.Root?.GetNodeOrNull("/root/DataIndex");
-            if (di != null && di.HasMethod("get_buildings"))
-            {
-                var arrVar = di.Call("get_buildings");
-                if (arrVar.VariantType != Variant.Type.Nil)
-                {
-                    foreach (var v in (Godot.Collections.Array)arrVar)
-                    {
-                        var res = v.AsGodotObject();
-                        if (res is BuildingDef bd && !string.IsNullOrEmpty(bd.Id) && string.Equals(bd.Id, id, System.StringComparison.Ordinal))
-                        {
-                            return bd;
-                        }
-                    }
-                }
-            }
-        }
-        catch { }
-        return null;
-    }
-}
 
 
 

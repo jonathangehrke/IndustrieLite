@@ -21,7 +21,9 @@ public partial class UIService : Node
     private InputManager? inputManager;
     private EventHub? eventHub;
     private Database? database;
+    private Node? dataIndex;
     private MarketService? marketService;
+    private LevelManager? levelManager;
 
     private bool servicesInitialized = false;
 
@@ -67,8 +69,20 @@ public partial class UIService : Node
         InputManager im,
         EventHub eh,
         Database db,
-        MarketService? ms = null)
+        MarketService? ms = null,
+        LevelManager? lm = null,
+        Node? dataIndex = null)
     {
+        // Validate required dependencies (fail-fast)
+        if (gm == null) throw new ArgumentNullException(nameof(gm), "UIService requires GameManager");
+        if (em == null) throw new ArgumentNullException(nameof(em), "UIService requires EconomyManager");
+        if (bm == null) throw new ArgumentNullException(nameof(bm), "UIService requires BuildingManager");
+        if (tm == null) throw new ArgumentNullException(nameof(tm), "UIService requires TransportManager");
+        if (rm == null) throw new ArgumentNullException(nameof(rm), "UIService requires RoadManager");
+        if (im == null) throw new ArgumentNullException(nameof(im), "UIService requires InputManager");
+        if (eh == null) throw new ArgumentNullException(nameof(eh), "UIService requires EventHub");
+        if (db == null) throw new ArgumentNullException(nameof(db), "UIService requires Database");
+
         this.gameManager = gm;
         this.economyManager = em;
         this.buildingManager = bm;
@@ -77,7 +91,9 @@ public partial class UIService : Node
         this.inputManager = im;
         this.eventHub = eh;
         this.database = db;
+        this.dataIndex = dataIndex;
         this.marketService = ms;
+        this.levelManager = lm;
         this.servicesInitialized = true;
 
         if (this.marketService != null)

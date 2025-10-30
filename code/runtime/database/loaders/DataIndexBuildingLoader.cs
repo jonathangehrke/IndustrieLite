@@ -18,17 +18,19 @@ public sealed class DataIndexBuildingLoader : IDataLoader<BuildingDef>
     /// <inheritdoc/>
     public Task<IReadOnlyCollection<BuildingDef>> LoadAsync(SceneTree sceneTree)
     {
-        // Try to get DataIndex from ServiceContainer first
+        // Try to get DataIndex from ServiceContainer first, then fall back to Autoload path
         Node? dataIndex = null;
         var sc = ServiceContainer.Instance;
         if (sc != null)
         {
             dataIndex = sc.GetNamedService<Node>("DataIndex");
         }
+        // Export-safe fallback: query /root/DataIndex directly if ServiceContainer isn't ready yet
+        dataIndex ??= sceneTree?.Root?.GetNodeOrNull("/root/DataIndex");
 
         if (dataIndex == null)
         {
-            DebugLogger.LogServices("DataIndexBuildingLoader: Kein DataIndex gefunden");
+            DebugLogger.LogServices("DataIndexBuildingLoader: Kein DataIndex gefunden (ServiceContainer und /root/DataIndex leer)");
             return Task.FromResult<IReadOnlyCollection<BuildingDef>>(System.Array.Empty<BuildingDef>());
         }
 
@@ -45,7 +47,24 @@ public sealed class DataIndexBuildingLoader : IDataLoader<BuildingDef>
             foreach (Variant eintrag in gebaeudeArray)
             {
                 var resource = eintrag.AsGodotObject();
-                if (resource is BuildingDef def && !string.IsNullOrEmpty(def.Id))
+                BuildingDef? def = null;
+                if (resource is BuildingDef typed && !string.IsNullOrEmpty(typed.Id))
+                {
+                    def = typed;
+                }
+                else if (resource is Resource res && !string.IsNullOrEmpty(res.ResourcePath))
+                {
+                    // Export timing workaround: reload as typed resource if C# class wasn't bound yet at preload time
+                    try
+                    {
+                        def = ResourceLoader.Load<BuildingDef>(res.ResourcePath);
+                    }
+                    catch
+                    {
+                        def = null;
+                    }
+                }
+                if (def != null && !string.IsNullOrEmpty(def.Id))
                 {
                     // Fix: Icons direkt laden (Export-Workaround)
                     // ExtResource-Referenzen in .tres werden im Export nicht aufgelöst
@@ -69,11 +88,11 @@ public sealed class DataIndexBuildingLoader : IDataLoader<BuildingDef>
                             def.Icon = ResourceLoader.Load<Texture2D>(iconPath);
                             if (def.Icon != null)
                             {
-                                GD.Print($"[DataIndexBuildingLoader] Icon geladen: {def.Id} → {iconPath}");
+                                DebugLogger.LogServices(() => $"[DataIndexBuildingLoader] Icon geladen: {def.Id} → {iconPath}");
                             }
                             else
                             {
-                                GD.PrintErr($"[DataIndexBuildingLoader] Icon FEHLT: {def.Id} → {iconPath}");
+                                DebugLogger.LogServices(() => $"[DataIndexBuildingLoader] Icon FEHLT: {def.Id} → {iconPath}");
                             }
                         }
                     }

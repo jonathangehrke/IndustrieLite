@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Godot;
 
@@ -75,6 +76,56 @@ public partial class GameDatabase : Node, IGameDatabase
         this.IsInitialized = true;
         DebugLogger.LogServices(() =>
             $"GameDatabase: Initialisiert - {this.Buildings.GetAll().Count} Gebaeude, {this.Resources.GetAll().Count} Ressourcen, {this.Recipes.GetAll().Count} Rezepte");
+
+        // Run data validation after loading
+        this.ValidateData();
+    }
+
+    /// <summary>
+    /// Validates all loaded data and logs results.
+    /// Called automatically after data loading.
+    /// </summary>
+    private void ValidateData()
+    {
+        DebugLogger.Log("data_validation", DebugLogger.LogLevel.Info,
+            () => "=== Starting Data Validation ===");
+
+        // Validate Resources first (needed for Recipe/Building validation)
+        var resourceResults = DataValidator.ValidateAllResources(this.Resources);
+        DataValidator.LogValidationResults("Resource", resourceResults);
+
+        // Validate Recipes (needs Resources)
+        var recipeResults = RecipeValidator.ValidateAllRecipes(this.Recipes, this.Resources);
+        RecipeValidator.LogValidationResults(recipeResults);
+
+        // Validate Buildings (needs Recipes)
+        var buildingResults = DataValidator.ValidateAllBuildings(this.Buildings, this.Recipes);
+        DataValidator.LogValidationResults("Building", buildingResults);
+
+        // Summary
+        int totalErrors = resourceResults.Sum(r => r.Value.Errors.Count) +
+                         recipeResults.Sum(r => r.Value.Errors.Count) +
+                         buildingResults.Sum(r => r.Value.Errors.Count);
+
+        int totalWarnings = resourceResults.Sum(r => r.Value.Warnings.Count) +
+                           recipeResults.Sum(r => r.Value.Warnings.Count) +
+                           buildingResults.Sum(r => r.Value.Warnings.Count);
+
+        if (totalErrors > 0)
+        {
+            DebugLogger.Log("data_validation", DebugLogger.LogLevel.Error,
+                () => $"=== Data Validation FAILED: {totalErrors} error(s), {totalWarnings} warning(s) ===");
+        }
+        else if (totalWarnings > 0)
+        {
+            DebugLogger.Log("data_validation", DebugLogger.LogLevel.Warn,
+                () => $"=== Data Validation PASSED with {totalWarnings} warning(s) ===");
+        }
+        else
+        {
+            DebugLogger.Log("data_validation", DebugLogger.LogLevel.Info,
+                () => "=== Data Validation PASSED: No errors or warnings ===");
+        }
     }
 }
 

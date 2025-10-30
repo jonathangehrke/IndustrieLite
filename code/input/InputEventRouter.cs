@@ -72,9 +72,23 @@ public partial class InputEventRouter : Node, ITickable
     private CameraController? kameraController;
     private EventHub? eventHub;
     private Simulation? simulation;
+    private Node? cachedServiceContainer;
     private bool signaleAktiv = true;
     private bool demolishTasteGedrueckt;
     private Vector2 aktuelleKameraRichtung = Vector2.Zero;
+
+    /// <summary>Lazy-loaded ServiceContainer for DI access</summary>
+    private Node? ServiceContainer
+    {
+        get
+        {
+            if (this.cachedServiceContainer == null)
+            {
+                this.cachedServiceContainer = this.GetTree()?.Root?.GetNodeOrNull<Node>("/root/ServiceContainer");
+            }
+            return this.cachedServiceContainer;
+        }
+    }
 
     /// <inheritdoc/>
     string ITickable.Name => "InputEventRouter";
@@ -309,7 +323,7 @@ public partial class InputEventRouter : Node, ITickable
             geschlossen = true;
 
             // Landkauf/-verkauf-Modi sauber deaktivieren
-            var sc = this.GetTree().Root.GetNodeOrNull<Node>("/root/ServiceContainer");
+            var sc = this.ServiceContainer;
             Node? uiService = null;
             if (sc != null)
             {
@@ -346,7 +360,7 @@ public partial class InputEventRouter : Node, ITickable
                 }
             }
             // Verlasse Build-Modus (InputManager auf None)
-            var sc = this.GetTree().Root.GetNodeOrNull<Node>("/root/ServiceContainer");
+            var sc = this.ServiceContainer;
             Node? im = null;
             if (sc != null)
             {

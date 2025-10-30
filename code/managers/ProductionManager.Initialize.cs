@@ -8,7 +8,7 @@ public partial class ProductionManager
     /// Explizite DI-Initialisierung fuer den ProductionManager.
     /// Registriert sich bei der Simulation und uebernimmt optional ProductionSystem/DevFlags.
     /// </summary>
-    public void Initialize(ResourceManager resourceManager, Simulation simulation, ProductionSystem? productionSystem = null, Node? devFlags = null)
+    public void Initialize(IResourceManager resourceManager, Simulation simulation, ProductionSystem? productionSystem = null, Node? devFlags = null)
     {
         if (resourceManager == null)
         {
@@ -20,7 +20,7 @@ public partial class ProductionManager
             throw new ArgumentNullException(nameof(simulation));
         }
 
-        this.resourceManager = resourceManager;
+        this.resourceManager = (ResourceManager)resourceManager; // Cast for storage (will be replaced with interface field later)
         this.productionSystem = productionSystem;
 
         try

@@ -7,7 +7,7 @@ using Godot;
 /// <summary>
 /// Verwalter fr Geb4ude: Platzierung, Entfernung, Abfragen und Registrierungen.
 /// </summary>
-public partial class BuildingManager : Node, ILifecycleScope
+public partial class BuildingManager : Node, IBuildingManager, ILifecycleScope
 {
     /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
@@ -35,22 +35,26 @@ public partial class BuildingManager : Node, ILifecycleScope
 
     private bool initialized;
 
-    // DI über ServiceContainer (SC-only)
+    // DI Ã¼ber ServiceContainer (SC-only)
     private LandManager landManager = default!;
     private EconomyManager economyManager = default!;
-    private Database? database; // optional
+    private Database database = default!; // required (validated in Initialize)
     private EventHub? eventHub;
     private ISceneGraph sceneGraph = default!;
+    private Simulation? simulation; // needed for BuildingFactory recreation
+    private GameTimeManager? gameTimeManager; // needed for BuildingFactory recreation
+    private Node? dataIndex; // needed for BuildingFactory recreation
 
     // Neue Services
     private PlacementService placementService = default!;
     private BuildingFactory buildingFactory = default!;
-    private BuildingRegistry registry = new BuildingRegistry();
+    private readonly BuildingIndex buildingIndex = new BuildingIndex();
+    private readonly BuildingQueries buildingQueries = new BuildingQueries();
 
     /// <inheritdoc/>
     public override void _Ready()
     {
-        // Named-Self-Registration für GDScript-Bridge
+        // Named-Self-Registration fÃ¼r GDScript-Bridge
         var sc = ServiceContainer.Instance;
         if (sc != null)
         {
@@ -90,6 +94,22 @@ public partial class BuildingManager : Node, ILifecycleScope
         try
         {
             var ok = this.placementService.CanPlace(type, cell, this.Buildings, out size, out cost);
+            // Normalize cost to Database definition to avoid mismatches
+            if (ok)
+            {
+                try
+                {
+                    var canonical = IdMigration.ToCanonical(type);
+                    var def = this.database?.GetBuilding(canonical) ?? this.database?.GetBuilding(type);
+                    if (def != null)
+                    {
+                        cost = (int)def.Cost;
+                    }
+                }
+                catch
+                {
+                }
+            }
             DebugLogger.LogServices("CanPlace check for " + type + " at " + cell + " => " + ok + ", size " + size + ", cost " + cost);
             return ok;
         }
@@ -158,7 +178,7 @@ public partial class BuildingManager : Node, ILifecycleScope
                 return Result<bool>.Fail(new ErrorInfo(ErrorIds.BuildingServiceUnavailableName, "BuildingManager nicht initialisiert"));
             }
 
-            // Verwende CanPlace (prüft nur) statt TryPlace (erstellt Gebäude)
+            // Verwende CanPlace (prÃ¼ft nur) statt TryPlace (erstellt GebÃ¤ude)
             if (!this.placementService.CanPlace(type, cell, this.Buildings, out var size, out var cost))
             {
                 return Result<bool>.Fail(new ErrorInfo(ErrorIds.BuildingInvalidPlacementName, "Platzierung nicht moeglich"));
@@ -232,11 +252,11 @@ public partial class BuildingManager : Node, ILifecycleScope
 
         this.sceneGraph.AddChild(b);
         this.Buildings.Add(b);
-        this.registry?.Add(b);
+        this.buildingIndex.Add(b);
 
         // Gruppen fuer einfache UI-Queries
         b.AddToGroup("buildings");
-        if (b is ChickenFarm)
+        if (b.DefinitionId == "chicken_farm")
         {
             b.AddToGroup("chicken_farms");
         }
@@ -253,7 +273,7 @@ public partial class BuildingManager : Node, ILifecycleScope
             try
             {
                 this.eventHub.EmitSignal(EventHub.SignalName.BuildingPlaced, b);
-                if (b is ChickenFarm)
+                if (b is IProductionBuilding)
                 {
                     this.eventHub.EmitSignal(EventHub.SignalName.FarmStatusChanged);
                 }
@@ -265,36 +285,43 @@ public partial class BuildingManager : Node, ILifecycleScope
         }
     }
 
-    public List<ChickenFarm> GetChickenFarms()
+    public List<IProductionBuilding> GetProductionBuildings()
     {
-        return this.Buildings.OfType<ChickenFarm>().ToList();
+        return this.buildingQueries.GetProductionBuildings(this.Buildings);
     }
 
     // Interop-freundliche Variante fuer GDScript
-    public Godot.Collections.Array<ChickenFarm> GetChickenFarmsForUI()
+    public Godot.Collections.Array<Building> GetProductionBuildingsForUI()
     {
-        var arr = new Godot.Collections.Array<ChickenFarm>();
-        foreach (var farm in this.Buildings.OfType<ChickenFarm>())
-        {
-            arr.Add(farm);
-        }
+        return this.buildingQueries.GetProductionBuildingsForUI(this.Buildings);
+    }
 
-        return arr;
+    // Legacy-KompatibilitÃ¤t: spezifische Farm-Queries
+    [System.Obsolete("Use GetProductionBuildings() or filter by DefinitionId instead")]
+    public List<Building> GetChickenFarms()
+    {
+        return this.buildingQueries.GetByDefinitionId(this.Buildings, "chicken_farm");
+    }
+
+    [System.Obsolete("Use GetProductionBuildingsForUI() or filter by DefinitionId instead")]
+    public Godot.Collections.Array<Building> GetChickenFarmsForUI()
+    {
+        return this.buildingQueries.GetByDefinitionIdForUI(this.Buildings, "chicken_farm");
     }
 
     public List<SolarPlant> GetSolarPlants()
     {
-        return this.Buildings.OfType<SolarPlant>().ToList();
+        return this.buildingQueries.GetByType<SolarPlant>(this.Buildings);
     }
 
     public List<WaterPump> GetWaterPumps()
     {
-        return this.Buildings.OfType<WaterPump>().ToList();
+        return this.buildingQueries.GetByType<WaterPump>(this.Buildings);
     }
 
     public List<House> GetHouses()
     {
-        return this.Buildings.OfType<House>().ToList();
+        return this.buildingQueries.GetByType<House>(this.Buildings);
     }
 
     public bool RemoveBuildingAt(Vector2I cell)
@@ -319,7 +346,7 @@ public partial class BuildingManager : Node, ILifecycleScope
     }
 
     /// <summary>
-    /// Result-Variante: Entfernt ein Gebäude inkl. Deregistrierung und Events.
+    /// Result-Variante: Entfernt ein GebÃ¤ude inkl. Deregistrierung und Events.
     /// </summary>
     /// <returns></returns>
     public Result TryRemoveBuilding(Building b, string? correlationId = null)
@@ -340,7 +367,7 @@ public partial class BuildingManager : Node, ILifecycleScope
                 this.Cities.Remove(city);
             }
 
-            this.registry?.Remove(b);
+            this.buildingIndex.Remove(b);
 
             if (this.SignaleAktiv && this.eventHub != null)
             {
@@ -384,7 +411,7 @@ public partial class BuildingManager : Node, ILifecycleScope
     {
         try
         {
-            var byIdx = this.registry?.GetAt(cell);
+            var byIdx = this.buildingIndex.GetAt(cell);
             if (byIdx != null)
             {
                 return byIdx;
@@ -423,24 +450,9 @@ public partial class BuildingManager : Node, ILifecycleScope
     /// <returns></returns>
     public Building? GetBuildingByGuid(Guid id)
     {
-        if (id == Guid.Empty)
-        {
-            return null;
-        }
-
         try
         {
-            if (this.buildingsByGuid.TryGetValue(id, out var building))
-            {
-                if (building != null && IsInstanceValid(building))
-                {
-                    return building;
-                }
-
-                // Clean up invalid reference
-                this.buildingsByGuid.Remove(id);
-            }
-            return null;
+            return this.buildingIndex.GetByGuid(id);
         }
         catch (Exception ex)
         {
@@ -461,21 +473,9 @@ public partial class BuildingManager : Node, ILifecycleScope
             return;
         }
 
-        if (string.IsNullOrEmpty(building.BuildingId))
-        {
-            return;
-        }
-
         try
         {
-            if (Guid.TryParse(building.BuildingId, out var guid))
-            {
-                this.buildingsByGuid[guid] = building;
-            }
-            else
-            {
-                DebugLogger.Error("debug_building", "RegisterBuildingGuidInvalid", $"Invalid GUID format: {building.BuildingId}");
-            }
+            this.buildingIndex.RegisterGuid(building);
         }
         catch (Exception ex)
         {
@@ -488,14 +488,12 @@ public partial class BuildingManager : Node, ILifecycleScope
     /// </summary>
     public void UnregisterBuildingGuid(Building building)
     {
-        if (building == null || string.IsNullOrEmpty(building.BuildingId))
+        try
         {
-            return;
+            this.buildingIndex.UnregisterGuid(building);
         }
-
-        if (Guid.TryParse(building.BuildingId, out var guid))
+        catch
         {
-            this.buildingsByGuid.Remove(guid);
         }
     }
 
@@ -519,7 +517,7 @@ public partial class BuildingManager : Node, ILifecycleScope
         this.Cities.Clear();
     }
 
-    // === UI‑Hilfsfunktionen fuer GDScript ===
+    // === UIâ€‘Hilfsfunktionen fuer GDScript ===
     // Liefert alle Gebaeude als Godot-Array (GDScript-kompatibel)
 
     /// <summary>
@@ -528,19 +526,10 @@ public partial class BuildingManager : Node, ILifecycleScope
     /// <returns></returns>
     public Godot.Collections.Array<Building> GetAllBuildings()
     {
-        var arr = new Godot.Collections.Array<Building>();
-        var snapshot = this.Buildings.ToArray();
-        foreach (var b in snapshot)
-        {
-            if (b != null && IsInstanceValid(b) && !b.IsQueuedForDeletion())
-            {
-                arr.Add(b);
-            }
-        }
-        return arr;
+        return this.buildingQueries.GetAllBuildingsForUI(this.Buildings.ToArray());
     }
 
-    // Liefert Staedte als Godot-Array (wird von Panels fuer Naechste‑Stadt gesucht)
+    // Liefert Staedte als Godot-Array (wird von Panels fuer Naechsteâ€‘Stadt gesucht)
 
     /// <summary>
     /// Liefert alle St4dte als Godot-Array (UI-kompatibel).
@@ -548,20 +537,11 @@ public partial class BuildingManager : Node, ILifecycleScope
     /// <returns></returns>
     public Godot.Collections.Array<City> GetCitiesForUI()
     {
-        var arr = new Godot.Collections.Array<City>();
-        var snapshot = this.Cities.ToArray();
-        foreach (var c in snapshot)
-        {
-            if (c != null && IsInstanceValid(c) && !c.IsQueuedForDeletion())
-            {
-                arr.Add(c);
-            }
-        }
-        return arr;
+        return this.buildingQueries.GetCitiesForUI(this.Cities.ToArray());
     }
 
     /// <summary>
-    /// Sammelt die Gesamtmenge einer Ressource aus allen Gebäude-Inventaren und Stock-Werten.
+    /// Sammelt die Gesamtmenge einer Ressource aus allen GebÃ¤ude-Inventaren und Stock-Werten.
     /// </summary>
     /// <returns></returns>
     [Obsolete]
@@ -609,7 +589,7 @@ public partial class BuildingManager : Node, ILifecycleScope
                     }
                 }
 
-                // Legacy-Stock nur zählen, wenn kein Inventar-Eintrag vorhanden ist
+                // Legacy-Stock nur zÃ¤hlen, wenn kein Inventar-Eintrag vorhanden ist
                 if (!countedFromInventory && building is IHasStock stockBuilding)
                 {
                     try
@@ -639,16 +619,14 @@ public partial class BuildingManager : Node, ILifecycleScope
 
     /// <summary>
     /// Gets the main resource ID for a building (what its Stock property represents).
+    /// Legacy method - new buildings using IHasInventory don't need this.
     /// </summary>
+    [System.Obsolete("Legacy method for old IHasStock buildings")]
     private StringName GetMainResourceIdForBuilding(Building building)
     {
-        return building switch
-        {
-            ChickenFarm => ChickenFarm.MainResourceId,  // "chickens"
-            PigFarm => PigFarm.MainResourceId,          // "pig"
-            GrainFarm => GrainFarm.MainResourceId,      // "grain"
-            _ => new StringName(""),
-        };
+        // Legacy support - GenericProductionBuilding implements IHasInventory instead of IHasStock
+        // so this method is only called for old building types without IHasInventory
+        return new StringName("");
     }
 }
 

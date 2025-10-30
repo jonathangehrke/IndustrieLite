@@ -17,21 +17,29 @@ public partial class UIService
             return 0;
         }
 
-        int total = 0;
-        foreach (var farm in this.buildingManager.GetChickenFarms())
-        {
-            total += farm.Stock;
-        }
-        return total;
+        // Use BuildingManager's inventory totals instead of direct farm access
+        return this.buildingManager.GetTotalInventoryOfResource(new StringName("chickens"));
     }
 
     /// <summary>
     /// Liefert alle Hhnerfarmen fr die UI-Anzeige.
     /// </summary>
     /// <returns></returns>
-    public Godot.Collections.Array<ChickenFarm> GetChickenFarmsForUI()
+    [System.Obsolete("Use GetProductionBuildingsForUI() instead")]
+    public Godot.Collections.Array<Building> GetChickenFarmsForUI()
     {
-        return this.buildingManager?.GetChickenFarmsForUI() ?? new Godot.Collections.Array<ChickenFarm>();
+        #pragma warning disable CS0618 // Type or member is obsolete
+        return this.buildingManager?.GetChickenFarmsForUI() ?? new Godot.Collections.Array<Building>();
+        #pragma warning restore CS0618
+    }
+
+    /// <summary>
+    /// Liefert alle Produktionsgebäude für die UI-Anzeige.
+    /// </summary>
+    /// <returns></returns>
+    public Godot.Collections.Array<Building> GetProductionBuildingsForUI()
+    {
+        return this.buildingManager?.GetProductionBuildingsForUI() ?? new Godot.Collections.Array<Building>();
     }
 
     /// <summary>

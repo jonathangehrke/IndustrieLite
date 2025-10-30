@@ -158,7 +158,9 @@ func _auf_market_accept_order(id):
 func _auf_input_mode_changed(mode: String, _build_id: String):
     # Keine ActionsBar mehr vorhanden
 
-    if mode != "Build" and button_verwalter != null:
+    # Bau-Menü nur bei Modi schließen, die mit dem Bau-Menü konkurrieren
+    # NICHT bei "None" (könnte vom Panel-Toggle kommen) oder "Build" (offensichtlich)
+    if mode in ["Demolish", "BuyLand", "SellLand", "Transport"] and button_verwalter != null:
         button_verwalter.leere_build_auswahl()
         button_verwalter.setze_bau_leiste_sichtbar(false)
 

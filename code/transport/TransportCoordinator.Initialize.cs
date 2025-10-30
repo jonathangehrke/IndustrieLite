@@ -12,7 +12,7 @@ public partial class TransportCoordinator
 	/// Explizite Dependency Injection (neue Architektur).
 	/// Wird von TransportManager.Initialize() aufgerufen.
 	/// </summary>
-	public void Initialize(BuildingManager buildingManager, RoadManager? roadManager, EconomyManager economyManager, GameManager gameManager, EventHub? eventHub)
+	public void Initialize(BuildingManager buildingManager, RoadManager? roadManager, EconomyManager economyManager, GameManager gameManager, EventHub? eventHub, GameTimeManager? gameTimeManager)
 	{
 		if (this.initialized)
 		{
@@ -25,6 +25,7 @@ public partial class TransportCoordinator
 		this.economyManager = economyManager;
 		this.gameManager = gameManager;
 		this.eventHub = eventHub;
+		this.gameTimeManager = gameTimeManager;
 
 		this.initialized = true;
 		DebugLogger.LogTransport($"TransportCoordinator.Initialize(): Dependencies gesetzt OK (Building={buildingManager != null}, Road={roadManager != null}, Economy={economyManager != null}, Game={gameManager != null})");
@@ -57,7 +58,7 @@ public partial class TransportCoordinator
 
 		if (this.orderManager != null && this.transportCore != null && this.buildingManager != null && this.truckManager != null && this.economyService != null)
 		{
-			this.orderManager.Initialize(this.transportCore, this.buildingManager, this.truckManager, this.economyService, this);
+			this.orderManager.Initialize(this.transportCore, this.buildingManager, this.truckManager, this.economyService, this, this.gameTimeManager);
 			DebugLogger.LogTransport("TransportCoordinator: Re-initialized OrderManager");
 		}
 

@@ -27,6 +27,7 @@ public partial class Building : Node2D
     public string DefinitionId { get; set; } = "";
 
     protected Database? database;
+    protected Node? dataIndex;
 
     [Export]
     public string BuildingId { get; set; } = "";
@@ -103,7 +104,7 @@ public partial class Building : Node2D
         // 2) Fallback: DataIndex (preloaded, export-sicher)
         try
         {
-            var di = this.GetNodeOrNull("/root/DataIndex");
+            var di = this.dataIndex ?? this.GetNodeOrNull("/root/DataIndex");
             if (di != null && di.HasMethod("get_buildings"))
             {
                 var arrVar = di.Call("get_buildings");
@@ -138,7 +139,7 @@ public partial class Building : Node2D
         {
             try
             {
-                var di = this.GetNodeOrNull("/root/DataIndex");
+                var di = this.dataIndex ?? this.GetNodeOrNull("/root/DataIndex");
                 if (di != null && !string.IsNullOrEmpty(def.Id))
                 {
                     var v = di.Call("get_building_icon", def.Id);
@@ -205,9 +206,10 @@ public partial class Building : Node2D
     /// <summary>
     /// Einheitliche Initialize-Methode fuer Gebaeude (aktuell: Database setzen).
     /// </summary>
-    public virtual void Initialize(Database? database)
+    public virtual void Initialize(Database? database, Node? dataIndex = null)
     {
         this.database = database;
+        this.dataIndex = dataIndex;
     }
 
     /// <summary>

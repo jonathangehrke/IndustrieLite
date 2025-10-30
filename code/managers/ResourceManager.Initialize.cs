@@ -8,12 +8,23 @@ public partial class ResourceManager
     /// <summary>
     /// Explizite DI-Initialisierung fuer den ResourceManager.
     /// Setzt Registry/EventHub/BuildingManager und registriert sich bei der Simulation.
+    /// BuildingManager is now REQUIRED (no longer optional via setter).
     /// </summary>
-    public void Initialize(ResourceRegistry? registry, EventHub? eventHub, Simulation simulation, BuildingManager? buildingManager = null)
+    public void Initialize(ResourceRegistry? registry, EventHub? eventHub, Simulation simulation, IBuildingManager buildingManager)
     {
+        // Validate required dependencies
+        if (buildingManager == null)
+        {
+            throw new System.ArgumentNullException(nameof(buildingManager), "ResourceManager requires BuildingManager for GetTotalOfResource");
+        }
+        if (simulation == null)
+        {
+            throw new System.ArgumentNullException(nameof(simulation), "ResourceManager requires Simulation for registration");
+        }
+
         this.resourceRegistry = registry;
         this.eventHub = eventHub;
-        this.buildingManager = buildingManager;
+        this.buildingManager = (BuildingManager)buildingManager; // Cast for storage (will be replaced with interface field later)
 
         // Fallback: Standard-IDs sicherstellen
         this.EnsureResourceExists(ResourceIds.PowerName);
@@ -45,13 +56,5 @@ public partial class ResourceManager
         }
     }
 
-    /// <summary>
-    /// Setzt BuildingManager-Referenz nach Initialisierung (bricht zirkulare Abhangigkeit).
-    /// Wird von DIContainer aufgerufen nachdem BuildingManager initialisiert wurde.
-    /// </summary>
-    public void SetBuildingManager(BuildingManager? buildingManager)
-    {
-        this.buildingManager = buildingManager;
-        DebugLogger.LogServices("ResourceManager.SetBuildingManager(): BuildingManager-Referenz gesetzt");
-    }
+    // SetBuildingManager() removed - BuildingManager is now passed directly in Initialize()
 }

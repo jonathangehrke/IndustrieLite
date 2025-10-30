@@ -13,7 +13,7 @@ public interface IProducer
     void OnProductionTick(bool canProduce);
 }
 
-public partial class ProductionManager : Node, ITickable, ILifecycleScope
+public partial class ProductionManager : Node, IProductionManager, ITickable, ILifecycleScope
 {
     /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;

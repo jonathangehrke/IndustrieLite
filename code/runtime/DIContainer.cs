@@ -66,8 +66,11 @@ public partial class DIContainer : Node
             DebugLogger.Error("debug_services", "DIInitSceneGraphNull", "SceneGraphAdapter nicht verfügbar - Manager können keine Nodes hinzufügen");
         }
 
-        // DevFlags: Direkter Autoload-Zugriff (kann noch nicht im SC registriert sein)
-        var devFlags = gameManager.GetNodeOrNull<Node>("/root/DevFlags");
+        // DevFlags: Aus ServiceContainer oder Fallback via Autoload
+        var devFlags = sc.GetNamedService<Node>("DevFlags") ?? gameManager.GetNodeOrNull<Node>("/root/DevFlags");
+
+        // DataIndex: Aus ServiceContainer oder Fallback via Autoload
+        var dataIndex = sc.GetNamedService<Node>("DataIndex") ?? gameManager.GetNodeOrNull<Node>("/root/DataIndex");
 
         var uiService = sc.GetNamedService<UIService>(ServiceNames.UIService);
 
@@ -132,92 +135,91 @@ public partial class DIContainer : Node
         }
 
         // 3.3: RoadManager (benötigt Land, Building, Economy, SceneGraph)
-        if (roadManager != null && landManager != null && buildingManager != null && economyManager != null && sceneGraph != null)
-        {
-            roadManager.Initialize(landManager, buildingManager, economyManager, sceneGraph, eventHub, camera);
-            DebugLogger.LogServices("DIContainer.InitializeAll: RoadManager.Initialize() OK");
-        }
+        // NOTE: Needs BuildingManager, so must come after BuildingManager init
 
-        // 3.4: ResourceManager (benötigt Registry, EventHub, Simulation)
-        // HINWEIS: BuildingManager wird später gesetzt (nach 3.6) um zirkuläre Abhängigkeit zu brechen
-        if (resourceManager != null && simulation != null)
-        {
-            resourceManager.Initialize(resourceRegistry, eventHub, simulation, null); // BuildingManager=null initially
-            DebugLogger.LogServices("DIContainer.InitializeAll: ResourceManager.Initialize() OK");
-        }
-
-        // 3.5: ProductionManager (benötigt Resource, Simulation, ProductionSystem)
-        if (productionManager != null && resourceManager != null && simulation != null)
-        {
-            productionManager.Initialize(resourceManager, simulation, productionSystem, devFlags);
-            DebugLogger.LogServices("DIContainer.InitializeAll: ProductionManager.Initialize() OK");
-        }
-
-        // 3.5.1: GameTimeManager (benötigt EventHub, Simulation)
+        // 3.4: GameTimeManager (benötigt EventHub, Simulation)
         if (gameTimeManager != null && simulation != null)
         {
             gameTimeManager.Initialize(eventHub, simulation);
             DebugLogger.LogServices("DIContainer.InitializeAll: GameTimeManager.Initialize() OK");
         }
 
-        // 3.5.2: LevelManager (benötigt EventHub)
+        // 3.5: LevelManager (benötigt EventHub)
         if (levelManager != null)
         {
             levelManager.Initialize(eventHub);
             DebugLogger.LogServices("DIContainer.InitializeAll: LevelManager.Initialize() OK");
         }
 
-        // 3.6: BuildingManager (benötigt viele andere Manager + SceneGraph)
+        // 3.6: BuildingManager (benötigt Land, Economy, SceneGraph - ProductionManager ist optional)
+        // IMPORTANT: Initialized WITHOUT ProductionManager to break circular dependency
         if (buildingManager != null && landManager != null && economyManager != null && sceneGraph != null)
         {
-            buildingManager.Initialize(landManager, economyManager, sceneGraph, database, eventHub, productionManager, simulation, gameTimeManager, roadManager);
-            DebugLogger.LogServices("DIContainer.InitializeAll: BuildingManager.Initialize() OK");
+            buildingManager.Initialize(landManager, economyManager, sceneGraph, database, eventHub, null, simulation, gameTimeManager, null, dataIndex);
+            DebugLogger.LogServices("DIContainer.InitializeAll: BuildingManager.Initialize() OK (without ProductionManager/RoadManager)");
         }
 
-        // 3.6.1: Setze BuildingManager-Referenz in ResourceManager (bricht zirkuläre Abhängigkeit)
-        if (resourceManager != null && buildingManager != null)
+        // 3.6.1: RoadManager (benötigt BuildingManager - now available!)
+        if (roadManager != null && landManager != null && buildingManager != null && economyManager != null && sceneGraph != null)
         {
-            resourceManager.SetBuildingManager(buildingManager);
+            roadManager.Initialize(landManager, buildingManager, economyManager, sceneGraph, eventHub, camera, dataIndex);
+            DebugLogger.LogServices("DIContainer.InitializeAll: RoadManager.Initialize() OK");
         }
 
-        // 3.7: TransportManager (benötigt Building, Road, Economy, Game, SceneGraph, Event)
+        // 3.7: ResourceManager (benötigt BuildingManager - now available!)
+        // Circular dependency RESOLVED: BuildingManager initialized first, then ResourceManager
+        if (resourceManager != null && buildingManager != null && simulation != null)
+        {
+            resourceManager.Initialize(resourceRegistry, eventHub, simulation, buildingManager);
+            DebugLogger.LogServices("DIContainer.InitializeAll: ResourceManager.Initialize() OK (with BuildingManager)");
+        }
+
+        // 3.8: ProductionManager (benötigt ResourceManager)
+        if (productionManager != null && resourceManager != null && simulation != null)
+        {
+            productionManager.Initialize(resourceManager, simulation, productionSystem, devFlags);
+            DebugLogger.LogServices("DIContainer.InitializeAll: ProductionManager.Initialize() OK");
+        }
+
+        // 3.8.1: Set ProductionManager in BuildingManager (breaks circular dependency)
+        // BuildingManager was initialized without ProductionManager, now update it
+        if (buildingManager != null && productionManager != null)
+        {
+            buildingManager.SetProductionManager(productionManager);
+            DebugLogger.LogServices("DIContainer.InitializeAll: BuildingManager.SetProductionManager() OK");
+        }
+
+        // 3.9: TransportManager (benötigt Building, Road, Economy, Game, SceneGraph, Event, GameTime)
         if (transportManager != null && buildingManager != null && economyManager != null && sceneGraph != null)
         {
-            transportManager.Initialize(buildingManager, roadManager, economyManager, gameManager, sceneGraph, eventHub);
+            transportManager.Initialize(buildingManager, roadManager, economyManager, gameManager, sceneGraph, eventHub, gameTimeManager);
             DebugLogger.LogServices("DIContainer.InitializeAll: TransportManager.Initialize() OK");
         }
 
-        // 3.8: InputManager (benötigt fast alle Manager)
+        // 3.10: InputManager (benötigt fast alle Manager)
         if (inputManager != null && landManager != null && buildingManager != null && economyManager != null && transportManager != null && map != null)
         {
-            inputManager.Initialize(landManager, buildingManager, economyManager, transportManager, roadManager, map, gameManager, eventHub, camera, simulation);
+            inputManager.Initialize(landManager, buildingManager, economyManager, transportManager, roadManager, map, gameManager, eventHub, camera, simulation, uiService);
             DebugLogger.LogServices("DIContainer.InitializeAll: InputManager.Initialize() OK");
         }
 
-        // 3.9: GameClockManager (Event-basiert, keine Hard-Dependencies)
+        // 3.11: GameClockManager (Event-basiert, keine Hard-Dependencies)
         if (gameClockManager != null)
         {
             gameClockManager.Initialize(eventHub);
             DebugLogger.LogServices("DIContainer.InitializeAll: GameClockManager.Initialize() OK");
         }
 
-        // 3.10: CityGrowthManager (benötigt EventHub für MonthChanged Signal)
+        // 3.12: CityGrowthManager (benötigt EventHub für MonthChanged Signal)
         if (cityGrowthManager != null)
         {
             cityGrowthManager.Initialize(eventHub);
             DebugLogger.LogServices("DIContainer.InitializeAll: CityGrowthManager.Initialize() OK");
         }
 
-        // 3.10.1: LevelManager (benötigt EventHub für UI-Signale)
-        if (levelManager != null)
-        {
-            levelManager.Initialize(eventHub);
-            DebugLogger.LogServices("DIContainer.InitializeAll: LevelManager.Initialize() OK");
-        }
+        // ========== Phase 3.13: Helper Services (Phase 6 - Explicit DI statt ServiceContainer lookups) ==========
 
-        // ========== Phase 3.11: Helper Services (Phase 6 - Explicit DI statt ServiceContainer lookups) ==========
-
-        // 3.11.1: LogisticsService (benötigt EconomyManager, EventHub)
+        // 3.13.1: LogisticsService (benötigt EconomyManager, EventHub)
         if (logisticsService != null && economyManager != null)
         {
             logisticsService.Initialize(economyManager, eventHub);
@@ -225,17 +227,25 @@ public partial class DIContainer : Node
         }
 
         // 3.11.2: MarketService (benötigt ResourceManager, TransportManager, EconomyManager, BuildingManager, LevelManager)
-        if (marketService != null && resourceManager != null && transportManager != null && economyManager != null && buildingManager != null)
+        if (marketService != null && resourceManager != null && transportManager != null && economyManager != null && buildingManager != null && levelManager != null)
         {
             marketService.Initialize(resourceManager, transportManager, economyManager, buildingManager, levelManager, database);
             DebugLogger.LogServices("DIContainer.InitializeAll: MarketService.Initialize() OK");
         }
+        else if (marketService != null)
+        {
+            DebugLogger.Error("debug_services", "DIInitMarketServiceMissingDeps", $"MarketService cannot initialize - Missing dependencies (ResourceManager: {resourceManager != null}, TransportManager: {transportManager != null}, EconomyManager: {economyManager != null}, BuildingManager: {buildingManager != null}, LevelManager: {levelManager != null})");
+        }
 
         // 3.11.3: SupplierService (benötigt BuildingManager, TransportManager, GameDatabase, EventHub)
-        if (supplierService != null && buildingManager != null && transportManager != null)
+        if (supplierService != null && buildingManager != null && transportManager != null && gameDatabase != null)
         {
             supplierService.Initialize(buildingManager, transportManager, gameDatabase, eventHub);
             DebugLogger.LogServices("DIContainer.InitializeAll: SupplierService.Initialize() OK");
+        }
+        else if (supplierService != null && gameDatabase == null)
+        {
+            DebugLogger.Error("debug_services", "SupplierServiceGameDatabaseMissing", "SupplierService cannot be initialized: GameDatabase not available");
         }
 
         // 3.11.4: ProductionCalculationService (benötigt GameDatabase)
@@ -259,7 +269,7 @@ public partial class DIContainer : Node
         // 3.13: UIService (benötigt GameManager + alle Manager + MarketService)
         if (uiService != null && economyManager != null && buildingManager != null && transportManager != null && roadManager != null && inputManager != null && eventHub != null && database != null)
         {
-            uiService.Initialize(gameManager, economyManager, buildingManager, transportManager, roadManager, inputManager, eventHub, database, marketService);
+            uiService.Initialize(gameManager, economyManager, buildingManager, transportManager, roadManager, inputManager, eventHub, database, marketService, levelManager, dataIndex);
             DebugLogger.LogServices("DIContainer.InitializeAll: UIService.Initialize() OK");
         }
 
@@ -277,7 +287,8 @@ public partial class DIContainer : Node
             DebugLogger.LogServices("DIContainer.InitializeAll: Map.Initialize() OK");
         }
 
-        // ========== Phase 4: Named-Registry für UI-Bridge (NUR Named, KEINE Typed) ==========
+        // ========== Phase 4: Registry für UI-Bridge (Named) + Interface-basiert ==========
+        // Backward compatibility: Register as Named for GDScript bridge
         this.RegisterForUI(sc, ServiceNames.GameManager, gameManager);
         this.RegisterForUI(sc, nameof(LandManager), landManager);
         this.RegisterForUI(sc, nameof(EconomyManager), economyManager);
@@ -301,6 +312,14 @@ public partial class DIContainer : Node
         this.RegisterForUI(sc, nameof(SupplierService), supplierService);
         this.RegisterForUI(sc, nameof(ProductionCalculationService), productionCalculationService);
         this.RegisterForUI(sc, nameof(ResourceTotalsService), resourceTotalsService);
+
+        // NEW: Interface-based registration for proper DI (testability & decoupling)
+        this.RegisterInterface<IEconomyManager>(sc, economyManager);
+        this.RegisterInterface<IBuildingManager>(sc, buildingManager);
+        this.RegisterInterface<IProductionManager>(sc, productionManager);
+        this.RegisterInterface<IResourceManager>(sc, resourceManager);
+        this.RegisterInterface<ITransportManager>(sc, transportManager);
+        this.RegisterInterface<IRoadManager>(sc, roadManager);
 
         // ========== Phase 5: Validierung (alle Manager initialisiert?) ==========
         this.ValidateComposition(landManager, economyManager, buildingManager, transportManager, roadManager, inputManager, resourceManager, productionManager, gameClockManager, cityGrowthManager, simulation, uiService);
@@ -326,6 +345,30 @@ public partial class DIContainer : Node
         catch (Exception ex)
         {
             DebugLogger.LogServices(() => $"DIContainer.RegisterForUI: Fehler bei '{name}': {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Registriert Service als Interface für typsichere DI.
+    /// Ermöglicht Interface-basierte Dependencies und Testbarkeit.
+    /// </summary>
+    private void RegisterInterface<TInterface>(ServiceContainer sc, TInterface? service)
+        where TInterface : class
+    {
+        if (sc == null || service == null)
+        {
+            return;
+        }
+
+        try
+        {
+            // ServiceContainer.RegisterNamedService is not generic, cast to Node
+            sc.RegisterNamedService(typeof(TInterface).Name, (Node)(object)service);
+            DebugLogger.LogServices(() => $"DIContainer: Registered interface {typeof(TInterface).Name}");
+        }
+        catch (Exception ex)
+        {
+            DebugLogger.LogServices(() => $"DIContainer.RegisterInterface: Fehler bei '{typeof(TInterface).Name}': {ex.Message}");
         }
     }
 

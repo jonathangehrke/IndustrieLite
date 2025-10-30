@@ -1,0 +1,33 @@
+Summary
+  Generated on: 28.10.2025 - 17:34:59
+  Coverage date: 28.10.2025 - 17:34:50
+  Parser: Cobertura
+  Assemblies: 1
+  Classes: 11
+  Files: 9
+  Line coverage: 82.1%
+  Covered lines: 212
+  Uncovered lines: 46
+  Coverable lines: 258
+  Total lines: 452
+  Branch coverage: 67.3% (70 of 104)
+  Covered branches: 70
+  Total branches: 104
+  Method coverage: 81.3% (48 of 59)
+  Full method coverage: 74.5% (44 of 59)
+  Covered methods: 48
+  Fully covered methods: 44
+  Total methods: 59
+
+IndustrieLite.Core                                    82.1%
+  IndustrieLite.Core.Domain.BuildingDefinition           0%
+  IndustrieLite.Core.Domain.ResourceInfo               100%
+  IndustrieLite.Core.Economy.EconomyCoreService       80.6%
+  IndustrieLite.Core.Placement.BuildingSpec            100%
+  IndustrieLite.Core.Placement.PlacementCoreService   84.7%
+  IndustrieLite.Core.Primitives.Int2                   100%
+  IndustrieLite.Core.Primitives.Rect2i                 100%
+  IndustrieLite.Core.Resources.ResourceCoreService    78.7%
+  IndustrieLite.Core.Util.CoreError                    100%
+  IndustrieLite.Core.Util.CoreResult                    90%
+  IndustrieLite.Core.Util.CoreResult<T>                100%

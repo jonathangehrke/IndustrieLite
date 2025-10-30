@@ -13,6 +13,7 @@ public partial class ToolManager : Node
     private RoadManager? roadManager;
     private Map map = default!;
     private EventHub? eventHub;
+    private UIService? uiService;
 
     private BuildTool? buildTool;
     private BuyLandTool? buyLandTool;
@@ -38,7 +39,8 @@ public partial class ToolManager : Node
         TransportManager transportManager,
         RoadManager? roadManager,
         Map map,
-        EventHub? eventHub)
+        EventHub? eventHub,
+        UIService? uiService = null)
     {
         this.landManager = landManager;
         this.buildingManager = buildingManager;
@@ -47,6 +49,7 @@ public partial class ToolManager : Node
         this.roadManager = roadManager;
         this.map = map;
         this.eventHub = eventHub;
+        this.uiService = uiService;
 
         this.ErzeugeWerkzeuge();
         this.initialisiert = true;
@@ -150,13 +153,13 @@ public partial class ToolManager : Node
 
         if (this.roadManager != null)
         {
-            this.buildTool = new BuildTool(this.landManager, this.buildingManager, this.economyManager, this.roadManager);
-            this.demolishTool = new DemolishTool(this.roadManager, this.buildingManager);
+            this.buildTool = new BuildTool(this.landManager, this.buildingManager, this.economyManager, this.roadManager, this.uiService);
+            this.demolishTool = new DemolishTool(this.roadManager, this.buildingManager, this.uiService);
         }
 
         this.buyLandTool = new BuyLandTool(this.landManager, this.economyManager, this.map);
         this.transportTool = new TransportTool(this.transportManager);
-        this.sellLandTool = new SellLandTool(this.landManager, this.economyManager, this.map, this.buildingManager, this.roadManager);
+        this.sellLandTool = new SellLandTool(this.landManager, this.economyManager, this.map, this.buildingManager, this.roadManager, this.uiService);
 
         this.aktuellesWerkzeug = null;
     }

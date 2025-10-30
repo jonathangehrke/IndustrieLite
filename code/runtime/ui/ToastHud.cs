@@ -7,6 +7,18 @@ public partial class ToastHud : Control
     private VBoxContainer stack = default!;
     private EventHub? eventHub;
 
+    /// <summary>
+    /// Initialize with EventHub dependency (optional).
+    /// </summary>
+    public void Initialize(EventHub? eventHub)
+    {
+        this.eventHub = eventHub;
+        if (this.eventHub != null && this.IsInsideTree())
+        {
+            this.eventHub.Connect(EventHub.SignalName.ToastRequested, new Callable(this, nameof(this.OnToastRequested)));
+        }
+    }
+
     /// <inheritdoc/>
     public override void _Ready()
     {
@@ -29,14 +41,7 @@ public partial class ToastHud : Control
         this.stack.OffsetLeft = 16;
         this.AddChild(this.stack);
 
-        try
-        {
-            this.eventHub = ServiceContainer.Instance?.GetNamedService<EventHub>(ServiceNames.EventHub);
-        }
-        catch
-        {
-            this.eventHub = null;
-        }
+        // Connect EventHub if already initialized
         if (this.eventHub != null)
         {
             this.eventHub.Connect(EventHub.SignalName.ToastRequested, new Callable(this, nameof(this.OnToastRequested)));

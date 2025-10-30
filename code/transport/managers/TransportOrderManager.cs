@@ -18,6 +18,7 @@ public partial class TransportOrderManager : Node, ITransportOrderManager
     private ITruckManager truckManager = default!;
     private ITransportEconomyService economyService = default!;
     private TransportCoordinator coordinator = default!;
+    private GameTimeManager? gameTimeManager;
 
     // State from old TransportManager
     private readonly Queue<ManuellerTransportAuftrag> manuelleTransportAuftraege = new();
@@ -59,13 +60,14 @@ public partial class TransportOrderManager : Node, ITransportOrderManager
     /// </summary>
     public void Initialize(TransportCoreService transportCore, BuildingManager buildingManager,
                               ITruckManager truckManager, ITransportEconomyService economyService,
-                              TransportCoordinator coordinator)
+                              TransportCoordinator coordinator, GameTimeManager? gameTimeManager = null)
     {
         this.transportCore = transportCore;
         this.buildingManager = buildingManager;
         this.truckManager = truckManager;
         this.economyService = economyService;
         this.coordinator = coordinator;
+        this.gameTimeManager = gameTimeManager;
     }
 
     /// <summary>
@@ -718,8 +720,7 @@ public partial class TransportOrderManager : Node, ITransportOrderManager
         DebugLogger.LogTransport(() => $"TransportOrderManager: Getting orders from {this.buildingManager.Cities.Count} cities");
 
         // Get current game time for expiry check
-        var gameTime = ServiceContainer.Instance?.GetNamedService("GameTimeManager") as GameTimeManager;
-        var currentDate = gameTime?.CurrentDate ?? System.DateTime.Now;
+        var currentDate = this.gameTimeManager?.CurrentDate ?? System.DateTime.Now;
 
         foreach (var city in this.buildingManager.Cities)
         {

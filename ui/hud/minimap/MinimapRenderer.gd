@@ -45,7 +45,10 @@ func draw_camera_overlay(ziel: Control, controller: MinimapController) -> void:
     var sichtbar = viewport.get_visible_rect()
     var sicht_px = Vector2(sichtbar.size)
 
-    var halbwelt = sicht_px * 0.5 * controller.kamera_zoom
+    # In Godot 4: Hoehere Zoom-Werte bedeuten staerkeres Hineinzoomen (kleinerer Weltbereich sichtbar).
+    # Sichtbarer Weltbereich = Viewport‑Pixelgroesse geteilt durch Zoom.
+    # Daher hier Division (nicht Multiplikation), damit der Minimap‑Rahmen beim Reinzoomen kleiner wird.
+    var halbwelt = sicht_px * 0.5 / controller.kamera_zoom
     var kamera_rect_pos = controller.kamera_position - halbwelt
     var kamera_rect_groesse = halbwelt * 2.0
 

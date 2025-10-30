@@ -26,16 +26,12 @@ public partial class UIService
     /// </summary>
     private Godot.Collections.Array<BuildingDef> FilterBuildingsByLevel(Godot.Collections.Array<BuildingDef> buildings)
     {
-        var levelManager = ServiceContainer.Instance?.GetNamedService<LevelManager>("LevelManager");
-        int currentLevel = levelManager?.CurrentLevel ?? 1;
-
-        GD.Print($"UIService.FilterBuildingsByLevel: Current Level = {currentLevel}, LevelManager found = {levelManager != null}");
+        int currentLevel = this.levelManager?.CurrentLevel ?? 1;
 
         var filtered = new Godot.Collections.Array<BuildingDef>();
         foreach (var building in buildings)
         {
             bool included = building.RequiredLevel <= currentLevel;
-            GD.Print($"  - {building.Id} (RequiredLevel={building.RequiredLevel}): {(included ? "INCLUDED" : "EXCLUDED")}");
             if (included)
             {
                 filtered.Add(building);
@@ -95,9 +91,13 @@ public partial class UIService
         // 2) Export-Fallback: DataIndex durchsuchen
         try
         {
-            var sc = ServiceContainer.Instance;
-            var di = sc?.GetNamedService<Node>("DataIndex");
-            di ??= this.GetTree()?.Root?.GetNodeOrNull("/root/DataIndex");
+            var di = this.dataIndex;
+            if (di == null)
+            {
+                var sc = ServiceContainer.Instance;
+                di = sc?.GetNamedService<Node>("DataIndex");
+                di ??= this.GetTree()?.Root?.GetNodeOrNull("/root/DataIndex");
+            }
             if (di != null && di.HasMethod("get_buildings"))
             {
                 var arrVar = di.Call("get_buildings");
@@ -142,8 +142,7 @@ public partial class UIService
             this.InitializeServices();
         }
 
-        var levelManager = ServiceContainer.Instance?.GetNamedService<LevelManager>("LevelManager");
-        int currentLevel = levelManager?.CurrentLevel ?? 1;
+        int currentLevel = this.levelManager?.CurrentLevel ?? 1;
 
         // Primary: Use Database map when available and populated
         if (this.database?.ResourcesById != null && this.database.ResourcesById.Count > 0)
@@ -164,9 +163,13 @@ public partial class UIService
         var result = new Godot.Collections.Dictionary();
         try
         {
-            var sc = ServiceContainer.Instance;
-            var di = sc?.GetNamedService<Node>("DataIndex");
-            di ??= this.GetTree()?.Root?.GetNodeOrNull("/root/DataIndex");
+            var di = this.dataIndex;
+            if (di == null)
+            {
+                var sc = ServiceContainer.Instance;
+                di = sc?.GetNamedService<Node>("DataIndex");
+                di ??= this.GetTree()?.Root?.GetNodeOrNull("/root/DataIndex");
+            }
             if (di != null && di.HasMethod("get_resources"))
             {
                 var arrVar = di.Call("get_resources");
@@ -206,8 +209,7 @@ public partial class UIService
 
         var all = this.database?.GetBuildablesByCategory(category) ?? new Godot.Collections.Array<Godot.Collections.Dictionary>();
 
-        var levelManager = ServiceContainer.Instance?.GetNamedService<LevelManager>("LevelManager");
-        int currentLevel = levelManager?.CurrentLevel ?? 1;
+        int currentLevel = this.levelManager?.CurrentLevel ?? 1;
 
         var filtered = new Godot.Collections.Array<Godot.Collections.Dictionary>();
         foreach (var item in all)

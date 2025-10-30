@@ -35,11 +35,17 @@ public static class DebugLogger
         triedResolve = true;
         try
         {
-            // WICHTIG: Kein ServiceContainer-Get hier, um fruehe Warnungen zu vermeiden
-            // Greife direkt auf Autoload-Node im Root zu; ServiceContainer-Registrierung kann spaeter erfolgen
-            var tree = Engine.GetMainLoop() as SceneTree;
-            var root = tree?.Root;
-            devFlags = root?.GetNodeOrNull("/root/DevFlags");
+            // Versuche ServiceContainer zuerst (falls bereits initialisiert), sonst Autoload-Fallback
+            var sc = ServiceContainer.Instance;
+            devFlags = sc?.GetNamedService<Node>("DevFlags");
+
+            if (devFlags == null)
+            {
+                // Fallback: Direkter Autoload-Zugriff (für frühe Boot-Phase)
+                var tree = Engine.GetMainLoop() as SceneTree;
+                var root = tree?.Root;
+                devFlags = root?.GetNodeOrNull("/root/DevFlags");
+            }
         }
         catch
         {

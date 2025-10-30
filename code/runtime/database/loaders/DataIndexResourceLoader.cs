@@ -18,17 +18,18 @@ public sealed class DataIndexResourceLoader : IDataLoader<GameResourceDef>
     /// <inheritdoc/>
     public Task<IReadOnlyCollection<GameResourceDef>> LoadAsync(SceneTree sceneTree)
     {
-        // Try to get DataIndex from ServiceContainer first
+        // Try ServiceContainer first, then fall back to /root/DataIndex for export reliability
         Node? dataIndex = null;
         var sc = ServiceContainer.Instance;
         if (sc != null)
         {
             dataIndex = sc.GetNamedService<Node>("DataIndex");
         }
+        dataIndex ??= sceneTree?.Root?.GetNodeOrNull("/root/DataIndex");
 
         if (dataIndex == null)
         {
-            DebugLogger.LogServices("DataIndexResourceLoader: Kein DataIndex gefunden");
+            DebugLogger.LogServices("DataIndexResourceLoader: Kein DataIndex gefunden (ServiceContainer und /root/DataIndex leer)");
             return Task.FromResult<IReadOnlyCollection<GameResourceDef>>(System.Array.Empty<GameResourceDef>());
         }
 
@@ -45,7 +46,20 @@ public sealed class DataIndexResourceLoader : IDataLoader<GameResourceDef>
             foreach (Variant eintrag in ressourcenArray)
             {
                 var resource = eintrag.AsGodotObject();
-                if (resource is GameResourceDef def && !string.IsNullOrEmpty(def.Id))
+                GameResourceDef? def = null;
+                if (resource is GameResourceDef typed && !string.IsNullOrEmpty(typed.Id))
+                {
+                    def = typed;
+                }
+                else if (resource is Resource res && !string.IsNullOrEmpty(res.ResourcePath))
+                {
+                    try
+                    {
+                        def = ResourceLoader.Load<GameResourceDef>(res.ResourcePath);
+                    }
+                    catch { def = null; }
+                }
+                if (def != null && !string.IsNullOrEmpty(def.Id))
                 {
                     // Fix: Icons direkt laden (Export-Workaround)
                     // ExtResource-Referenzen in .tres werden im Export nicht aufgelöst
@@ -68,11 +82,11 @@ public sealed class DataIndexResourceLoader : IDataLoader<GameResourceDef>
                             def.Icon = ResourceLoader.Load<Texture2D>(iconPath);
                             if (def.Icon != null)
                             {
-                                GD.Print($"[DataIndexResourceLoader] Icon geladen: {def.Id} → {iconPath}");
+                                DebugLogger.LogServices(() => $"[DataIndexResourceLoader] Icon geladen: {def.Id} → {iconPath}");
                             }
                             else
                             {
-                                GD.PrintErr($"[DataIndexResourceLoader] Icon FEHLT: {def.Id} → {iconPath}");
+                                DebugLogger.LogServices(() => $"[DataIndexResourceLoader] Icon FEHLT: {def.Id} → {iconPath}");
                             }
                         }
                     }

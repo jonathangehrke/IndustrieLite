@@ -13,7 +13,7 @@ public partial class CameraController : Camera2D
     [Export]
     public float ZoomStep = 0.1f; // relative Aenderung pro Schritt (10%)
     [Export]
-    public float MinZoom = 0.4f;  // minimaler Zoom (kleinster Wert)
+    public float MinZoom = 0.5f;  // minimaler Zoom (kleinster Wert)
     [Export]
     public float MaxZoom = 3.0f;  // maximaler Zoom (groesster Wert)
 
@@ -105,6 +105,7 @@ public partial class CameraController : Camera2D
         {
             float worldW = this.landManager.GridW * this.buildingManager.TileSize;
             float worldH = this.landManager.GridH * this.buildingManager.TileSize;
+            // Grobe Klammer, falls Viewport/Zoom noch nicht verfuegbar sind
             this.simPosition = new Vector2(
                 Mathf.Clamp(this.simPosition.X, 0f, worldW),
                 Mathf.Clamp(this.simPosition.Y, 0f, worldH));
@@ -133,6 +134,52 @@ public partial class CameraController : Camera2D
         }
 
         this.simZoom = Mathf.Clamp(this.simZoom, this.MinZoom, this.MaxZoom);
+
+        // Exakte Klammer basierend auf Viewport-Groesse und Zoom, damit die Kamera
+        // nicht ueber die Kartenraender hinaus geschoben werden kann.
+        if (this.landManager != null && this.buildingManager != null)
+        {
+            var vp = this.GetViewport();
+            if (vp != null)
+            {
+                float worldW = this.landManager.GridW * this.buildingManager.TileSize;
+                float worldH = this.landManager.GridH * this.buildingManager.TileSize;
+
+                var vr = vp.GetVisibleRect();
+                Vector2 viewSize = new Vector2(vr.Size.X, vr.Size.Y);
+                float zx = this.simZoom;
+                float zy = this.simZoom;
+                Vector2 halfWorld = new Vector2(viewSize.X * 0.5f / zx, viewSize.Y * 0.5f / zy);
+
+                float minXBound = halfWorld.X;
+                float minYBound = halfWorld.Y;
+                float maxXBound = worldW - halfWorld.X;
+                float maxYBound = worldH - halfWorld.Y;
+
+                float clampedX = this.simPosition.X;
+                float clampedY = this.simPosition.Y;
+
+                if (maxXBound < minXBound)
+                {
+                    clampedX = worldW * 0.5f;
+                }
+                else
+                {
+                    clampedX = Mathf.Clamp(clampedX, minXBound, maxXBound);
+                }
+
+                if (maxYBound < minYBound)
+                {
+                    clampedY = worldH * 0.5f;
+                }
+                else
+                {
+                    clampedY = Mathf.Clamp(clampedY, minYBound, maxYBound);
+                }
+
+                this.simPosition = new Vector2(clampedX, clampedY);
+            }
+        }
 
         this.interpAccum = 0f;
         this.interpInterval = (float)dt;

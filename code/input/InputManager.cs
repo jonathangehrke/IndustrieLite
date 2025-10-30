@@ -40,6 +40,7 @@ public partial class InputManager : Node, ILifecycleScope
     private GameManager gameManager = default!;
     private EventHub? eventHub;
     private CameraController? kameraController;
+    private UIService? uiService;
 
     private InputHandler inputHandler = default!;
     private ToolManager toolManager = default!;
@@ -99,7 +100,8 @@ public partial class InputManager : Node, ILifecycleScope
         GameManager gameManager,
         EventHub? eventHub,
         CameraController? kameraController,
-        Simulation? simulation)
+        Simulation? simulation,
+        UIService? uiService = null)
     {
         if (this.initialized)
         {
@@ -116,6 +118,7 @@ public partial class InputManager : Node, ILifecycleScope
         this.gameManager = gameManager;
         this.eventHub = eventHub;
         this.kameraController = kameraController;
+        this.uiService = uiService;
 
         // WICHTIG: Warten bis _Ready() komplett ist und Child-Nodes verfügbar sind
         this.CallDeferred(nameof(this.InitializeDeferred));
@@ -155,7 +158,7 @@ public partial class InputManager : Node, ILifecycleScope
 
     private void VerbindeKomponenten()
     {
-        this.toolManager.InjiziereDependencies(this.landManager, this.buildingManager, this.economyManager, this.transportManager, this.roadManager, this.map, this.eventHub);
+        this.toolManager.InjiziereDependencies(this.landManager, this.buildingManager, this.economyManager, this.transportManager, this.roadManager, this.map, this.eventHub, this.uiService);
         this.inputEventRouter.InjiziereDependencies(this.map, this.gameManager, this.toolManager, this.buildingManager, this.kameraController, this.eventHub);
         this.inputHandler.InjiziereDependencies(this.map, this.inputEventRouter, this.toolManager);
     }

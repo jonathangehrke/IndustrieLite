@@ -9,10 +9,12 @@ using Godot;
 internal class DevFeatureSetup
 {
     private readonly Node ownerNode;
+    private readonly Node? devFlags;
 
-    public DevFeatureSetup(Node ownerNode)
+    public DevFeatureSetup(Node ownerNode, Node? devFlags = null)
     {
         this.ownerNode = ownerNode ?? throw new ArgumentNullException(nameof(ownerNode));
+        this.devFlags = devFlags;
     }
 
     /// <summary>
@@ -61,11 +63,11 @@ internal class DevFeatureSetup
     }
 
     /// <summary>
-    /// Get DevFlags node from ServiceContainer.
+    /// Get DevFlags node (injected via constructor).
     /// </summary>
     private Node? GetDevFlags()
     {
-        return ServiceContainer.Instance?.GetNamedService<Node>("DevFlags");
+        return this.devFlags;
     }
 
     /// <summary>

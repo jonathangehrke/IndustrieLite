@@ -39,7 +39,7 @@ public partial class MarketService : Node, ILifecycleScope
     public override void _Ready()
     {
         // No self-registration - managed by DIContainer (Clean Architecture)
-        // Dependencies are injected via Initialize() method
+        // Dependencies are injected via Initialize() method (see MarketService.Initialize.cs)
     }
 
     /// <summary>

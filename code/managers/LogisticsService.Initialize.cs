@@ -11,19 +11,20 @@ public partial class LogisticsService : Node
     /// Explizite Initialisierung mit allen Dependencies.
     /// Ersetzt InitializeDependencies() ServiceContainer lookups.
     /// </summary>
-    public void Initialize(EconomyManager? economyManager, EventHub? eventHub)
+    public void Initialize(IEconomyManager economyManager, EventHub? eventHub)
     {
-        this.economyManager = economyManager;
-        this.eventHub = eventHub;
-
+        // Validate required dependencies (fail-fast)
         if (economyManager == null)
         {
-            DebugLogger.Error("debug_services", "LogisticsEconomyMissing", "EconomyManager not found! Buttons will be disabled.");
+            throw new System.ArgumentNullException(nameof(economyManager), "LogisticsService requires EconomyManager for upgrade cost calculations");
         }
+
+        this.economyManager = (EconomyManager)economyManager; // Cast for storage (will be replaced with interface field later)
+        this.eventHub = eventHub;
 
         if (eventHub == null)
         {
-            DebugLogger.Warn("debug_services", "LogisticsEventHubMissing", "EventHub not found");
+            DebugLogger.LogServices("LogisticsService: INFO - EventHub not available, upgrade events won't be emitted");
         }
 
         this.isInitialized = true;

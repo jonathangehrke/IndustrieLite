@@ -66,7 +66,7 @@ public partial class UIService
             var tileSize = this.buildingManager.TileSize;
             Vector2 CityCenter(City c)
                 => c.GlobalPosition + new Vector2(c.Size.X * tileSize / 2f, c.Size.Y * tileSize / 2f);
-            Vector2 FarmCenter(ChickenFarm f)
+            Vector2 FarmCenter(Building f)
                 => f.GlobalPosition + new Vector2(f.Size.X * tileSize / 2f, f.Size.Y * tileSize / 2f);
 
             var cityCenter = CityCenter(targetCity);

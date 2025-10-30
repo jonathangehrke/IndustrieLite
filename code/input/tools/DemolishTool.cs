@@ -8,11 +8,13 @@ public class DemolishTool : IInputTool
 {
     private readonly RoadManager roadManager;
     private readonly BuildingManager buildingManager;
+    private readonly UIService? uiService;
 
-    public DemolishTool(RoadManager roadManager, BuildingManager buildingManager)
+    public DemolishTool(RoadManager roadManager, BuildingManager buildingManager, UIService? uiService = null)
     {
         this.roadManager = roadManager;
         this.buildingManager = buildingManager;
+        this.uiService = uiService;
     }
 
     /// <inheritdoc/>
@@ -36,18 +38,16 @@ public class DemolishTool : IInputTool
             var res = this.roadManager.TryRemoveRoad(zelle);
             if (!res.Ok)
             {
-                var ui = ServiceContainer.Instance?.GetNamedService<UIService>(ServiceNames.UIService);
                 if (res.ErrorInfo != null)
                 {
-                    ui?.ShowErrorToast(res.ErrorInfo);
+                    this.uiService?.ShowErrorToast(res.ErrorInfo);
                 }
 
                 return;
             }
             DebugLogger.LogInput(() => $"Strasse entfernt bei {zelle}");
             {
-                var ui = ServiceContainer.Instance?.GetNamedService<UIService>(ServiceNames.UIService);
-                ui?.ShowSuccessToast($"Strasse entfernt bei {zelle}");
+                this.uiService?.ShowSuccessToast($"Strasse entfernt bei {zelle}");
             }
             return;
         }
@@ -58,18 +58,16 @@ public class DemolishTool : IInputTool
             var res = this.buildingManager.TryRemoveBuilding(gebaeude);
             if (!res.Ok)
             {
-                var ui = ServiceContainer.Instance?.GetNamedService<UIService>(ServiceNames.UIService);
                 if (res.ErrorInfo != null)
                 {
-                    ui?.ShowErrorToast(res.ErrorInfo);
+                    this.uiService?.ShowErrorToast(res.ErrorInfo);
                 }
 
                 return;
             }
             DebugLogger.LogInput(() => $"Gebaeude entfernt bei {zelle}");
             {
-                var ui = ServiceContainer.Instance?.GetNamedService<UIService>(ServiceNames.UIService);
-                ui?.ShowSuccessToast($"Gebaeude entfernt bei {zelle}");
+                this.uiService?.ShowSuccessToast($"Gebaeude entfernt bei {zelle}");
             }
             return;
         }

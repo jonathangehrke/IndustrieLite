@@ -11,5 +11,6 @@ Width = 1
 Height = 1
 Cost = 50
 Category = "Infrastruktur"
+Tags = Array[String](["infrastructure"])
 LegacyIds = ["Road"]
 Icon = ExtResource("2_0")

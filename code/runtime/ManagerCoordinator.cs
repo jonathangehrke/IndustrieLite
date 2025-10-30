@@ -131,14 +131,30 @@ public partial class ManagerCoordinator : Node
         this.transportManager?.AcceptOrder(id);
     }
 
-    public List<ChickenFarm> GetChickenFarms()
+    [System.Obsolete("Use GetProductionBuildings() instead")]
+    public List<Building> GetChickenFarms()
     {
-        return this.buildingManager?.GetChickenFarms() ?? new List<ChickenFarm>();
+        #pragma warning disable CS0618 // Type or member is obsolete
+        return this.buildingManager?.GetChickenFarms() ?? new List<Building>();
+        #pragma warning restore CS0618
     }
 
-    public Godot.Collections.Array<ChickenFarm> GetChickenFarmsForUI()
+    [System.Obsolete("Use GetProductionBuildingsForUI() instead")]
+    public Godot.Collections.Array<Building> GetChickenFarmsForUI()
     {
-        return this.buildingManager?.GetChickenFarmsForUI() ?? new Godot.Collections.Array<ChickenFarm>();
+        #pragma warning disable CS0618 // Type or member is obsolete
+        return this.buildingManager?.GetChickenFarmsForUI() ?? new Godot.Collections.Array<Building>();
+        #pragma warning restore CS0618
+    }
+
+    public List<IProductionBuilding> GetProductionBuildings()
+    {
+        return this.buildingManager?.GetProductionBuildings() ?? new List<IProductionBuilding>();
+    }
+
+    public Godot.Collections.Array<Building> GetProductionBuildingsForUI()
+    {
+        return this.buildingManager?.GetProductionBuildingsForUI() ?? new Godot.Collections.Array<Building>();
     }
 
     public int GetTotalChickens()
@@ -147,12 +163,8 @@ public partial class ManagerCoordinator : Node
         {
             return 0;
         }
-        int total = 0;
-        foreach (var farm in this.buildingManager.GetChickenFarms())
-        {
-            total += farm.Stock;
-        }
-        return total;
+        // Use BuildingManager's inventory totals instead of direct farm access
+        return this.buildingManager.GetTotalInventoryOfResource(new StringName("chickens"));
     }
 
     public void SetGameTimeScale(double scale)

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using Godot;
 
-public partial class RoadManager : Node2D, ILifecycleScope
+public partial class RoadManager : Node2D, IRoadManager, ILifecycleScope
 {
     /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;

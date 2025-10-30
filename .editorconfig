@@ -1,4 +1,4 @@
-root = true
+﻿root = true
 
 # Allgemeine Editor-Einstellungen
 [*]
@@ -9,7 +9,7 @@ end_of_line = crlf
 insert_final_newline = true
 trim_trailing_whitespace = true
 
-# Godot: GDScript & Szenen (LF, Tabs für .gd)
+# Godot: GDScript & Szenen (LF, Tabs fÃ¼r .gd)
 [*.gd]
 indent_style = tab
 end_of_line = lf
@@ -47,7 +47,7 @@ dotnet_diagnostic.SA1513.severity = suggestion
 dotnet_diagnostic.SA1515.severity = suggestion
 dotnet_diagnostic.SA1518.severity = suggestion
 dotnet_diagnostic.SA1208.severity = suggestion
-dotnet_diagnostic.SA1027.severity = suggestion
+dotnet_diagnostic.SA1027.severity = warning
 dotnet_diagnostic.SA1028.severity = suggestion
 dotnet_diagnostic.SA1122.severity = suggestion
 
@@ -57,6 +57,8 @@ dotnet_diagnostic.MA0042.severity = error
 # Dateiname entspricht erstem Typ in der Datei (global als Warning)
 dotnet_diagnostic.SA1649.severity = warning
 
+dotnet_diagnostic.SA1402.severity = warning
+dotnet_diagnostic.CA1852.severity = warning
 # Interfaces: Start mit 'I' und PascalCase
 dotnet_naming_rule.interfaces_should_start_with_i.symbols = interfaces
 dotnet_naming_rule.interfaces_should_start_with_i.style = interface_style
@@ -78,25 +80,25 @@ dotnet_diagnostic.CA1707.severity = none
 dotnet_diagnostic.CA1050.severity = none
 
 # Analyzer-Schwellwerte (Beispiele)
-dotnet_analyzer_diagnostic.severity = warning
-dotnet_diagnostic.CS1591.severity = warning
-dotnet_diagnostic.SA1600.severity = warning
+dotnet_analyzer_diagnostic.severity = suggestion
+dotnet_diagnostic.CS1591.severity = suggestion
+dotnet_diagnostic.SA1600.severity = suggestion
 dotnet_diagnostic.SA1604.severity = suggestion
 dotnet_diagnostic.SA1606.severity = suggestion
 dotnet_diagnostic.CS8618.severity = warning
 dotnet_diagnostic.CS8619.severity = warning
-dotnet_diagnostic.IDE0055.severity = warning
+dotnet_diagnostic.IDE0055.severity = suggestion
 
 # Reduce noisy design guidelines where refactors are large
 dotnet_diagnostic.CA1050.severity = none
-dotnet_diagnostic.CA1051.severity = none
-dotnet_diagnostic.CA1716.severity = none
-dotnet_diagnostic.CA1805.severity = none
+dotnet_diagnostic.CA1051.severity = suggestion
+dotnet_diagnostic.CA1716.severity = suggestion
+dotnet_diagnostic.CA1805.severity = suggestion
 
 
 # Downgrade noisy analyzer rules to suggestions
 dotnet_diagnostic.CA1822.severity = suggestion
-dotnet_diagnostic.CA1852.severity = suggestion
+dotnet_diagnostic.CA1852.severity = warning
 
 
 # Broader analyzer tuning to suggestions
@@ -106,4 +108,14 @@ dotnet_diagnostic.CA1000.severity = suggestion
 dotnet_diagnostic.CA1310.severity = suggestion
 dotnet_diagnostic.CA1869.severity = suggestion
 dotnet_diagnostic.CA1001.severity = suggestion
+
+
+# Analyzer overrides to ensure warnings in editor (kritische Rules)
+dotnet_diagnostic.SA1402.severity = warning
+dotnet_diagnostic.CA1852.severity = warning
+dotnet_diagnostic.SA1611.severity = suggestion
+dotnet_diagnostic.SA1616.severity = suggestion
+dotnet_diagnostic.MA0051.severity = suggestion
+dotnet_diagnostic.MA0047.severity = suggestion
+dotnet_diagnostic.MA0048.severity = suggestion
 

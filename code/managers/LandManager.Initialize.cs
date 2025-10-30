@@ -22,6 +22,12 @@ public partial class LandManager
             return;
         }
 
+        // Validate required dependencies (fail-fast)
+        if (economyManager == null)
+        {
+            throw new System.ArgumentNullException(nameof(economyManager), "LandManager requires EconomyManager for BuyLand operations");
+        }
+
         this.economyManager = economyManager;
         this.eventHub = eventHub;
 

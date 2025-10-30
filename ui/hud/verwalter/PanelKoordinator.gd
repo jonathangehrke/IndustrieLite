@@ -64,7 +64,8 @@ func umschalte_land_panel() -> bool:
 			ui_service.ToggleBuyLandMode(false)
 		if ui_service.has_method("ToggleSellLandMode"):
 			ui_service.ToggleSellLandMode(false)
-		_verlasse_road_build_wenn_aktiv()
+		# _verlasse_road_build_wenn_aktiv() wird hier NICHT aufgerufen
+		# Nur in _schliesse_land_panel() (globale Schließ-Funktionen) wird aufgeräumt
 	emit_signal("panel_umgeschaltet", "land", sichtbar)
 	return sichtbar
 
@@ -103,47 +104,48 @@ func _input(event):
 
 	# ESC: nur Panels schließen, kein Main-Menü
 	if event.is_action_pressed("ui_cancel"):
-		var closed := false
+		var panel_geschlossen := false
+
 		if land_panel != null and land_panel.visible:
 			_schliesse_land_panel()
-			closed = true
+			panel_geschlossen = true
+
 		if production_panel_host != null and production_panel_host.visible:
-			production_panel_host.visible = false
-			closed = true
+			_schliesse_production_panel()
+			panel_geschlossen = true
+
 		if _is_bau_menue_sichtbar():
 			_schliesse_bau_menue()
-			closed = true
-		if closed:
+			panel_geschlossen = true
+
+		# Event als handled markieren, damit InputEventRouter kein Hauptmenü öffnet
+		if panel_geschlossen:
 			get_viewport().set_input_as_handled()
 			return
 
-	# Linke/rechte Maustaste außerhalb schließt die Panels
+	# Rechte Maustaste außerhalb schließt die Panels
 	if event is InputEventMouseButton and event.pressed:
 		var btn := (event as InputEventMouseButton).button_index
-		if btn == MOUSE_BUTTON_LEFT or btn == MOUSE_BUTTON_RIGHT:
+		if btn == MOUSE_BUTTON_RIGHT:
 			var pos: Vector2 = (event as InputEventMouseButton).position
-			var closed2 := false
+
 			if land_panel != null and land_panel.visible:
-				if not (land_panel as Control).get_global_rect().has_point(pos) and btn == MOUSE_BUTTON_RIGHT:
+				if not (land_panel as Control).get_global_rect().has_point(pos):
 					_schliesse_land_panel()
-					closed2 = true
+
 			if production_panel_host != null and production_panel_host.visible:
 				var inside_prod := _is_point_inside_control_or_children(production_panel_host, pos)
 				if not inside_prod:
-					production_panel_host.visible = false
-					closed2 = true
+					_schliesse_production_panel()
+
 			if _is_bau_menue_sichtbar():
 				var inside_build := false
 				if build_bar != null and build_bar.get_global_rect().has_point(pos):
 					inside_build = true
 				if bau_leiste_bg != null and bau_leiste_bg.get_global_rect().has_point(pos):
 					inside_build = true
-				if not inside_build and btn == MOUSE_BUTTON_RIGHT:
+				if not inside_build:
 					_schliesse_bau_menue()
-					closed2 = true
-			if closed2:
-				get_viewport().set_input_as_handled()
-				return
 
 func _schliesse_land_panel():
 	if land_panel == null:
@@ -155,6 +157,17 @@ func _schliesse_land_panel():
 		if ui_service.has_method("ToggleSellLandMode"):
 			ui_service.ToggleSellLandMode(false)
 	_verlasse_road_build_wenn_aktiv()
+
+func _schliesse_production_panel():
+	if production_panel_host == null:
+		return
+	production_panel_host.visible = false
+	# EventHub-Signal senden, damit ProductionPanelHost current_building auf null setzt
+	var sc: Node = get_node_or_null("/root/ServiceContainer")
+	if sc != null and sc.has_method("GetNamedService"):
+		var event_hub = sc.GetNamedService("EventHub")
+		if event_hub != null and event_hub.has_signal(EventNames.SELECTED_BUILDING_CHANGED):
+			event_hub.emit_signal(EventNames.SELECTED_BUILDING_CHANGED, null)
 
 # Prueft, ob ein Punkt innerhalb eines Controls oder eines seiner sichtbaren Kinder liegt
 func _is_point_inside_control_or_children(node: Node, pos: Vector2) -> bool:

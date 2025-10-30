@@ -12,6 +12,7 @@ Height = 4
 Cost = 0
 Icon = ExtResource("2_0")
 Category = "Städte"
+Tags = Array[String](["compact-ui", "city"])
 LegacyIds = ["City"]
 DefaultRecipeId = "city_orders"
 AvailableRecipes = ["city_orders"]

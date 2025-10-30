@@ -51,10 +51,17 @@ public partial class Truck : Node2D
     // Sprite fuer visuelles Truck-Bild
     private Sprite2D? sprite;
 
+    /// <summary>
+    /// Sets DevFlags reference (optional, for debug features).
+    /// </summary>
+    public void SetDevFlags(Node? devFlags)
+    {
+        this.devFlags = devFlags;
+    }
+
     /// <inheritdoc/>
     public override void _Ready()
     {
-        this.devFlags = ServiceContainer.Instance?.GetNamedService<Node>(ServiceNames.DevFlags);
         // Render-Reihenfolge: Trucks ueber Strassen (RoadRenderer ZIndex=10)
         try
         {

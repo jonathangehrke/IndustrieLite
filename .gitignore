@@ -68,3 +68,7 @@ IndustrieLite_repo/
 
 # Windows invalid file artifacts
 nul
+# Build analysis files
+build_*.txt
+warning_analysis.md
+temp.txt

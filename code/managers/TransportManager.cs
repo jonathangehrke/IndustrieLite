@@ -15,7 +15,7 @@ using IndustrieLite.Transport.Core;
 /// Architecture:
 /// - TransportManager (this wrapper) -> TransportCoordinator -> TruckManager, TransportOrderManager, TransportEconomyService.
 /// </summary>
-public partial class TransportManager : Node, ITickable, ILifecycleScope
+public partial class TransportManager : Node, ITransportManager, ITickable, ILifecycleScope
 {
     /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;

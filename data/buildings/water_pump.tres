@@ -12,6 +12,7 @@ Height = 2
 Cost = 600
 Category = "Infrastruktur"
 Icon = ExtResource("2_0")
+Tags = Array[String](["capacity-provider", "compact-ui"])
 LegacyIds = ["Water"]
 DefaultRecipeId = "water_production"
 AvailableRecipes = ["water_production"]

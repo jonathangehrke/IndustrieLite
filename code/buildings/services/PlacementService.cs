@@ -2,269 +2,145 @@
 using System;
 using System.Collections.Generic;
 using Godot;
+using IndustrieLite.Core.Placement;
+using IndustrieLite.Core.Primitives;
+using IndustrieLite.Core.Ports;
 
 /// <summary>
-/// PlacementService prueft Platzierungsregeln (Bounds, Besitz, Kollision, Kosten).
-/// Spricht mit LandManager, EconomyManager und existierenden Gebaeuden.
+/// PlacementService prÃ¼ft Platzierungsregeln (Bounds, Besitz, Kollision, Kosten).
+/// Delegiert die Kernlogik an den engine-freien PlacementCoreService.
 /// </summary>
 public class PlacementService
 {
-    private readonly LandManager land;
-    private readonly EconomyManager economy;
-    private readonly Database? database; // optional
-    private readonly RoadManager? roadManager; // optional: fuer Kollision mit Strassen
+    private readonly ILandReadModel land;
+    private readonly IEconomy economy;
+    private readonly IBuildingDefinitionProvider? defs; // optional
+    private readonly IRoadReadModel? roads; // optional
+    private readonly PlacementCoreService core; // Core-Logik (Godot-frei)
 
-    public PlacementService(LandManager land, EconomyManager economy, Database? database = null, RoadManager? roadManager = null)
+    /// <summary>
+    /// Port-basierter Konstruktor (testfreundlich, enginefrei im Kern).
+    /// </summary>
+    public PlacementService(ILandReadModel land, IEconomy economy, IBuildingDefinitionProvider? defs = null, IRoadReadModel? roads = null)
     {
         this.land = land;
         this.economy = economy;
-        this.database = database;
-        this.roadManager = roadManager;
+        this.defs = defs;
+        this.roads = roads;
+        var landAdapter = new LandGridCoreAdapter(land);
+        var econAdapter = new EconomyCoreAdapter(economy);
+        var defsAdapter = defs != null ? new BuildingDefinitionsCoreAdapter(defs) : null;
+        var roadAdapter = roads != null ? new RoadGridCoreAdapter(roads) : null;
+        this.core = new PlacementCoreService(landAdapter, econAdapter, defsAdapter, roadAdapter);
+    }
+
+    /// <summary>
+    /// Legacy-Konstruktor (KompatibilitÃ¤t): wrapped die Manager Ã¼ber Port-Adapter.
+    /// </summary>
+    public PlacementService(LandManager land, EconomyManager economy, Database? database = null, RoadManager? roadManager = null)
+        : this(land, new EconomyPort(economy), database != null ? new DatabaseBuildingDefinitionProvider(database) : null, roadManager != null ? new RoadReadModelPort(roadManager) : null)
+    {
     }
 
     public bool CanPlace(string type, Vector2I cell, List<Building> existing, out Vector2I size, out int cost)
     {
-        // Defaults (fallback bei fehlenden Daten)
-        size = new Vector2I(2, 2);
-        cost = 200;
-
-        // Daten aus Database lesen (akzeptiert auch LegacyIds)
-        BuildingDef? def = null;
-        if (this.database != null)
-        {
-            def = this.database.GetBuilding(type);
-            // Falls nicht gefunden, kanonische ID probieren
-            if (def == null)
-            {
-                var canon = IdMigration.ToCanonical(type);
-                if (!string.IsNullOrEmpty(canon) && !string.Equals(canon, type, System.StringComparison.Ordinal))
-                {
-                    def = this.database.GetBuilding(canon);
-                }
-            }
-        }
-        // Export-Fallback: DataIndex verwenden, wenn Database (noch) leer ist
-        if (def == null)
-        {
-            try
-            {
-                var tree = Engine.GetMainLoop() as SceneTree;
-                var di = tree?.Root?.GetNodeOrNull("/root/DataIndex");
-                if (di != null)
-                {
-                    var canon = IdMigration.ToCanonical(type);
-                    var arrVar = di.Call("get_buildings");
-                    if (arrVar.VariantType != Variant.Type.Nil)
-                    {
-                        foreach (var v in (Godot.Collections.Array)arrVar)
-                        {
-                            var res = v.AsGodotObject();
-                            if (res is BuildingDef bd && !string.IsNullOrEmpty(bd.Id))
-                            {
-                                bool legacyMatch = false;
-                                if (bd.LegacyIds != null)
-                                {
-                                    foreach (var legacy in bd.LegacyIds)
-                                    {
-                                        if (string.Equals(legacy, type, StringComparison.Ordinal))
-                                        {
-                                            legacyMatch = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                                if (bd.Id == canon || legacyMatch)
-                                {
-                                    def = bd;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch
-            {
-            }
-        }
-        if (def != null)
-        {
-            size = new Vector2I(def.Width, def.Height);
-            cost = (int)def.Cost;
-        }
-
-        // Bounds & Besitz
-        for (int x = 0; x < size.X; x++)
-        {
-            for (int y = 0; y < size.Y; y++)
-            {
-                Vector2I c = new Vector2I(cell.X + x, cell.Y + y);
-                if (c.X < 0 || c.Y < 0 || c.X >= this.land.GridW || c.Y >= this.land.GridH)
-                {
-                    return false;
-                }
-
-                if (!this.land.IsOwned(c))
-                {
-                    return false;
-                }
-                // Kollision mit Strassen: Gebaeude duerfen nicht ueber vorhandene Strassen gebaut werden
-                if (this.roadManager != null && this.roadManager.IsRoad(c))
-                {
-                    return false;
-                }
-            }
-        }
-
-        // Kollision
-        Rect2I rect = new Rect2I(cell, size);
+        var rects = new List<Rect2i>(existing.Count);
         foreach (var b in existing)
         {
-            if (rect.Intersects(new Rect2I(b.GridPos, b.Size)))
-            {
-                return false;
-            }
+            rects.Add(new Rect2i(new Int2(b.GridPos.X, b.GridPos.Y), new Int2(b.Size.X, b.Size.Y)));
         }
 
-        // Geld
-        if (!this.economy.CanAfford(cost))
-        {
-            return false;
-        }
-
-        return true;
+        var ok = this.core.CanPlace(type, new Int2(cell.X, cell.Y), rects, out var coreSize, out cost);
+        size = new Vector2I(coreSize.X, coreSize.Y);
+        return ok;
     }
 
-    // Neues, fehlertolerantes TryPlace basierend auf Database und Factory
+    /// <summary>
+    /// Strukturierte, fehlertolerante Platzierung mit Result-Pattern.
+    /// </summary>
     public Result<Building> TryPlace(string buildingId, Vector2I cell, int tileSize, List<Building> existing, BuildingFactory factory)
     {
-        // Validierung
         if (string.IsNullOrWhiteSpace(buildingId))
         {
             return Result<Building>.Fail(new ErrorInfo(ErrorIds.TransportInvalidArgumentName, "Leere Building-ID",
                 new System.Collections.Generic.Dictionary<string, object?>(System.StringComparer.Ordinal) { { "type", buildingId } }));
         }
 
-        // Size/Cost bestimmen (mit Database-Fallbacks)
-        Vector2I size = new Vector2I(2, 2);
-        int cost = 200;
-        BuildingDef? def = null;
-        if (this.database != null)
+        var rects = new List<Rect2i>(existing.Count);
+        foreach (var b in existing)
         {
-            def = this.database.GetBuilding(buildingId);
-            if (def == null)
-            {
-                var canon = IdMigration.ToCanonical(buildingId);
-                if (!string.IsNullOrEmpty(canon) && !string.Equals(canon, buildingId, System.StringComparison.Ordinal))
-                {
-                    def = this.database.GetBuilding(canon);
-                }
-            }
+            rects.Add(new Rect2i(new Int2(b.GridPos.X, b.GridPos.Y), new Int2(b.Size.X, b.Size.Y)));
         }
-        // Export-Fallback auf DataIndex
-        if (def == null)
+        var planRes = this.core.TryPlan(buildingId, new Int2(cell.X, cell.Y), tileSize, rects);
+        if (!planRes.Ok || planRes.Value == null)
         {
-            try
-            {
-                var tree = Engine.GetMainLoop() as SceneTree;
-                var di = tree?.Root?.GetNodeOrNull("/root/DataIndex");
-                if (di != null)
-                {
-                    var canon = IdMigration.ToCanonical(buildingId);
-                    var arrVar = di.Call("get_buildings");
-                    if (arrVar.VariantType != Variant.Type.Nil)
-                    {
-                        foreach (var v in (Godot.Collections.Array)arrVar)
-                        {
-                            var res = v.AsGodotObject();
-                            if (res is BuildingDef bd && !string.IsNullOrEmpty(bd.Id))
-                            {
-                                bool legacyMatch = false;
-                                if (bd.LegacyIds != null)
-                                {
-                                    foreach (var legacy in bd.LegacyIds)
-                                    {
-                                        if (string.Equals(legacy, buildingId, StringComparison.Ordinal))
-                                        {
-                                            legacyMatch = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                                if (bd.Id == canon || legacyMatch)
-                                {
-                                    def = bd;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch
-            {
-            }
-        }
-        if (def != null)
-        {
-            size = new Vector2I(def.Width, def.Height);
-            cost = (int)def.Cost;
+            var code = planRes.Error?.Code ?? "building.invalid_placement";
+            var msg = planRes.Error?.Message ?? "Platzierung nicht moeglich";
+            var mapped = PlacementErrorMapping.MapCoreCodeToRuntime(code);
+            return Result<Building>.Fail(new ErrorInfo(mapped, msg));
         }
 
-        // Schrittweise, detailierte Validierung fuer klares Feedback
-        // 1) Bounds & Besitz fuer jede Zelle des Gebaeudes
-        for (int x = 0; x < size.X; x++)
+        var created = factory?.Create(planRes.Value.DefinitionId, cell, tileSize);
+        if (created == null)
         {
-            for (int y = 0; y < size.Y; y++)
-            {
-                Vector2I c = new Vector2I(cell.X + x, cell.Y + y);
-                if (c.X < 0 || c.Y < 0 || c.X >= this.land.GridW || c.Y >= this.land.GridH)
-                {
-                    return Result<Building>.Fail(new ErrorInfo(
-                        ErrorIds.LandOutOfBoundsName,
-                        "Ein Teil des Gebaeudes liegt ausserhalb des Spielfelds",
-                        new System.Collections.Generic.Dictionary<string, object?>(System.StringComparer.Ordinal) { { "cell", cell }, { "size", size } }));
-                }
-                if (!this.land.IsOwned(c))
-                {
-                    return Result<Building>.Fail(new ErrorInfo(
-                        ErrorIds.LandNotOwnedName,
-                        "Ein Teil des Gebaeudes liegt auf nicht gekauftem Land",
-                        new System.Collections.Generic.Dictionary<string, object?>(System.StringComparer.Ordinal) { { "cell", cell }, { "size", size }, { "missingCell", c } }));
-                }
-                if (this.roadManager != null && this.roadManager.IsRoad(c))
-                {
-                    return Result<Building>.Fail(new ErrorInfo(
-                        ErrorIds.TransportInvalidArgumentName,
-                        "Kollision mit Strasse: Entferne die Strasse oder waehle eine andere Position",
-                        new System.Collections.Generic.Dictionary<string, object?>(System.StringComparer.Ordinal) { { "cell", cell }, { "size", size }, { "roadCell", c } }));
-                }
-            }
+            return Result<Building>.Fail(new ErrorInfo(ErrorIds.BuildingFactoryUnknownTypeName, $"Gebaude-Typ '{buildingId}' unbekannt"));
         }
+        return Result<Building>.Success(created);
+    }
+}
 
-        // 2) Gebaeude-Kollisionen
-        Rect2I rect = new Rect2I(cell, size);
-        foreach (var bExist in existing)
+// Core-Adaptertypen (Godot -> Core Ports)
+internal sealed class LandGridCoreAdapter : ILandGrid
+{
+    private readonly ILandReadModel inner;
+    public LandGridCoreAdapter(ILandReadModel inner) { this.inner = inner; }
+    public bool IsOwned(Int2 cell) => this.inner.IsOwned(new Vector2I(cell.X, cell.Y));
+    public int GetWidth() => this.inner.GetGridW();
+    public int GetHeight() => this.inner.GetGridH();
+}
+
+internal sealed class RoadGridCoreAdapter : IRoadGrid
+{
+    private readonly IRoadReadModel inner;
+    public RoadGridCoreAdapter(IRoadReadModel inner) { this.inner = inner; }
+    public bool IsRoad(Int2 cell) => this.inner.IsRoad(new Vector2I(cell.X, cell.Y));
+}
+
+internal sealed class EconomyCoreAdapter : IEconomyCore
+{
+    private readonly IEconomy inner;
+    public EconomyCoreAdapter(IEconomy inner) { this.inner = inner; }
+    // PlacementCore should not enforce funds; BuildTool handles debit. Always allow.
+    public bool CanAfford(int amount) => true;
+}
+
+internal sealed class BuildingDefinitionsCoreAdapter : IBuildingDefinitionProvider, IBuildingDefinitions
+{
+    private readonly IBuildingDefinitionProvider inner;
+    public BuildingDefinitionsCoreAdapter(IBuildingDefinitionProvider inner) { this.inner = inner; }
+    // Godot-Port bleibt verfÃ¼gbar
+    public BuildingDef? GetBuilding(string id) => inner.GetBuilding(id);
+    // Core-Port
+    IndustrieLite.Core.Domain.BuildingDefinition? IBuildingDefinitions.GetById(string id)
+    {
+        var def = this.inner.GetBuilding(id);
+        if (def == null) return null;
+        return new IndustrieLite.Core.Domain.BuildingDefinition(def.Id, def.Width, def.Height, (int)def.Cost);
+    }
+}
+
+internal static class PlacementErrorMapping
+{
+    public static StringName MapCoreCodeToRuntime(string code)
+    {
+        return code switch
         {
-            if (rect.Intersects(new Rect2I(bExist.GridPos, bExist.Size)))
-            {
-                return Result<Building>.Fail(new ErrorInfo(
-                    ErrorIds.BuildingInvalidPlacementName,
-                    "Kollision mit bestehendem Gebaeude",
-                    new System.Collections.Generic.Dictionary<string, object?>(System.StringComparer.Ordinal) { { "cell", cell }, { "size", size }, { "other", bExist.DefinitionId ?? bExist.Name } }));
-            }
-        }
-
-        // Erzeugen
-        var neu = factory?.Create(buildingId, cell, tileSize);
-        if (neu == null)
-        {
-            return Result<Building>.Fail(new ErrorInfo(
-                ErrorIds.BuildingFactoryUnknownTypeName,
-                $"Gebaude-Typ '{buildingId}' unbekannt"));
-        }
-
-        // DETERMINISMUS: SimTick-only - Ergebnis wird im BuildingManager im SimTick verarbeitet
-        return Result<Building>.Success(neu);
+            "land.out_of_bounds" => ErrorIds.LandOutOfBoundsName,
+            "land.not_owned" => ErrorIds.LandNotOwnedName,
+            "economy.insufficient_funds" => ErrorIds.EconomyInsufficientFundsName,
+            "building.invalid_placement" => ErrorIds.BuildingInvalidPlacementName,
+            "road.collision" => ErrorIds.TransportInvalidArgumentName,
+            _ => ErrorIds.BuildingInvalidPlacementName,
+        };
     }
 }

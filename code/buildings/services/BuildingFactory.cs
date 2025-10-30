@@ -9,86 +9,41 @@ using Godot;
 /// </summary>
 public class BuildingFactory
 {
-    private readonly Database? database; // optional
+    private readonly Database database; // required
     private readonly ProductionManager? productionManager;
     private readonly EconomyManager? economyManager;
     private readonly EventHub? eventHub;
     private readonly Simulation? simulation;
     private readonly GameTimeManager? gameTimeManager;
+    private readonly Node? dataIndex;
 
-    public BuildingFactory(Database? database = null, ProductionManager? productionManager = null, EconomyManager? economyManager = null, EventHub? eventHub = null, Simulation? simulation = null, GameTimeManager? gameTimeManager = null)
+    public BuildingFactory(Database database, ProductionManager? productionManager = null, EconomyManager? economyManager = null, EventHub? eventHub = null, Simulation? simulation = null, GameTimeManager? gameTimeManager = null, Node? dataIndex = null)
     {
-        this.database = database;
+        this.database = database ?? throw new ArgumentNullException(nameof(database), "BuildingFactory requires Database for BuildingDef lookups");
         this.productionManager = productionManager;
         this.economyManager = economyManager;
         this.eventHub = eventHub;
         this.simulation = simulation;
         this.gameTimeManager = gameTimeManager;
+        this.dataIndex = dataIndex;
     }
 
     public Building? Create(string type, Vector2I cell, int tileSize)
     {
         Building? b = null;
         BuildingDef? def = null;
-        // 1) Lookup in Database (akzeptiert Legacy-IDs ueber LegacyIds)
-        if (this.database != null)
-        {
-            def = this.database.GetBuilding(type);
-            DebugLogger.LogServices($"BuildingFactory: Lookup '{type}' => {(def != null ? def.Id : "not found")}");
-            if (def == null)
-            {
-                // Versuche kanonische ID ueber Migration
-                var canon = IdMigration.ToCanonical(type);
-                if (!string.Equals(canon, type, System.StringComparison.Ordinal))
-                {
-                    def = this.database.GetBuilding(canon);
-                    DebugLogger.LogServices($"BuildingFactory: Fallback lookup via canonical '{canon}' => {(def != null ? def.Id : "not found")}");
-                }
-            }
-        }
 
-        // 1b) Export-Fallback: Def direkt aus DataIndex ermitteln, wenn Database (noch) leer ist
+        // 1) Lookup in Database (akzeptiert Legacy-IDs ueber LegacyIds)
+        def = this.database.GetBuilding(type);
+        DebugLogger.LogServices($"BuildingFactory: Lookup '{type}' => {(def != null ? def.Id : "not found")}");
         if (def == null)
         {
-            try
+            // Versuche kanonische ID ueber Migration
+            var canon = IdMigration.ToCanonical(type);
+            if (!string.Equals(canon, type, System.StringComparison.Ordinal))
             {
-                string canon = IdMigration.ToCanonical(type);
-                var tree = Engine.GetMainLoop() as SceneTree;
-                var di = tree?.Root?.GetNodeOrNull("/root/DataIndex");
-                if (di != null)
-                {
-                    var arrVar = di.Call("get_buildings");
-                    if (arrVar.VariantType != Variant.Type.Nil)
-                    {
-                        foreach (var v in (Godot.Collections.Array)arrVar)
-                        {
-                            var res = v.AsGodotObject();
-                            if (res is BuildingDef bd && !string.IsNullOrEmpty(bd.Id))
-                            {
-                                bool legacyMatch = false;
-                                if (bd.LegacyIds != null)
-                                {
-                                    foreach (var legacy in bd.LegacyIds)
-                                    {
-                                        if (string.Equals(legacy, type, StringComparison.Ordinal))
-                                        {
-                                            legacyMatch = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                                if (bd.Id == canon || legacyMatch)
-                                {
-                                    def = bd;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch
-            {
+                def = this.database.GetBuilding(canon);
+                DebugLogger.LogServices($"BuildingFactory: Fallback lookup via canonical '{canon}' => {(def != null ? def.Id : "not found")}");
             }
         }
 
@@ -104,17 +59,23 @@ public class BuildingFactory
         if (b == null)
         {
             var id = def?.Id ?? IdMigration.ToCanonical(type);
+
+            // Spezielle Gebaeude mit eigener Logik
             switch (id)
             {
                 case BuildingIds.House: b = new House(); break;
                 case BuildingIds.SolarPlant: b = new SolarPlant(); break;
                 case BuildingIds.WaterPump: b = new WaterPump(); break;
-                case BuildingIds.ChickenFarm: b = new ChickenFarm(); break;
-                case "grain_farm": b = new GrainFarm(); break;
-                case "pig_farm": b = new PigFarm(); break;
                 case BuildingIds.City: b = new City(); break;
             }
-            if (b != null)
+
+            // Produktionsgebaeude (Farmen etc.) verwenden GenericProductionBuilding
+            if (b == null && def != null && !string.IsNullOrEmpty(def.DefaultRecipeId))
+            {
+                b = new GenericProductionBuilding();
+                DebugLogger.LogServices($"BuildingFactory: Created GenericProductionBuilding for '{id}'");
+            }
+            else if (b != null)
             {
                 DebugLogger.LogServices($"BuildingFactory: Created from ID mapping: {b.GetType().Name} for '{id}'");
             }
@@ -152,38 +113,26 @@ public class BuildingFactory
         }
 
         // Rezept-Verknüpfung: Standardrezept aus BuildingDef in Gebäude übernehmen (falls unterstützt)
+        // Generisch für alle Gebäude mit RezeptIdOverride-Property
         if (def != null && !string.IsNullOrEmpty(def.DefaultRecipeId))
         {
-            switch (b)
+            // Versuche, RezeptIdOverride per Reflection zu setzen (funktioniert für alle Production Buildings)
+            var rezeptProp = b.GetType().GetProperty("RezeptIdOverride");
+            if (rezeptProp != null && rezeptProp.CanWrite)
             {
-                case ChickenFarm cf:
-                    if (string.IsNullOrEmpty(cf.RezeptIdOverride))
-                    {
-                        cf.RezeptIdOverride = def.DefaultRecipeId;
-                    }
-
-                    break;
-                case SolarPlant sp:
-                    if (string.IsNullOrEmpty(sp.RezeptIdOverride))
-                    {
-                        sp.RezeptIdOverride = def.DefaultRecipeId;
-                    }
-
-                    break;
-                case WaterPump wp:
-                    if (string.IsNullOrEmpty(wp.RezeptIdOverride))
-                    {
-                        wp.RezeptIdOverride = def.DefaultRecipeId;
-                    }
-
-                    break;
+                var currentValue = rezeptProp.GetValue(b) as string;
+                if (string.IsNullOrEmpty(currentValue))
+                {
+                    rezeptProp.SetValue(b, def.DefaultRecipeId);
+                    DebugLogger.LogServices($"BuildingFactory: Set RezeptIdOverride to '{def.DefaultRecipeId}' for {b.GetType().Name}");
+                }
             }
         }
 
         // Database + weitere Dependencies injizieren
         try
         {
-            b.Initialize(this.database);
+            b.Initialize(this.database, this.dataIndex);
         }
         catch
         {

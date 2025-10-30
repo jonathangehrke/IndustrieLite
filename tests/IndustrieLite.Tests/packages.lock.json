@@ -124,8 +124,12 @@
         "dependencies": {
           "Godot.SourceGenerators": "[4.4.1, )",
           "GodotSharp": "[4.4.1, )",
-          "GodotSharpEditor": "[4.4.1, )"
+          "GodotSharpEditor": "[4.4.1, )",
+          "IndustrieLite.Core": "[1.0.0, )"
         }
+      },
+      "industrielite.core": {
+        "type": "Project"
       }
     }
   }

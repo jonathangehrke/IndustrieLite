@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 using System;
 using System.Linq;
 using Godot;
@@ -17,20 +17,21 @@ public partial class TransportEconomyService : Node, ITransportEconomyService
     private EconomyManager economyManager = default!;
     private EventHub? eventHub;
     private BuildingManager buildingManager = default!;
+    private MarketService? marketService;
 
-    // Delegate für SignaleAktiv und jobsNeuZuPlanen (wird vom Coordinator gesetzt)
+    // Delegate fÃ¼r SignaleAktiv und jobsNeuZuPlanen (wird vom Coordinator gesetzt)
     public System.Func<bool>? GetSignaleAktivDelegate { get; set; }
 
     public System.Action? SetJobsNeuZuPlanenDelegate { get; set; }
 
-    // Delegate für TransportCore-Zugriff
+    // Delegate fÃ¼r TransportCore-Zugriff
     public System.Func<TransportCoreService?>? GetTransportCoreDelegate { get; set; }
 
     /// <summary>
-    /// Initialisiert den Service mit Abhängigkeiten und Kostenparametern.
+    /// Initialisiert den Service mit AbhÃ¤ngigkeiten und Kostenparametern.
     /// </summary>
     public void Initialize(EconomyManager economyManager, EventHub? eventHub, BuildingManager buildingManager,
-                          double costPerUnitPerTile, double truckFixedCost, double defaultPricePerUnit)
+                          double costPerUnitPerTile, double truckFixedCost, double defaultPricePerUnit, MarketService? marketService = null)
     {
         this.economyManager = economyManager;
         this.eventHub = eventHub;
@@ -38,10 +39,11 @@ public partial class TransportEconomyService : Node, ITransportEconomyService
         this.CostPerUnitPerTile = costPerUnitPerTile;
         this.TruckFixedCost = truckFixedCost;
         this.DefaultPricePerUnit = defaultPricePerUnit;
+        this.marketService = marketService;
     }
 
     /// <summary>
-    /// Liefert den aktuellen Marktpreis für ein Produkt in einer Stadt (Fallback: DefaultPricePerUnit).
+    /// Liefert den aktuellen Marktpreis fÃ¼r ein Produkt in einer Stadt (Fallback: DefaultPricePerUnit).
     /// </summary>
     /// <returns></returns>
     public double GetCurrentMarketPrice(string product, City city)
@@ -61,7 +63,7 @@ public partial class TransportEconomyService : Node, ITransportEconomyService
     }
 
     /// <summary>
-    /// Verarbeitet die Ankunft eines Trucks (Erlös, Kosten, Events, Jobabschluss).
+    /// Verarbeitet die Ankunft eines Trucks (ErlÃ¶s, Kosten, Events, Jobabschluss).
     /// </summary>
     public void ProcessTruckArrival(Truck t)
     {
@@ -93,11 +95,29 @@ public partial class TransportEconomyService : Node, ITransportEconomyService
 
                             // Complete market order delivery (resource deduction + money payment)
                             DebugLogger.LogTransport($"TransportEconomyService: Order {ord.Id} delivered, looking for MarketService...");
-                            var marketService = ServiceContainer.Instance?.GetNamedService<MarketService>(ServiceNames.MarketService);
-                            if (marketService != null)
+                                						// Lazy DI fallback: resolve MarketService once via ServiceContainer if not injected
+                                						if (this.marketService == null)
+                                						{
+                                							try
+                                							{
+                                								var sc = ServiceContainer.Instance;
+                                								if (sc != null)
+                                								{
+                                									this.marketService = sc.GetNamedService<MarketService>(ServiceNames.MarketService);
+                                									if (this.marketService != null)
+                                									{
+                                										DebugLogger.LogTransport("TransportEconomyService: MarketService resolved via ServiceContainer");
+                                									}
+                                								}
+                                							}
+                                							catch
+                                							{
+                                							}
+                                						}
+                            if (this.marketService != null)
                             {
                                 DebugLogger.LogTransport($"TransportEconomyService: MarketService found, calling CompleteMarketOrderDelivery for {ord.Product} x{ord.Amount}");
-                                marketService.CompleteMarketOrderDelivery(ord);
+                                this.marketService.CompleteMarketOrderDelivery(ord);
                             }
                             else
                             {

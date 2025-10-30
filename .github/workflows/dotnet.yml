@@ -64,8 +64,30 @@ jobs:
           global-json-file: global.json
       - name: Restore
         run: dotnet restore
-      - name: Test
-        run: dotnet test -c Release --no-build --logger "trx;LogFileName=testresults.trx"
+      - name: Test (with coverage)
+        run: |
+          dotnet test -c Release --no-restore `
+            --collect:"XPlat Code Coverage" `
+            --results-directory TestResults `
+            --logger "trx;LogFileName=testresults.trx"
+      - name: Install ReportGenerator tool
+        run: dotnet tool install -g dotnet-reportgenerator-globaltool
+      - name: Generate coverage report
+        run: |
+          $env:PATH += ";$env:USERPROFILE\.dotnet\tools"
+          reportgenerator `
+            -reports:"TestResults/**/coverage.cobertura.xml" `
+            -targetdir:"coverage-report" `
+            -reporttypes:"Html;TextSummary"
+          if (Test-Path "coverage-report\Summary.txt") {
+            Get-Content "coverage-report\Summary.txt" | Write-Host
+          }
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage-report
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4

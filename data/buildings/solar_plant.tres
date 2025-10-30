@@ -12,6 +12,7 @@ Height = 2
 Cost = 800
 Category = "Energie"
 Icon = ExtResource("2_0")
+Tags = Array[String](["capacity-provider", "compact-ui"])
 LegacyIds = ["Solar"]
 DefaultRecipeId = "power_generation"
 AvailableRecipes = ["power_generation"]

@@ -16,6 +16,12 @@ Build and manage a small economy: place production buildings (farms, power plant
 - 💰 **Trade** - Fulfill dynamic market orders from cities
 - 📈 **Upgrade** - Improve building capacity and truck logistics
 
+## 🎮 Play the Game
+
+**[▶️ Play on itch.io](https://jonathangehrke.itch.io/industrielite)** _(Coming soon - in development)_
+
+> **For Developers:** This project showcases modern C# architecture patterns in a game development context. See [Technical Highlights](#technical-highlights-for-developers) below for implementation details.
+
 ## Tech Stack
 
 - **Engine:** Godot 4.x (C# / .NET 8)
@@ -39,6 +45,71 @@ Build and manage a small economy: place production buildings (farms, power plant
 ✅ **Market Simulation** - Cities generate orders with dynamic pricing
 ✅ **Building Upgrades** - Logistics capacity and speed improvements
 ✅ **Save/Load System** - Versioned saves with automatic migration
+
+## Technical Highlights for Developers
+
+### Architecture Achievements
+
+**Hexagonal/Ports & Adapters Architecture**
+- Core business logic decoupled from Godot engine via port interfaces
+- `PlacementService` uses `ILandReadModel`, `IEconomy`, `IRoadReadModel` ports
+- Adapter pattern bridges Godot managers to port interfaces (`EconomyPort`, `RoadReadModelPort`)
+- Enables unit testing without Godot runtime dependencies
+
+**Explicit Dependency Injection**
+- Custom `DIContainer` with constructor-based injection (~500 LOC composition root)
+- 20+ services wired explicitly at startup
+- `ServiceContainer` serves as named registry for Godot/GDScript bridge only
+- CI enforcement: No runtime `ServiceContainer` lookups in managers
+
+**Event-Driven Design**
+- `EventHub` provides pub/sub messaging between systems
+- Loose coupling: UI, simulation, and managers communicate via events
+- Type-safe event definitions with structured payloads
+
+**Result<T> Pattern**
+- Structured error handling without exception-driven control flow
+- Type-safe error codes (`ErrorIds`) with localized messages
+- Success/failure state with optional error details
+
+### Recent Refactorings
+
+**BuildingManager → Service Extraction** ([code/buildings/services](code/buildings/services))
+- Refactored 689-line "God Object" into focused services:
+  - `PlacementService` - Placement validation (bounds, ownership, costs, collisions)
+  - `BuildingFactory` - Building instantiation from definitions
+  - `BuildingIndex` - GUID and cell-based indexing
+  - `BuildingQueries` - Stateless query helpers
+  - `BuildingRegistry` - Spatial indexing for fast lookups
+- Port-based architecture enables unit testing with mocks
+- Clear single responsibilities per service
+
+**Production System**
+- Recipe-based production with input/output buffers
+- Tick-based simulation (20Hz deterministic)
+- Resource constraints and capacity management
+
+**Transport System**
+- Autonomous truck agents with A* pathfinding
+- Order management with priority queuing
+- Economic calculations (fuel costs, delivery pricing)
+
+### Code Quality Gates
+
+**Automated CI/CD Pipeline**
+- ✅ .NET build with Release configuration
+- ✅ Unit & integration tests with coverage reports
+- ✅ Code formatting verification (`dotnet format`)
+- ✅ DI pattern enforcement (custom analyzers)
+- ✅ Nullability checks (`<Nullable>enable</Nullable>`)
+- ✅ Warnings as errors
+- ✅ Roslyn static analysis
+
+**Development Standards**
+- Conventional commit messages
+- XML documentation for public APIs
+- Centralized constants (no magic strings via `ResourceIds`, `ErrorIds`)
+- Structured logging with categories (`DebugLogger`)
 
 ## Quick Start
 

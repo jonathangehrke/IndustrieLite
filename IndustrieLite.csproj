@@ -10,13 +10,25 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <!-- Verhindere doppelte Assembly-Attribute mit Godot-Generierung -->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+    <!-- Unterdrücke dokumentations-warnings (werden als suggestion in .editorconfig behandelt) -->
+    <NoWarn>$(NoWarn);CS1591;SA1600;SA1611;SA1616</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="tests\**\*.cs" />
     <Compile Remove="IndustrieLite_repo\**\*.cs" />
+    <Compile Remove="core\**\*.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.354" PrivateAssets="all" />
     <PackageReference Include="Meziantou.Analyzer" Version="2.0.146" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="core\IndustrieLite.Core\IndustrieLite.Core.csproj" />
   </ItemGroup>
 </Project>

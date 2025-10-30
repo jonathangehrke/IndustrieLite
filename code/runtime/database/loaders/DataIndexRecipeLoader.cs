@@ -18,17 +18,18 @@ public sealed class DataIndexRecipeLoader : IDataLoader<RecipeDef>
     /// <inheritdoc/>
     public Task<IReadOnlyCollection<RecipeDef>> LoadAsync(SceneTree sceneTree)
     {
-        // Try to get DataIndex from ServiceContainer first
+        // Try ServiceContainer first, then fall back to /root/DataIndex for export builds
         Node? dataIndex = null;
         var sc = ServiceContainer.Instance;
         if (sc != null)
         {
             dataIndex = sc.GetNamedService<Node>("DataIndex");
         }
+        dataIndex ??= sceneTree?.Root?.GetNodeOrNull("/root/DataIndex");
 
         if (dataIndex == null)
         {
-            DebugLogger.LogServices("DataIndexRecipeLoader: Kein DataIndex gefunden");
+            DebugLogger.LogServices("DataIndexRecipeLoader: Kein DataIndex gefunden (ServiceContainer und /root/DataIndex leer)");
             return Task.FromResult<IReadOnlyCollection<RecipeDef>>(System.Array.Empty<RecipeDef>());
         }
 
@@ -45,7 +46,17 @@ public sealed class DataIndexRecipeLoader : IDataLoader<RecipeDef>
             foreach (Variant eintrag in rezepteArray)
             {
                 var resource = eintrag.AsGodotObject();
-                if (resource is RecipeDef def && !string.IsNullOrEmpty(def.Id))
+                RecipeDef? def = null;
+                if (resource is RecipeDef typed && !string.IsNullOrEmpty(typed.Id))
+                {
+                    def = typed;
+                }
+                else if (resource is Resource res && !string.IsNullOrEmpty(res.ResourcePath))
+                {
+                    try { def = ResourceLoader.Load<RecipeDef>(res.ResourcePath); }
+                    catch { def = null; }
+                }
+                if (def != null && !string.IsNullOrEmpty(def.Id))
                 {
                     ergebnis.Add(def);
                 }

@@ -8,6 +8,22 @@ using Godot;
 public partial class EconomyManager
 {
     private bool initialized;
+    private IndustrieLite.Core.Economy.EconomyCoreService core = new IndustrieLite.Core.Economy.EconomyCoreService();
+
+    private sealed class MoneyEventsSink : IndustrieLite.Core.Ports.IEconomyEvents
+    {
+        private readonly EconomyManager mgr;
+        public MoneyEventsSink(EconomyManager mgr) { this.mgr = mgr; }
+        public void OnMoneyChanged(double money)
+        {
+            // Spiegel internen Wert und sende optional EventHub-Signal
+            this.mgr.Money = money;
+            if (this.mgr.SignaleAktiv && this.mgr.eventHub != null)
+            {
+                this.mgr.eventHub.EmitSignal(EventHub.SignalName.MoneyChanged, this.mgr.Money);
+            }
+        }
+    }
 
     /// <summary>
     /// Explizite Dependency Injection (neue Architektur).
@@ -22,7 +38,9 @@ public partial class EconomyManager
         }
 
         this.eventHub = eventHub;
-        this.Money = this.StartingMoney;
+        // Core mit Startkapital + Event-Sink initialisieren
+        this.core = new IndustrieLite.Core.Economy.EconomyCoreService(this.StartingMoney, new MoneyEventsSink(this));
+        this.Money = this.core.GetMoney();
 
         this.initialized = true;
         DebugLogger.LogServices(string.Format(CultureInfo.InvariantCulture, "EconomyManager.Initialize(): Initialisiert mit StartingMoney={0}, EventHub={1}", this.Money, (eventHub != null) ? "OK" : "null"));

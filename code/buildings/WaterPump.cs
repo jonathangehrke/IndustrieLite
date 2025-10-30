@@ -31,7 +31,7 @@ public partial class WaterPump : Building, IProducer, IHasInventory
 
         this.controller = new RecipeProductionController();
         this.controller.Name = "RecipeProductionController"; // Explicit name for save/load
-        this.controller.Initialize(this.database, this.productionManager);
+        this.controller.Initialize(this.database, this.productionManager, this.dataIndex);
         this.AddChild(this.controller);
         var rid = string.IsNullOrEmpty(this.RezeptIdOverride) ? RecipeIds.WaterProduction : this.RezeptIdOverride;
         if (!this.controller.SetzeRezept(rid))

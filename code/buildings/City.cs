@@ -107,7 +107,7 @@ public partial class City : Building, ITickable
         {
             this.controller = new RecipeProductionController();
             this.controller.Name = "RecipeProductionController"; // Explicit name for save/load
-            this.controller.Initialize(this.database, null);
+            this.controller.Initialize(this.database, null, this.dataIndex);
             this.AddChild(this.controller);
             var rid = string.IsNullOrEmpty(this.RezeptIdOverride) ? "city_orders" : this.RezeptIdOverride;
             this.controller.SetzeRezept(rid);
@@ -229,7 +229,7 @@ public partial class City : Building, ITickable
             {
                 level = lm.CurrentLevel;
             }
-            var di = sc?.GetNamedService<Node>("DataIndex") ?? this.GetNodeOrNull<Node>("/root/DataIndex");
+            var di = this.dataIndex ?? sc?.GetNamedService<Node>("DataIndex") ?? this.GetNodeOrNull<Node>("/root/DataIndex");
             if (di != null)
             {
                 try

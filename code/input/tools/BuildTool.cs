@@ -11,16 +11,18 @@ public class BuildTool : IInputTool
     private readonly BuildingManager buildingManager;
     private readonly EconomyManager economyManager;
     private readonly RoadManager roadManager;
+    private readonly UIService? uiService;
 
     // Aktueller Bautyp (z. B. "House", "Road", ...)
     public string AktuellerBautyp { get; set; } = string.Empty;
 
-    public BuildTool(LandManager landManager, BuildingManager buildingManager, EconomyManager economyManager, RoadManager roadManager)
+    public BuildTool(LandManager landManager, BuildingManager buildingManager, EconomyManager economyManager, RoadManager roadManager, UIService? uiService = null)
     {
         this.landManager = landManager;
         this.buildingManager = buildingManager;
         this.economyManager = economyManager;
         this.roadManager = roadManager;
+        this.uiService = uiService;
     }
 
     /// <inheritdoc/>
@@ -58,18 +60,16 @@ public class BuildTool : IInputTool
             var res = this.roadManager.TryPlaceRoad(zelle);
             if (!res.Ok)
             {
-                var ui = ServiceContainer.Instance?.GetNamedService<UIService>(ServiceNames.UIService);
                 if (res.ErrorInfo != null)
                 {
-                    ui?.ShowErrorToast(res.ErrorInfo);
+                    this.uiService?.ShowErrorToast(res.ErrorInfo);
                 }
 
                 return;
             }
             {
                 DebugLogger.LogInput("Strasse platziert");
-                var ui = ServiceContainer.Instance?.GetNamedService<UIService>(ServiceNames.UIService);
-                ui?.ShowSuccessToast($"Strasse platziert bei {zelle}");
+                this.uiService?.ShowSuccessToast($"Strasse platziert bei {zelle}");
             }
             return;
         }
@@ -79,8 +79,7 @@ public class BuildTool : IInputTool
         if (!canEx.Ok)
         {
             DebugLogger.LogInput($"Kann '{this.AktuellerBautyp}' nicht bei {zelle} platzieren");
-            var ui = ServiceContainer.Instance?.GetNamedService<UIService>(ServiceNames.UIService);
-            ui?.ShowErrorToast(canEx.ErrorInfo ?? new ErrorInfo(ErrorIds.BuildingInvalidPlacementName, "Platzierung nicht moeglich"));
+            this.uiService?.ShowErrorToast(canEx.ErrorInfo ?? new ErrorInfo(ErrorIds.BuildingInvalidPlacementName, "Platzierung nicht moeglich"));
             return;
         }
 
@@ -88,8 +87,7 @@ public class BuildTool : IInputTool
         if (!this.buildingManager.CanPlace(this.AktuellerBautyp, zelle, out var groesse, out var kosten))
         {
             // Sollte nicht vorkommen, da CanPlaceEx bereits true meldete, aber sicherheitshalber
-            var ui = ServiceContainer.Instance?.GetNamedService<UIService>(ServiceNames.UIService);
-            ui?.ShowErrorToast(new ErrorInfo(ErrorIds.BuildingInvalidPlacementName, "Platzierung nicht moeglich"));
+            this.uiService?.ShowErrorToast(new ErrorInfo(ErrorIds.BuildingInvalidPlacementName, "Platzierung nicht moeglich"));
             return;
         }
 
@@ -97,8 +95,7 @@ public class BuildTool : IInputTool
         var debit = this.economyManager.TryDebit(kosten);
         if (!debit.Ok)
         {
-            var ui = ServiceContainer.Instance?.GetNamedService<UIService>(ServiceNames.UIService);
-            ui?.ShowErrorToast(debit.ErrorInfo ?? new ErrorInfo(ErrorIds.EconomyInsufficientFundsName, "Nicht genug Geld"));
+            this.uiService?.ShowErrorToast(debit.ErrorInfo ?? new ErrorInfo(ErrorIds.EconomyInsufficientFundsName, "Nicht genug Geld"));
             return;
         }
 
@@ -107,15 +104,13 @@ public class BuildTool : IInputTool
         {
             // Rückzahlung, falls Platzierung unerwartet fehlschlägt
             this.economyManager.TryCredit(kosten);
-            var ui = ServiceContainer.Instance?.GetNamedService<UIService>(ServiceNames.UIService);
-            ui?.ShowErrorToast(place.ErrorInfo ?? new ErrorInfo(ErrorIds.SystemUnexpectedExceptionName, "Platzierung fehlgeschlagen"));
+            this.uiService?.ShowErrorToast(place.ErrorInfo ?? new ErrorInfo(ErrorIds.SystemUnexpectedExceptionName, "Platzierung fehlgeschlagen"));
             return;
         }
 
         DebugLogger.LogInput("Gebaeude platziert!");
         {
-            var ui = ServiceContainer.Instance?.GetNamedService<UIService>(ServiceNames.UIService);
-            ui?.ShowSuccessToast($"Gebaeude platziert bei {zelle}");
+            this.uiService?.ShowSuccessToast($"Gebaeude platziert bei {zelle}");
         }
     }
 }

@@ -12,6 +12,7 @@ public partial class ResourceRegistry : Node
 {
     // Interner Speicher der bekannten Ressourcen-IDs
     private readonly HashSet<StringName> resourceIds = new();
+    private Database? database;
 
     // Legacy-Mapping entfernt
 
@@ -23,6 +24,15 @@ public partial class ResourceRegistry : Node
     private static readonly StringName IdEgg = new("egg");
     private static readonly StringName IdPig = new("pig");
     private static readonly StringName IdGrain = new("grain");
+
+    /// <summary>
+    /// Initialize with Database dependency (optional).
+    /// </summary>
+    public void Initialize(Database? database)
+    {
+        this.database = database;
+        this.TrySeedFromDatabase();
+    }
 
     /// <inheritdoc/>
     public override void _Ready()
@@ -56,14 +66,13 @@ public partial class ResourceRegistry : Node
 
     private void TrySeedFromDatabase()
     {
-        var db = ServiceContainer.Instance?.GetNamedService<Database>("Database");
-        if (db == null || db.ResourcesById == null)
+        if (this.database == null || this.database.ResourcesById == null)
         {
             DebugLogger.LogServices("ResourceRegistry: Keine Database gefunden oder keine Ressourcen definiert (verwende Fallbacks)");
             return;
         }
 
-        foreach (var id in db.ResourcesById.Keys)
+        foreach (var id in this.database.ResourcesById.Keys)
         {
             this.RegisterResource(new StringName(id));
         }

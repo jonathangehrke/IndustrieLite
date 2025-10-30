@@ -12,17 +12,35 @@ public partial class MarketService : Node
     /// Ersetzt InitializeDependencies() ServiceContainer lookups.
     /// </summary>
     public void Initialize(
-        ResourceManager? resourceManager,
-        TransportManager? transportManager,
-        EconomyManager? economyManager,
-        BuildingManager? buildingManager,
+        IResourceManager resourceManager,  // Changed to required
+        ITransportManager transportManager,  // Changed to required
+        IEconomyManager economyManager,  // Changed to required
+        IBuildingManager buildingManager,  // Changed to required
         LevelManager? levelManager = null,
         Database? database = null)
     {
-        this.resourceManager = resourceManager;
-        this.transportManager = transportManager;
-        this.economyManager = economyManager;
-        this.buildingManager = buildingManager;
+        // Validate required dependencies (fail-fast)
+        if (resourceManager == null)
+        {
+            throw new System.ArgumentNullException(nameof(resourceManager), "MarketService requires ResourceManager");
+        }
+        if (transportManager == null)
+        {
+            throw new System.ArgumentNullException(nameof(transportManager), "MarketService requires TransportManager");
+        }
+        if (economyManager == null)
+        {
+            throw new System.ArgumentNullException(nameof(economyManager), "MarketService requires EconomyManager");
+        }
+        if (buildingManager == null)
+        {
+            throw new System.ArgumentNullException(nameof(buildingManager), "MarketService requires BuildingManager");
+        }
+
+        this.resourceManager = (ResourceManager)resourceManager; // Cast for storage (will be replaced with interface field later)
+        this.transportManager = (TransportManager)transportManager; // Cast for storage (will be replaced with interface field later)
+        this.economyManager = (EconomyManager)economyManager; // Cast for storage (will be replaced with interface field later)
+        this.buildingManager = (BuildingManager)buildingManager; // Cast for storage (will be replaced with interface field later)
         this.levelManager = levelManager;
         this.database = database;
 
@@ -41,25 +59,7 @@ public partial class MarketService : Node
             }
         }
 
-        if (resourceManager == null)
-        {
-            DebugLogger.LogServices("MarketService: WARNING - ResourceManager not found");
-        }
-
-        if (transportManager == null)
-        {
-            DebugLogger.LogServices("MarketService: WARNING - TransportManager not found");
-        }
-
-        if (economyManager == null)
-        {
-            DebugLogger.LogServices("MarketService: WARNING - EconomyManager not found");
-        }
-
-        if (buildingManager == null)
-        {
-            DebugLogger.LogServices("MarketService: WARNING - BuildingManager not found");
-        }
+        // Removed WARNING logs - dependencies are now required and validated above
 
         if (levelManager == null)
         {

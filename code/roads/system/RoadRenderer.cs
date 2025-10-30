@@ -17,13 +17,12 @@ public partial class RoadRenderer : Node2D
     private System.Action<Vector2I>? onRemoved;
     private readonly AboVerwalter abos = new();
 
-    public void Init(RoadGrid grid, BuildingManager buildingManager)
+    public void Init(RoadGrid grid, BuildingManager buildingManager, Node? dataIndex)
     {
         this.grid = grid;
         this.buildingManager = buildingManager;
         this.ZIndex = 10;
         // Strassen-Textur laden: Primär aus DataIndex (preloaded), Fallback: Runtime-Loading
-        var dataIndex = GetNode("/root/DataIndex");
         if (dataIndex != null && dataIndex.HasMethod("get_building_icon"))
         {
             var icon = dataIndex.Call("get_building_icon", "road");
@@ -149,7 +148,14 @@ public partial class RoadRenderer : Node2D
             var vr = vp.GetVisibleRect();
             Vector2 viewSize = new Vector2(vr.Size.X, vr.Size.Y);
             Vector2 zoom = this.camera.Zoom;
-            Vector2 halfWorld = new Vector2(viewSize.X * 0.5f * zoom.X, viewSize.Y * 0.5f * zoom.Y);
+            // Godot 4: Hoeherer Zoom => staerkeres Hineinzoomen => kleinerer sichtbarer Weltbereich.
+            // Sichtbarer Weltbereich = Viewport‑Pixelgroesse geteilt durch Zoom.
+            Vector2 halfWorld = new Vector2(viewSize.X * 0.5f / zoom.X, viewSize.Y * 0.5f / zoom.Y);
+
+            // Dyn. Overdraw-Rand (in Bildschirm-Pixeln), um Randartefakte bei starkem Zoom-Out zu vermeiden
+            const float overdrawPx = 64f;
+            Vector2 overWorld = new Vector2(overdrawPx / zoom.X, overdrawPx / zoom.Y);
+            halfWorld += overWorld;
             Vector2 center = this.camera.GlobalPosition;
             var vis = new Rect2(center - halfWorld, halfWorld * 2f);
 

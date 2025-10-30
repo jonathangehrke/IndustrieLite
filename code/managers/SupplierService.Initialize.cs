@@ -11,31 +11,31 @@ public partial class SupplierService : Node
     /// Explizite Initialisierung mit allen Dependencies.
     /// Ersetzt InitializeDependencies() ServiceContainer lookups.
     /// </summary>
-    public void Initialize(BuildingManager? buildingManager, TransportManager? transportManager, GameDatabase? gameDatabase, EventHub? eventHub)
+    public void Initialize(IBuildingManager buildingManager, ITransportManager transportManager, GameDatabase gameDatabase, EventHub? eventHub)
     {
-        this.buildingManager = buildingManager;
-        this.transportManager = transportManager;
+        // Validate required dependencies (fail-fast)
+        if (buildingManager == null)
+        {
+            throw new System.ArgumentNullException(nameof(buildingManager), "SupplierService requires BuildingManager");
+        }
+        if (transportManager == null)
+        {
+            throw new System.ArgumentNullException(nameof(transportManager), "SupplierService requires TransportManager");
+        }
+        if (gameDatabase == null)
+        {
+            throw new System.ArgumentNullException(nameof(gameDatabase), "SupplierService requires GameDatabase");
+        }
+
+        this.buildingManager = (BuildingManager)buildingManager; // Cast for storage (will be replaced with interface field later)
+        this.transportManager = (TransportManager)transportManager; // Cast for storage (will be replaced with interface field later)
         this.gameDatabase = gameDatabase;
         this.eventHub = eventHub;
 
-        if (buildingManager == null)
-        {
-            DebugLogger.LogServices("SupplierService: WARNING - BuildingManager not found");
-        }
-
-        if (transportManager == null)
-        {
-            DebugLogger.LogServices("SupplierService: WARNING - TransportManager not found");
-        }
-
-        if (gameDatabase == null)
-        {
-            DebugLogger.LogServices("SupplierService: WARNING - GameDatabase not found");
-        }
-
+        // EventHub is truly optional for this service
         if (eventHub == null)
         {
-            DebugLogger.LogServices("SupplierService: WARNING - EventHub not found");
+            DebugLogger.LogServices("SupplierService: INFO - EventHub not available, supplier change events won't be emitted");
         }
     }
 }

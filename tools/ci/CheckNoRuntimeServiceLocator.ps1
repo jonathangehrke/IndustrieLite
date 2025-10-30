@@ -21,9 +21,20 @@ $violationPatterns = @(
 )
 
 # Files to scan
+# Erweiterter Scan: auch Transport/Input/Buildings/Roads und Unterordner
 $scanPaths = @(
     "$RootPath\code\managers\*.cs",
-    "$RootPath\code\runtime\*.cs"
+    "$RootPath\code\managers\**\*.cs",
+    "$RootPath\code\runtime\*.cs",
+    "$RootPath\code\runtime\**\*.cs",
+    "$RootPath\code\transport\*.cs",
+    "$RootPath\code\transport\**\*.cs",
+    "$RootPath\code\input\*.cs",
+    "$RootPath\code\input\**\*.cs",
+    "$RootPath\code\buildings\*.cs",
+    "$RootPath\code\buildings\**\*.cs",
+    "$RootPath\code\roads\*.cs",
+    "$RootPath\code\roads\**\*.cs"
 )
 
 # Exclusions - these are allowed patterns

@@ -26,7 +26,7 @@ public partial class SaveLoadTestBridge : Node
         var result = new Godot.Collections.Dictionary();
         try
         {
-            var content = FileAccess.GetFileAsString(resPath);
+            var content = Godot.FileAccess.GetFileAsString(resPath);
             if (string.IsNullOrEmpty(content))
             {
                 result["test_successful"] = false;
@@ -77,7 +77,7 @@ public partial class SaveLoadTestBridge : Node
         var result = new Godot.Collections.Dictionary();
         try
         {
-            var content = FileAccess.GetFileAsString(resPath);
+            var content = Godot.FileAccess.GetFileAsString(resPath);
             if (string.IsNullOrEmpty(content))
             {
                 result["test_successful"] = false;

@@ -71,6 +71,7 @@ public partial class TransportCoordinator : Node, ITickable
     private EconomyManager economyManager = default!;
     private GameManager gameManager = default!;
     private EventHub? eventHub;
+    private GameTimeManager? gameTimeManager;
     private readonly AboVerwalter abos = new();
 
     // Public Properties for Wrapper access
@@ -167,7 +168,7 @@ public partial class TransportCoordinator : Node, ITickable
         this.orderManager = new TransportOrderManager();
         if (this.buildingManager != null)
         {
-            this.orderManager.Initialize(this.transportCore, this.buildingManager, this.truckManager, this.economyService, this);
+            this.orderManager.Initialize(this.transportCore, this.buildingManager, this.truckManager, this.economyService, this, this.gameTimeManager);
             DebugLogger.LogTransport("TransportCoordinator: OrderManager initialized");
         }
         else

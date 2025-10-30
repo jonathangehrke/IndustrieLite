@@ -61,8 +61,12 @@ public partial class UIService
             // Fallback: Wenn Database noch nicht bereit ist, prüfe DataIndex schnell
             try
             {
-                var sc = ServiceContainer.Instance;
-                var di = sc?.GetNamedService<Node>("DataIndex") ?? this.GetTree()?.Root?.GetNodeOrNull("/root/DataIndex");
+                var di = this.dataIndex;
+                if (di == null)
+                {
+                    var sc = ServiceContainer.Instance;
+                    di = sc?.GetNamedService<Node>("DataIndex") ?? this.GetTree()?.Root?.GetNodeOrNull("/root/DataIndex");
+                }
                 if (di != null && di.HasMethod("get_buildings"))
                 {
                     var arrVar = di.Call("get_buildings");

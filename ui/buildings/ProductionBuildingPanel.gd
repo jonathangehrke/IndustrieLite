@@ -118,9 +118,23 @@ func _apply_background_style() -> void:
 	panel_style.border_color = Color(0, 0, 0, 0.55)
 	bg_panel.add_theme_stylebox_override("panel", panel_style)
 
+# Helper: Prueft ob BuildingDef ein bestimmtes Tag hat
+func _has_tag(tag: String) -> bool:
+	if building_def != null and "Tags" in building_def:
+		var tags = building_def.Tags
+		if tags != null:
+			for t in tags:
+				if str(t) == tag:
+					return true
+	return false
+
 # Reduziert die Hintergrund-Hoehe fuer bestimmte Gebaeude (Haus, Solar, Wasserpumpe, Stadt)
 const BG_SHRINK_BOTTOM := 160
 func _soll_bg_verkleinert() -> bool:
+	# Tag-basierte Pruefung (neu)
+	if _has_tag("compact-ui"):
+		return true
+	# Legacy-Fallback fuer alte Gebaeude ohne Tags
 	if building_def != null and "Id" in building_def:
 		var bid: String = str(building_def.Id)
 		if bid == "house" or bid == "solar_plant" or bid == "water_pump" or bid == "city":
@@ -142,16 +156,6 @@ func _apply_bg_shrink_if_needed() -> void:
 		background.offset_bottom = bottom_offset
 	if bg_image != null:
 		bg_image.offset_bottom = bottom_offset
-
-# Schliessen bei Klick ausserhalb des sichtbaren Hintergrunds
-func _gui_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		var bg: Control = get_node_or_null("Background")
-		if bg != null:
-			var mp: Vector2 = get_viewport().get_mouse_position()
-			if not bg.get_global_rect().has_point(mp):
-				if event_hub:
-					event_hub.emit_signal(EventNames.SELECTED_BUILDING_CHANGED, null)
 
 func _deferred_adjust_min_size() -> void:
 	# Warte einen Frame, bis Container ihre Mindestgroessen berechnet haben
@@ -194,7 +198,10 @@ func _aktualisiere_anzeige() -> void:
 	_aktualisiere_lieferanten()
 
 func _ist_kapazitaets_gebaeude() -> bool:
-	# Kapazitätsgebäude: Haus, Solaranlage, Wasserpumpe
+	# Tag-basierte Pruefung (neu)
+	if _has_tag("capacity-provider"):
+		return true
+	# Legacy-Fallback: Kapazitätsgebäude: Haus, Solaranlage, Wasserpumpe
 	var capacity_ids := ["house", "solar_plant", "water_pump"]
 	if building_def != null and "Id" in building_def:
 		var bid: String = str(building_def.Id)
@@ -207,7 +214,11 @@ func _ist_kapazitaets_gebaeude() -> bool:
 	return false
 
 func _logistik_verbergen() -> bool:
-	# Verberge Logistik fuer bestimmte Gebaeude (Stadt, Haus, Solaranlage, Wasserpumpe, Bauernhof)
+	# Tag-basierte Pruefung (neu): Zeige Logistik nur fuer Gebaeude mit "needs-logistics" Tag
+	if building_def != null and "Tags" in building_def:
+		# Wenn Tags vorhanden sind, verwende Tag-basierte Logik
+		return not _has_tag("needs-logistics")
+	# Legacy-Fallback: Verberge Logistik fuer bestimmte Gebaeude (Stadt, Haus, Solaranlage, Wasserpumpe, Bauernhof)
 	var hide_ids := ["city", "house", "solar_plant", "water_pump", "grain_farm"]
 	if building_def != null and "Id" in building_def:
 		var bid: String = str(building_def.Id)

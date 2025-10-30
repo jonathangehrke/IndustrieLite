@@ -23,6 +23,7 @@ public partial class RecipeProductionController : Node
     // Referenzen (per DI gesetzt)
     private Database? datenbank;
     private ProductionManager? produktionsManager;
+    private Node? dataIndex;
 
     // Rezept & Zustand
     public string AktuellesRezeptId { get; private set; } = "";
@@ -54,10 +55,11 @@ public partial class RecipeProductionController : Node
     /// <summary>
     /// Setzt Abhängigkeiten explizit (statt ServiceContainer).
     /// </summary>
-    public void Initialize(Database? datenbank, ProductionManager? produktionsManager)
+    public void Initialize(Database? datenbank, ProductionManager? produktionsManager, Node? dataIndex = null)
     {
         this.datenbank = datenbank;
         this.produktionsManager = produktionsManager;
+        this.dataIndex = dataIndex;
         this.AktualisiereTickDauer();
     }
 
@@ -85,9 +87,13 @@ public partial class RecipeProductionController : Node
             // Export-Fallback: DataIndex nach Rezepten durchsuchen
             try
             {
-                var sc = ServiceContainer.Instance;
-                var di = sc?.GetNamedService<Node>("DataIndex");
-                di ??= this.GetTree()?.Root?.GetNodeOrNull("/root/DataIndex");
+                var di = this.dataIndex;
+                if (di == null)
+                {
+                    var sc = ServiceContainer.Instance;
+                    di = sc?.GetNamedService<Node>("DataIndex");
+                    di ??= this.GetTree()?.Root?.GetNodeOrNull("/root/DataIndex");
+                }
                 if (di != null && di.HasMethod("get_recipes"))
                 {
                     var arrVar = di.Call("get_recipes");

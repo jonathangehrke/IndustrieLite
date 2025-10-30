@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Godot;
+using IndustrieLite.Core.Resources;
 
 [System.Obsolete("Veraltet: Bitte StringName-basierte Ressourcen-IDs verwenden (z. B. new StringName(\"power\")). Dieser Enum wird in einer k8nftigen Version entfernt.")]
 public enum ResourceType
@@ -29,7 +30,7 @@ public class ResourceInfo
     }
 }
 
-public partial class ResourceManager : Node, ITickable, ILifecycleScope
+public partial class ResourceManager : Node, IResourceManager, ITickable, ILifecycleScope
 {
     /// <inheritdoc/>
     public ServiceLifecycle Lifecycle => ServiceLifecycle.Session;
@@ -68,6 +69,7 @@ public partial class ResourceManager : Node, ITickable, ILifecycleScope
     private double emitAccum = 0.0;
     private double resetAccum = 0.0;
     private bool registeredWithSimulation;
+    private ResourceCoreService core = new ResourceCoreService();
 
     /// <inheritdoc/>
     public override void _Ready()
@@ -114,10 +116,20 @@ public partial class ResourceManager : Node, ITickable, ILifecycleScope
     /// </summary>
     public void ResetTick()
     {
-        foreach (var resource in this.resourcesById.Values)
+        this.core.ResetTick();
+        // Sync lokale Struktur aus Core
+        var snap = this.core.GetSnapshot();
+        foreach (var kv in snap)
         {
-            resource.Available = resource.Production;
-            resource.Consumption = 0;
+            var id = new StringName(kv.Key);
+            if (!this.resourcesById.TryGetValue(id, out var info))
+            {
+                info = new ResourceInfo();
+                this.resourcesById[id] = info;
+            }
+            info.Production = kv.Value.Production;
+            info.Available = kv.Value.Available;
+            info.Consumption = kv.Value.Consumption;
         }
     }
 
@@ -128,6 +140,7 @@ public partial class ResourceManager : Node, ITickable, ILifecycleScope
     /// </summary>
     public void ClearAllData()
     {
+        this.core.ClearAll();
         foreach (var kvp in this.resourcesById)
         {
             kvp.Value.Production = 0;
@@ -145,6 +158,7 @@ public partial class ResourceManager : Node, ITickable, ILifecycleScope
     /// </summary>
     public void AddProduction(StringName resourceId, int amount)
     {
+        this.core.AddProduction(resourceId.ToString(), amount);
         var info = this.GetOrCreateInfo(resourceId);
         info.Production += amount;
     }
@@ -157,6 +171,7 @@ public partial class ResourceManager : Node, ITickable, ILifecycleScope
     /// </summary>
     public void SetProduction(StringName resourceId, int amount)
     {
+        this.core.SetProduction(resourceId.ToString(), amount);
         var info = this.GetOrCreateInfo(resourceId);
         info.Production = amount;
     }
@@ -169,9 +184,10 @@ public partial class ResourceManager : Node, ITickable, ILifecycleScope
     /// <returns></returns>
     public bool ConsumeResource(StringName resourceId, int amount)
     {
-        var info = this.GetOrCreateInfo(resourceId);
-        if (info.Available >= amount)
+        var ok = this.core.ConsumeResource(resourceId.ToString(), amount);
+        if (ok)
         {
+            var info = this.GetOrCreateInfo(resourceId);
             info.Available -= amount;
             info.Consumption += amount;
             return true;
@@ -187,7 +203,7 @@ public partial class ResourceManager : Node, ITickable, ILifecycleScope
     /// <returns></returns>
     public int GetAvailable(StringName resourceId)
     {
-        return this.resourcesById.TryGetValue(resourceId, out var info) ? info.Available : 0;
+        return this.core.GetAvailable(resourceId.ToString());
     }
 
     // StringName-basierte Variante (neu)
@@ -198,6 +214,7 @@ public partial class ResourceManager : Node, ITickable, ILifecycleScope
     /// <returns></returns>
     public ResourceInfo GetResourceInfo(StringName resourceId)
     {
+        // Rückgabe aus lokaler Struktur; wird in Mutationsmethoden aus Core synchronisiert
         return this.GetOrCreateInfo(resourceId);
     }
 
@@ -331,6 +348,8 @@ public partial class ResourceManager : Node, ITickable, ILifecycleScope
         {
             this.resourcesById[id] = new ResourceInfo();
         }
+        // Core synchron halten
+        this.core.EnsureResourceExists(id.ToString());
     }
 }
 

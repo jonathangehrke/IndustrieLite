@@ -182,7 +182,14 @@ public partial class Map : Node2D, ILifecycleScope
             var vr = vp.GetVisibleRect();
             Vector2 viewSize = new Vector2(vr.Size.X, vr.Size.Y);
             Vector2 zoom = this.camera.Zoom;
-            Vector2 halfWorld = new Vector2(viewSize.X * 0.5f * zoom.X, viewSize.Y * 0.5f * zoom.Y);
+            // Godot 4: Hoeherer Zoom => staerkeres Hineinzoomen => kleinerer sichtbarer Weltbereich.
+            // Sichtbarer Weltbereich = Viewport‑Pixelgroesse geteilt durch Zoom.
+            Vector2 halfWorld = new Vector2(viewSize.X * 0.5f / zoom.X, viewSize.Y * 0.5f / zoom.Y);
+
+            // Dyn. Overdraw-Rand (in Bildschirm-Pixeln), um Randartefakte bei starkem Zoom-Out zu vermeiden
+            const float overdrawPx = 64f;
+            Vector2 overWorld = new Vector2(overdrawPx / zoom.X, overdrawPx / zoom.Y);
+            halfWorld += overWorld;
             Vector2 center = this.camera.GlobalPosition;
             var vis = new Rect2(center - halfWorld, halfWorld * 2f);
 
