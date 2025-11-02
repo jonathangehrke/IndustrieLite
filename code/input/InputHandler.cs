@@ -1,0 +1,169 @@
+// SPDX-License-Identifier: MIT
+using Godot;
+
+/// <summary>
+/// Verantwortlich fuer das Erfassen von Roh-Input und das Ableiten von Befehlen.
+/// </summary>
+public partial class InputHandler : Node
+{
+    private Map? map;
+    private InputEventRouter? inputEventRouter;
+    private ToolManager? toolManager;
+    private Vector2 letzteKameraRichtung = Vector2.Zero;
+
+    /// <inheritdoc/>
+    public override void _Ready()
+    {
+        this.SetProcess(true);
+        this.SetProcessInput(true);
+        this.SetProcessUnhandledInput(true);
+    }
+
+    /// <summary>
+    /// Injektion aller benoetigten Referenzen nach dem Laden durch den InputManager.
+    /// </summary>
+    /// <param name="map">Karten-Referenz fuer Zellberechnungen.</param>
+    /// <param name="router">Router fuer die Weiterleitung der Eingabebefehle.</param>
+    /// <param name="toolManager">ToolManager fuer Statusabfragen.</param>
+    public void InjiziereDependencies(Map map, InputEventRouter router, ToolManager toolManager)
+    {
+        this.map = map;
+        this.inputEventRouter = router;
+        this.toolManager = toolManager;
+    }
+
+    /// <inheritdoc/>
+    public override void _Input(InputEvent @event)
+    {
+        if (this.inputEventRouter == null)
+        {
+            return;
+        }
+
+        if (@event.IsActionPressed("ui_cancel"))
+        {
+            if (@event is InputEventKey key && key.Echo)
+            {
+                return;
+            }
+
+            var fokus = this.GetViewport()?.GuiGetFocusOwner();
+            if (fokus is LineEdit || fokus is TextEdit)
+            {
+                return;
+            }
+
+            this.inputEventRouter.FordereModusAbbrechenDurchEscAn();
+            this.GetViewport()?.SetInputAsHandled();
+        }
+    }
+
+    /// <inheritdoc/>
+    public override void _UnhandledInput(InputEvent @event)
+    {
+        if (this.inputEventRouter == null)
+        {
+            return;
+        }
+
+        if (@event is InputEventAction action)
+        {
+            switch (action.Action)
+            {
+                case "toggle_demolish":
+                    this.inputEventRouter.VerarbeiteDemolishAktion(action.Pressed);
+                    return;
+                case "zoom_in":
+                    if (action.Pressed)
+                    {
+                        this.inputEventRouter.FuegeZoomSchrittHinzu(-1);
+                    }
+                    return;
+                case "zoom_out":
+                    if (action.Pressed)
+                    {
+                        this.inputEventRouter.FuegeZoomSchrittHinzu(1);
+                    }
+                    return;
+                default:
+                    return;
+            }
+        }
+
+        if (@event is InputEventMouseButton mb && mb.Pressed)
+        {
+            if (mb.ButtonIndex == MouseButton.Left)
+            {
+                if (this.map != null)
+                {
+                    var weltPos = this.map.GetGlobalMousePosition();
+                    var zelle = this.map.BerechneCellVonPosition(weltPos);
+                    this.inputEventRouter.FuegeMausKlickHinzu(zelle);
+                }
+                return;
+            }
+
+            if (mb.ButtonIndex == MouseButton.Right)
+            {
+                this.inputEventRouter.FordereModusAbbrechenDurchRechtsklickAn();
+                return;
+            }
+
+            if (mb.ButtonIndex == MouseButton.WheelUp)
+            {
+                this.inputEventRouter.FuegeZoomSchrittHinzu(-1);
+                return;
+            }
+
+            if (mb.ButtonIndex == MouseButton.WheelDown)
+            {
+                this.inputEventRouter.FuegeZoomSchrittHinzu(1);
+                return;
+            }
+        }
+    }
+
+    /// <inheritdoc/>
+    public override void _Process(double delta)
+    {
+        if (this.inputEventRouter == null)
+        {
+            return;
+        }
+
+        var richtung = this.BerechneKameraBewegung();
+        if (richtung != this.letzteKameraRichtung)
+        {
+            this.inputEventRouter.MeldeKameraBewegung(richtung);
+            this.letzteKameraRichtung = richtung;
+        }
+    }
+
+    private Vector2 BerechneKameraBewegung()
+    {
+        Vector2 richtung = Vector2.Zero;
+        if (Input.IsActionPressed("move_camera_left"))
+        {
+            richtung.X -= 1f;
+        }
+        if (Input.IsActionPressed("move_camera_right"))
+        {
+            richtung.X += 1f;
+        }
+        if (Input.IsActionPressed("move_camera_up"))
+        {
+            richtung.Y -= 1f;
+        }
+        if (Input.IsActionPressed("move_camera_down"))
+        {
+            richtung.Y += 1f;
+        }
+
+        if (richtung != Vector2.Zero)
+        {
+            richtung = richtung.Normalized();
+        }
+
+        return richtung;
+    }
+}

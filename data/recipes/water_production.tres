@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=4 format=3 uid="uid://bwmprago0ry2a"]
+
+[ext_resource type="Script" uid="uid://derd6wedxi60v" path="res://code/data/RecipeDef.cs" id="1_0"]
+[ext_resource type="Script" uid="uid://bgu2tpnd1tfcy" path="res://code/data/Amount.cs" id="1_1"]
+
+[sub_resource type="Resource" id="2"]
+script = ExtResource("1_1")
+ResourceId = "water"
+PerMinute = 480.0
+
+[resource]
+script = ExtResource("1_0")
+Id = "water_production"
+DisplayName = "Wasserförderung"
+Inputs = Array[ExtResource("1_1")]([])
+Outputs = Array[ExtResource("1_1")]([SubResource("2")])
+CycleSeconds = 1.0
+StartupSeconds = 0.0
+PowerRequirement = 0.0
+WaterRequirement = 0.0
+ProductionCost = 0.05
+MaintenanceCost = 0.1

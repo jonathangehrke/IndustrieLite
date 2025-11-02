@@ -1,0 +1,12 @@
+{
+  "schema": "IndustrieLite.Save",
+  "version": 2,
+  "money": 1000.0,
+  "gridW": 10,
+  "gridH": 10,
+  "ownedCells": [[0,0],[1,1],[2,1],[3,3],[4,1],[7,2]],
+  "buildings": [
+    { "type": "house", "x": 1, "y": 1 },
+    { "type": "chicken_farm", "x": 4, "y": 1 }
+  ]
+}

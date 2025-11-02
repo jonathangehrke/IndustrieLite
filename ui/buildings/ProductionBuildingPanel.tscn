@@ -1,0 +1,196 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/buildings/ProductionBuildingPanel.gd" id="1"]
+
+[node name="ProductionBuildingPanel" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+
+[node name="Background" type="Panel" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="BgImage" type="TextureRect" parent="Background"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+expand_mode = 1
+stretch_mode = 6
+modulate = Color(1, 1, 1, 0.96)
+visible = false
+
+[node name="VBox" type="VBoxContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = -44.0
+
+[node name="Header" type="HBoxContainer" parent="VBox"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="VBox/Header"]
+size_flags_horizontal = 3
+size_flags_vertical = 1
+text = "Produktionsgebaeude"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 18
+
+[node name="MainContent" type="HBoxContainer" parent="VBox"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="LeftSide" type="VBoxContainer" parent="VBox/MainContent"]
+custom_minimum_size = Vector2(200, 0)
+size_flags_horizontal = 0
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="GraphicContainer" type="Control" parent="VBox/MainContent/LeftSide"]
+custom_minimum_size = Vector2(192, 192)
+size_flags_horizontal = 1
+size_flags_vertical = 0
+
+[node name="BuildingGraphic" type="TextureRect" parent="VBox/MainContent/LeftSide/GraphicContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+expand_mode = 1
+stretch_mode = 5
+
+[node name="InventoryBox" type="VBoxContainer" parent="VBox/MainContent/LeftSide"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="InventoryHeader" type="Label" parent="VBox/MainContent/LeftSide/InventoryBox"]
+text = "Lager"
+theme_override_font_sizes/font_size = 14
+
+[node name="InventoryList" type="HBoxContainer" parent="VBox/MainContent/LeftSide/InventoryBox"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="LogisticsBox" type="VBoxContainer" parent="VBox/MainContent/LeftSide"]
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_constants/separation = 6
+
+[node name="LogisticsHeader" type="Label" parent="VBox/MainContent/LeftSide/LogisticsBox"]
+text = "Logistik"
+theme_override_font_sizes/font_size = 14
+
+[node name="CapRow" type="HBoxContainer" parent="VBox/MainContent/LeftSide/LogisticsBox"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="CapacityLabel" type="Label" parent="VBox/MainContent/LeftSide/LogisticsBox/CapRow"]
+size_flags_horizontal = 3
+text = "Kapazitaet: 5"
+
+[node name="CapPlusBtn" type="Button" parent="VBox/MainContent/LeftSide/LogisticsBox/CapRow"]
+text = "+"
+size_flags_horizontal = 0
+size_flags_vertical = 0
+custom_minimum_size = Vector2(24, 24)
+
+[node name="SpeedRow" type="HBoxContainer" parent="VBox/MainContent/LeftSide/LogisticsBox"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="SpeedLabel" type="Label" parent="VBox/MainContent/LeftSide/LogisticsBox/SpeedRow"]
+size_flags_horizontal = 3
+text = "Geschwindigkeit: 32"
+
+[node name="SpeedPlusBtn" type="Button" parent="VBox/MainContent/LeftSide/LogisticsBox/SpeedRow"]
+text = "+"
+size_flags_horizontal = 0
+size_flags_vertical = 0
+custom_minimum_size = Vector2(24, 24)
+
+[node name="RightSide" type="VBoxContainer" parent="VBox/MainContent"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="ProductionBox" type="VBoxContainer" parent="VBox/MainContent/RightSide"]
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_constants/separation = 8
+
+[node name="ProductionHeader" type="Label" parent="VBox/MainContent/RightSide/ProductionBox"]
+text = "Produktion"
+theme_override_font_sizes/font_size = 14
+
+[node name="RecipeContainer" type="GridContainer" parent="VBox/MainContent/RightSide/ProductionBox"]
+size_flags_horizontal = 3
+size_flags_vertical = 0
+columns = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+
+[node name="ProductionIcon" type="TextureRect" parent="VBox/MainContent/RightSide/ProductionBox"]
+custom_minimum_size = Vector2(128, 128)
+expand_mode = 1
+stretch_mode = 5
+visible = false
+
+[node name="OutputList" type="VBoxContainer" parent="VBox/MainContent/RightSide/ProductionBox"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="ConsumptionBox" type="VBoxContainer" parent="VBox/MainContent/RightSide"]
+visible = false
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_constants/separation = 8
+
+[node name="ConsumptionHeader" type="Label" parent="VBox/MainContent/RightSide/ConsumptionBox"]
+text = "Verbrauch (alle Rezepte)"
+theme_override_font_sizes/font_size = 14
+
+[node name="ConsumptionGrid" type="GridContainer" parent="VBox/MainContent/RightSide/ConsumptionBox"]
+size_flags_horizontal = 3
+size_flags_vertical = 0
+columns = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 4
+
+[node name="StatusBox" type="VBoxContainer" parent="VBox/MainContent/RightSide"]
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_constants/separation = 8
+
+[node name="StatusHeader" type="Label" parent="VBox/MainContent/RightSide/StatusBox"]
+text = "Benoetigt"
+theme_override_font_sizes/font_size = 14
+
+[node name="StatusGrid" type="GridContainer" parent="VBox/MainContent/RightSide/StatusBox"]
+size_flags_horizontal = 3
+size_flags_vertical = 0
+columns = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 4
+
+[node name="SupplierBox" type="VBoxContainer" parent="VBox/MainContent/RightSide"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="SupplierHeader" type="Label" parent="VBox/MainContent/RightSide/SupplierBox"]
+text = "Lieferanten"
+theme_override_font_sizes/font_size = 14
+
+[node name="SupplierList" type="VBoxContainer" parent="VBox/MainContent/RightSide/SupplierBox"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+
+; ActionBar mit Liefer-Button entfernt (Auto-Lieferung per feste Route)

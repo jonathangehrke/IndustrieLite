@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <!-- Qualitaets-Gates: Nullability + Analyzer aktiviert -->
+    <Nullable>enable</Nullable>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <!-- Nur Nullability-Warnungen als Fehler (inkrementelle Einfuehrung) -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors>CS8600;CS8601;CS8602;CS8603;CS8604;CS8618;CS8625</WarningsAsErrors>
+  </PropertyGroup>
+</Project>

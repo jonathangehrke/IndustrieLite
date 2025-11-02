@@ -1,0 +1,48 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/menu/Landbearbeitung.png" id="1_land"]
+[ext_resource type="Texture2D" path="res://assets/menu/Marktmenu.png" id="2_markt"]
+[ext_resource type="Texture2D" path="res://assets/tools/abriss.png" id="3_abriss"]
+
+[node name="LowLeftButtons" type="VBoxContainer"]
+layout_mode = 0
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 0.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -312.0
+offset_right = 72.0
+offset_bottom = -120.0
+mouse_filter = 1
+z_index = 66
+alignment = 2
+theme_override_constants/separation = 8
+
+[node name="Spacer" type="Control" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="AbrissButton" type="TextureButton" parent="."]
+layout_mode = 2
+custom_minimum_size = Vector2(64, 64)
+size_flags_horizontal = 0
+texture_normal = ExtResource("3_abriss")
+focus_mode = 0
+tooltip_text = "Abriss"
+
+[node name="MarktButton" type="TextureButton" parent="."]
+layout_mode = 2
+custom_minimum_size = Vector2(64, 64)
+size_flags_horizontal = 0
+texture_normal = ExtResource("2_markt")
+focus_mode = 0
+tooltip_text = "Markt"
+
+[node name="LandButton" type="TextureButton" parent="."]
+layout_mode = 2
+custom_minimum_size = Vector2(64, 64)
+size_flags_horizontal = 0
+texture_normal = ExtResource("1_land")
+focus_mode = 0
+tooltip_text = "Landbearbeitung"

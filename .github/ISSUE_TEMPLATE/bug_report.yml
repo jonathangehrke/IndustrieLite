@@ -1,0 +1,111 @@
+name: Bug Report
+description: Melde einen Fehler in diesem Projekt.
+title: "Bug: "
+labels: [bug, needs triage]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke fürs Melden eines Fehlers! Bitte fülle die folgenden Felder so genau wie möglich aus.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Vorab
+      options:
+        - label: Ich habe nach ähnlichen Issues/PRs gesucht (inkl. geschlossenen) und nichts Passendes gefunden.
+          required: true
+        - label: Ich habe die README/CONTRIBUTING beachtet und die neueste Version getestet.
+          required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Betroffene Version/Commit
+      description: Version, Tag oder Commit-Hash, in dem der Fehler auftritt.
+      placeholder: z. B. v0.3.2 oder 1a2b3c4
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Betriebssystem
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Andere
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Schritte zum Reproduzieren
+      description: Liste die Schritte, um den Fehler zu reproduzieren.
+      placeholder: |
+        1. Aktion A
+        2. Aktion B
+        3. Fehler tritt auf
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Erwartetes Verhalten
+      placeholder: Was hättest du erwartet?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Tatsächliches Verhalten
+      placeholder: Was ist stattdessen passiert?
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevante Logs/Stacktraces
+      description: Bitte in Codeblöcken einfügen; personenbezogene Daten entfernen.
+      render: shell
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Optional, aber hilfreich.
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Schweregrad
+      options:
+        - Niedrig (kosmetisch)
+        - Mittel (Workaround möglich)
+        - Hoch (kein Workaround)
+        - Kritisch (Datenverlust/Absturz)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priorität (Einschätzung)
+      options:
+        - P3 (niedrig)
+        - P2 (normal)
+        - P1 (hoch)
+        - P0 (sofort)
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Weitere Hinweise/Kontext
+      placeholder: Zusätzliche Informationen, Links, mögliche Ursachen, …
+

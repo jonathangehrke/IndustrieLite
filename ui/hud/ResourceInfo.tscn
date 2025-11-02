@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/hud/ResourceInfo.gd" id="1"]
+
+[node name="ResourceInfo" type="HBoxContainer"]
+custom_minimum_size = Vector2(200, 32)
+script = ExtResource("1")
+event_hub_path = NodePath("")
+ui_service_path = NodePath("")

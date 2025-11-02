@@ -1,0 +1,13 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📚 Contributing Guidelines
+    url: https://github.com/jonathangehrke/IndustrieLite-dev/blob/main/CONTRIBUTING.md
+    about: Please read our contribution guidelines before opening an issue or PR
+
+  - name: 💬 GitHub Discussions
+    url: https://github.com/jonathangehrke/IndustrieLite-dev/discussions
+    about: Ask questions, share ideas, or discuss the project with the community
+
+  - name: 📖 Documentation
+    url: https://github.com/jonathangehrke/IndustrieLite-dev/blob/main/docs/DEVELOPMENT.md
+    about: Check our development documentation for technical guides and architecture details

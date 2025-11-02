@@ -1,0 +1,17 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/hud/BuildBar.gd" id="1"]
+
+[node name="BuildBar" type="HBoxContainer"]
+anchor_left = 0.0
+anchor_right = 1.0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 56.0
+offset_right = -8.0
+offset_top = -40.0
+offset_bottom = -8.0
+size_flags_horizontal = 3
+script = ExtResource("1")
+ui_service_path = NodePath("")
+event_hub_path = NodePath("")

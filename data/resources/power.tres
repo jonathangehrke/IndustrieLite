@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="GameResourceDef" load_steps=3 format=3 uid="uid://dwhv6xlq3nv8r"]
+
+[ext_resource type="Script" uid="uid://b2jahp8p3d8sd" path="res://code/data/GameResourceDef.cs" id="1_0x0x0"]
+[ext_resource type="Texture2D" uid="uid://ct2ouqtkxp43o" path="res://assets/resources/Energie.png" id="2_0"]
+
+[resource]
+script = ExtResource("1_0x0x0")
+Id = "power"
+DisplayName = "Strom"
+Icon = ExtResource("2_0")
+Category = "energy"

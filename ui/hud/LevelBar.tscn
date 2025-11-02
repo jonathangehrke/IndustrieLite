@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/hud/LevelBar.gd" id="1"]
+
+[node name="LevelBar" type="Control"]
+script = ExtResource("1")
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(220, 24)
+event_hub_path = NodePath("")
+ui_service_path = NodePath("")
