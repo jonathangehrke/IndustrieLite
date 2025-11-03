@@ -29,6 +29,7 @@
     <PackageReference Include="Meziantou.Analyzer" Version="2.0.146" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="GodotSharp" Version="4.5.1" />
     <ProjectReference Include="core\IndustrieLite.Core\IndustrieLite.Core.csproj" />
   </ItemGroup>
 </Project>
