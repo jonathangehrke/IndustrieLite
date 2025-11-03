@@ -14,11 +14,20 @@
         "resolved": "4.4.1",
         "contentHash": "ghnQEo5LikQPfbCYcVxje8epffNCiyNG4zvGWUDRZRC1O+653+yqG3wdxk3+5RZsA3jaRuGKRavsGcnhLKe12g=="
       },
+      "GodotSharpEditor": {
+        "type": "Direct",
+        "requested": "[4.4.1, )",
+        "resolved": "4.4.1",
+        "contentHash": "cc3nA24r/sjW8KxrNqfSQk4CQMQYcg/kYk5935R88IhGBdRuTH4miaBXPlzR/td5GR8i1oGtCMWyW8axpQ0DxA==",
+        "dependencies": {
+          "GodotSharp": "4.4.1"
+        }
+      },
       "Meziantou.Analyzer": {
         "type": "Direct",
-        "requested": "[2.0.146, )",
-        "resolved": "2.0.146",
-        "contentHash": "pJ3k+3UjD2WwPsZR7fkgVYviXP3PCQM0hjwN1TuM4C0u1TuGKC9WdZCo0RAPZ+azhRPmYGSUjkjsN2fkQByghQ=="
+        "requested": "[2.0.248, )",
+        "resolved": "2.0.248",
+        "contentHash": "O+tZCnsk6pr+cYhwDOVVB7XJ6bcauLD953giskNkyu2r9Wsn2L2cfRzuQ+wQcWWuuxvnssNIIia+FAlXu3QyPg=="
       },
       "StyleCop.Analyzers": {
         "type": "Direct",
@@ -37,7 +46,6 @@
       "industrielite.core": {
         "type": "Project"
       }
-    },
-    "net8.0/win-x64": {}
+    }
   }
 }
